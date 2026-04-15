@@ -1,0 +1,161 @@
+.builder-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2.5rem;
+  height: 100%;
+}
+
+.template-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.template-card {
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.template-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--accent-blue);
+}
+
+.template-preview {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.template-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--accent-blue);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.template-info {
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Prompt Input */
+.prompt-section {
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.ai-input-wrapper {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  display: flex;
+  gap: 1rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.ai-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  resize: none;
+  min-height: 80px;
+}
+
+/* Simulation / Generator */
+.generating-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 4rem;
+}
+
+.progress-track {
+  width: 100%;
+  max-width: 400px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--accent-blue);
+}
+
+/* Preview Area */
+.preview-window {
+  flex: 1;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  box-shadow: var(--shadow-2xl);
+}
+
+.preview-toolbar {
+  height: 48px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  justify-content: space-between;
+}
+
+.mock-url {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #666;
+  width: 300px;
+}
+
+.site-render {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Dashboard Controls */
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.action-card {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}

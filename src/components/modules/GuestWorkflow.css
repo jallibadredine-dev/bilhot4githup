@@ -1,0 +1,189 @@
+.workflows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.guest-flow-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.guest-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px dashed var(--border-light);
+  padding-bottom: 12px;
+}
+
+.guest-info h3 {
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.room-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-base);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.error-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--status-red-light);
+  color: var(--status-red);
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Horizontal Flow Layout */
+.flow-path-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  width: 120px;
+  text-align: center;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
+}
+
+.node-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-surface-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.node-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Completed & Active States */
+.flow-node.completed.blue .node-icon {
+  background: var(--accent-blue-light);
+  color: var(--accent-blue);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 15px rgba(46, 101, 243, 0.2);
+}
+.flow-node.completed.yellow .node-icon {
+  background: var(--status-yellow-light);
+  color: var(--status-yellow);
+  border-color: var(--status-yellow);
+  box-shadow: 0 0 15px rgba(244, 196, 67, 0.2);
+}
+.flow-node.completed.green .node-icon {
+  background: var(--status-green-light);
+  color: var(--status-green);
+  border-color: var(--status-green);
+  box-shadow: 0 0 15px rgba(90, 194, 130, 0.2);
+}
+.flow-node.completed.cyan .node-icon {
+  background: rgba(85, 212, 225, 0.1);
+  color: var(--status-cyan);
+  border-color: var(--status-cyan);
+  box-shadow: 0 0 15px rgba(85, 212, 225, 0.2);
+}
+
+.flow-node.completed .node-label {
+  color: var(--text-primary);
+}
+
+/* Pulsing / Pending Current State */
+.flow-node.pulsing {
+  color: var(--text-primary);
+}
+.flow-node.pulsing.yellow .node-icon {
+  border-color: var(--status-yellow);
+  color: var(--status-yellow);
+  animation: pulse-yellow 2s infinite;
+}
+
+@keyframes pulse-yellow {
+  0% { box-shadow: 0 0 0 0 rgba(244, 196, 67, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(244, 196, 67, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(244, 196, 67, 0); }
+}
+
+/* Error State */
+.flow-node.error-state .node-icon {
+  background: var(--status-red-light);
+  color: var(--status-red);
+  border-color: var(--status-red);
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+.flow-node.error-state .node-label {
+  color: var(--status-red);
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* Connectors */
+.flow-connector {
+  flex: 1;
+  height: 3px;
+  background: var(--border-light);
+  margin-top: -20px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.flow-connector.active-line {
+  background: var(--border-medium);
+}
+.flow-connector.active-line .energy-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(46, 101, 243, 0.8), transparent);
+  animation: travel 2s infinite linear;
+}
+
+.flow-connector.error-line {
+  background: var(--status-red-light);
+}
+.flow-connector.error-line .energy-pulse {
+  position: absolute;
+  height: 100%;
+  width: 50%;
+  background: var(--status-red);
+}
+
+@keyframes travel {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
