@@ -102,11 +102,25 @@
 .luxe-range { width: 100%; height: 3px; appearance: none; background: #e2e8f0; border-radius: 10px; margin: 32px 0; }
 .luxe-range::-webkit-slider-thumb { appearance: none; width: 22px; height: 22px; background: white; border: 1px solid var(--luxe-slate); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-.luxe-toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.luxe-toggle-grid button { padding: 12px; border: 1px solid #e2e8f0; background: transparent; border-radius: 12px; font-size: 12px; font-weight: 700; color: var(--luxe-grey); cursor: pointer; transition: 0.2s; position: relative; }
-.luxe-toggle-grid button.active { border-color: var(--luxe-slate); color: var(--luxe-slate); background: white; }
-.discount { position: absolute; top: -10px; right: -4px; background: #10b981; color: white; font-size: 8px; padding: 2px 6px; border-radius: 100px; font-weight: 800; }
-
+.luxe-select-wrapper { margin-bottom: 8px; }
+.luxe-duration-select {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--luxe-slate);
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: 0.2s;
+}
+.luxe-duration-select:focus, .luxe-duration-select:hover {
+  border-color: var(--luxe-blue);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05);
+}
 /* Addons */
 .luxe-addons { display: grid; gap: 12px; }
 .l-addon { background: white; padding: 16px; border-radius: 16px; border: 1px solid var(--luxe-border); display: flex; align-items: center; gap: 16px; cursor: pointer; transition: 0.2s; }

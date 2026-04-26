@@ -220,15 +220,134 @@
 }
 
 .toggle-switch::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: white;
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+/* ─── Responsive Sidebar ─── */
+.mobile-sidebar-close {
+  display: none;
+  margin-left: auto;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+
+@media (max-width: 1024px) {
+  .sidebar-container {
+    padding: 1.5rem 0;
+    align-items: center; /* Center contents when collapsed */
+  }
+
+  .sidebar-logo {
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 2rem;
+  }
+
+  .sidebar-logo h2,
+  .btn-create span:not(.plus-icon),
+  .menu-item span,
+  .group-title,
+  .sidebar-section,
+  .badge-alert,
+  .project-list,
+  .toggle-switch {
+    display: none; /* Hide all text and badges */
+  }
+
+  .sidebar-action {
+    padding: 0 0.5rem;
+    width: 100%;
+  }
+
+  .btn-create {
+    padding: 10px;
+    justify-content: center;
+  }
+
+  .sidebar-menu {
+    width: 100%;
+    align-items: center;
+  }
+
+  .menu-item {
+    justify-content: center;
+    padding: 12px 0;
+    width: 100%;
+    border-right: none !important; /* Remove active border */
+  }
+
+  .menu-item.active {
+    border-radius: var(--radius-md);
+    background: var(--accent-blue-light);
+  }
+
+  .pro-sidebar-wrap {
+    width: 100%;
+  }
+
+  .sidebar-group {
+    width: 100%;
+    align-items: center;
+  }
+
+  .sidebar-group .menu-item {
+    padding: 12px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* On mobile, sidebar goes back to full width but inside the drawer */
+  .sidebar-container {
+    align-items: stretch;
+    padding: 1.5rem 0;
+  }
+
+  .mobile-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .sidebar-logo {
+     width: 100%;
+     padding-right: 1.5rem;
+     padding-left: 1.5rem;
+     justify-content: flex-start;
+  }
+
+  .sidebar-logo h2,
+  .btn-create span:not(.plus-icon),
+  .menu-item span,
+  .group-title,
+  .sidebar-section,
+  .badge-alert,
+  .project-list,
+  .toggle-switch {
+    display: flex; /* Restore text visibility */
+  }
+
+  .sidebar-action {
+    padding: 0 1.5rem;
+  }
+
+  .btn-create {
+    justify-content: flex-start;
+  }
+
+  .menu-item {
+    justify-content: flex-start;
+    padding: 10px 1.5rem;
+  }
 }
 
 /* Pro Sidebar Categorization */

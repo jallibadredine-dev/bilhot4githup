@@ -111,6 +111,33 @@
 .status-badge.libre { background: #ECFDF5; color: #10B981; }
 .status-badge.occupé { background: #FEE2E2; color: #EF4444; }
 
+.housekeeping-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.housekeeping-badge.clean { background: rgba(16, 185, 129, 0.9); color: white; }
+.housekeeping-badge.dirty { background: rgba(245, 158, 11, 0.9); color: white; }
+.housekeeping-badge.cleaning { background: rgba(14, 165, 233, 0.9); color: white; }
+
+.spinning-icon {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
 .property-type-tag {
   position: absolute;
   bottom: 0.75rem;
@@ -218,6 +245,31 @@
 }
 .ios-switch.on .handle { transform: translateX(14px); }
 .visibility-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); }
+
+.btn-housekeeping-action {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-housekeeping-action.dirty {
+  background: #FEF3C7;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+.btn-housekeeping-action.cleaning {
+  background: #E0F2FE;
+  color: #0284C7;
+  border: 1px solid #BAE6FD;
+}
+.btn-housekeeping-action:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
 
 /* ─── Placeholder Card ─── */
 .add-placeholder-card {

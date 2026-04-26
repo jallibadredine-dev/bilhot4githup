@@ -244,9 +244,48 @@
 }
 
 .layout-btn.active {
-  background: white;
+  background: var(--accent-blue-light);
   color: var(--accent-blue);
-  box-shadow: var(--shadow-sm);
+  border-color: var(--accent-blue);
+}
+
+/* ─── Responsive Header ─── */
+@media (max-width: 1024px) {
+  .header-top-row {
+    gap: 1rem;
+  }
+  .stats-filters {
+    display: none; /* Hide stats on tablet header */
+  }
+}
+
+@media (max-width: 768px) {
+  .topheader-container {
+    height: auto;
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .header-top-row {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .filter-group.interval, 
+  .filter-group.breakdown,
+  .primary-actions {
+    display: none; /* Only keep mode switcher and essentials on mobile header */
+  }
+
+  .mode-switcher-container {
+    margin-left: 0;
+    width: 100%;
+    order: 3; /* Move to bottom of the row if needed, or keep top */
+  }
+
+  .header-bottom-row {
+    display: none; /* Hide secondary row on mobile completely to save space */
+  }
 }
 
 /* Global Mode Switcher */

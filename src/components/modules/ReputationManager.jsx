@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, MessageSquare, Bot, CheckCircle2, Search, Filter, Sparkles, Send, Globe, ChevronRight } from 'lucide-react';
+import { Star, MessageSquare, Bot, CheckCircle2, Search, Filter, Sparkles, Send, Globe, ChevronRight, Settings, ShieldCheck } from 'lucide-react';
 import './ReputationManager.css';
 
 const REVIEWS_DATA = [
@@ -54,8 +54,8 @@ const STATS = {
   positive: 92
 };
 
-const ReputationManager = () => {
-  const [activeTab, setActiveTab] = useState('all');
+const ReputationManager = ({ pmsMode, setActiveView }) => {
+  const [activeTab, setActiveTab] = useState('all'); // 'all', 'pending', 'replied', 'config'
   const [searchQuery, setSearchQuery] = useState('');
   const [reviews, setReviews] = useState(REVIEWS_DATA);
   const [activeReplyId, setActiveReplyId] = useState(null);
@@ -150,6 +150,9 @@ const ReputationManager = () => {
                À répondre <span className="tab-badge bg-rose-100 text-rose-600">{reviews.filter(r => r.status === 'pending').length}</span>
             </button>
             <button className={`rep-tab ${activeTab === 'replied' ? 'active' : ''}`} onClick={() => setActiveTab('replied')}>Traités</button>
+            <button className={`rep-tab ${activeTab === 'config' ? 'active' : ''}`} onClick={() => setActiveTab('config')}>
+               <Settings size={16} /> Configurer
+            </button>
          </div>
          <div className="rep-search">
             <Search size={18} className="text-slate-400" />
@@ -164,15 +167,98 @@ const ReputationManager = () => {
 
       {/* REVIEWS FEED */}
       <div className="rep-feed space-y-6 pb-12">
-        {filteredReviews.length === 0 && (
-           <div className="text-center py-16 bg-white rounded-3xl border border-slate-100">
-              <Filter size={48} className="mx-auto text-slate-300 mb-4" />
-              <h3 className="text-xl font-bold text-slate-700">Aucun avis trouvé</h3>
-              <p className="text-slate-500 mt-2">Vous êtes à jour ou les filtres ne correspondent à aucun résultat.</p>
+        {activeTab === 'config' && (
+           <div className="animate-in fade-in zoom-in-95 duration-300">
+              <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl overflow-hidden">
+                 <div className="p-8 bg-indigo-600 text-white flex justify-between items-center">
+                    <div>
+                       <h2 className="text-2xl font-black">Configuration E-Réputation</h2>
+                       <p className="text-indigo-100 font-medium">Automatisez vos réponses et gérez la synchronisation des avis.</p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white/20 px-4 py-2 rounded-xl backdrop-blur-md border border-white/20">
+                       <ShieldCheck size={20} />
+                       <span className="text-xs font-black uppercase tracking-widest">IA Sécurisée</span>
+                    </div>
+                 </div>
+
+                 <div className="p-10 grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="space-y-8">
+                       <div className="space-y-4">
+                          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                             <Sparkles size={14} className="text-indigo-500" /> Paramètres de l'Assistant IA
+                          </h4>
+                          <div className="space-y-6 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                             <div className="flex items-center justify-between">
+                                <div>
+                                   <div className="font-bold text-slate-800 text-sm">Réponse Auto (5 étoiles)</div>
+                                   <p className="text-xs text-slate-500">Répondre instantanément aux avis parfaits sans intervention.</p>
+                                </div>
+                                <div className="w-10 h-5 bg-emerald-500 rounded-full relative cursor-pointer">
+                                   <div className="absolute top-1 left-6 w-3 h-3 bg-white rounded-full"></div>
+                                </div>
+                             </div>
+                             <div className="flex items-center justify-between">
+                                <div>
+                                   <div className="font-bold text-slate-800 text-sm">Détection de Langue</div>
+                                   <p className="text-xs text-slate-500">Répondre automatiquement dans la langue du client.</p>
+                                </div>
+                                <div className="w-10 h-5 bg-indigo-600 rounded-full relative cursor-pointer">
+                                   <div className="absolute top-1 left-6 w-3 h-3 bg-white rounded-full"></div>
+                                </div>
+                             </div>
+                             <div className="pt-4 border-t border-slate-200">
+                                <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">Signature des réponses</label>
+                                <input type="text" defaultValue="L'Équipe de Direction HosFlow" className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-500" />
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="space-y-8">
+                       <div className="space-y-4">
+                          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                             <Globe size={14} className="text-indigo-500" /> Sources de Données (Sync)
+                          </h4>
+                          <div className="space-y-3">
+                             {[
+                                { name: 'Airbnb', connected: true, lastSync: 'Il y a 5 min' },
+                                { name: 'Booking.com', connected: true, lastSync: 'Il y a 2 min' },
+                                { name: 'TripAdvisor', connected: false, lastSync: 'Jamais' },
+                                { name: 'Expedia', connected: true, lastSync: 'Il y a 1 heure' },
+                             ].map(platform => (
+                                <div key={platform.name} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:bg-slate-50 transition-colors">
+                                   <div className="flex items-center gap-3">
+                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-white text-xs ${platform.name === 'Airbnb' ? 'bg-rose-500' : platform.name === 'Booking.com' ? 'bg-blue-900' : 'bg-slate-400'}`}>
+                                         {platform.name.charAt(0)}
+                                      </div>
+                                      <div>
+                                         <div className="font-bold text-slate-800 text-sm">{platform.name}</div>
+                                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Dernière sync: {platform.lastSync}</p>
+                                      </div>
+                                   </div>
+                                   <button className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border ${platform.connected ? 'border-emerald-100 text-emerald-600 bg-emerald-50' : 'border-slate-200 text-slate-400'}`}>
+                                      {platform.connected ? 'Actif' : 'Relier'}
+                                   </button>
+                                </div>
+                             ))}
+                          </div>
+                       </div>
+
+                       <div className="p-6 bg-indigo-50 rounded-3xl border border-indigo-100">
+                          <div className="flex items-center gap-3 text-indigo-700 font-black text-xs uppercase mb-2">
+                             <Bot size={16} /> Conseil HosFlow IA
+                          </div>
+                          <p className="text-xs text-indigo-900 leading-relaxed font-medium">
+                             L'activation des réponses automatiques sur les avis 5 étoiles augmente votre taux d'engagement de 40%. Nous vous recommandons de garder un contrôle manuel sur les avis inférieurs à 3 étoiles.
+                          </p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
            </div>
         )}
 
-        {filteredReviews.map(review => (
+        {activeTab !== 'config' && filteredReviews.map(review => (
           <div key={review.id} className="rep-review-card bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8 flex gap-6 hover:shadow-lg transition-shadow duration-300">
             
             {/* Guest Meta Block */}

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { MessageSquare, Phone, Mail, Paperclip, Send, Settings, CheckCircle2, AlertCircle, RefreshCw, X, FileText, Image as ImageIcon, Plus } from 'lucide-react';
 import './UnifiedInbox.css';
 
-const UnifiedInbox = ({ pmsMode = 'pro' }) => {
-  const [activeView, setActiveView] = useState('chat'); // 'chat' or 'config'
+const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'config'
   const [selectedChat, setSelectedChat] = useState(1);
   const [messageInput, setMessageInput] = useState('');
 
@@ -74,21 +74,21 @@ const UnifiedInbox = ({ pmsMode = 'pro' }) => {
         </div>
         <div className="header-right">
           <button 
-            className={`btn-toggle-view ${activeView === 'chat' ? 'active' : ''}`}
-            onClick={() => setActiveView('chat')}
+            className={`btn-toggle-view ${activeTab === 'chat' ? 'active' : ''}`}
+            onClick={() => setActiveTab('chat')}
           >
             <MessageSquare size={16} /> Messages
           </button>
           <button 
-            className={`btn-toggle-view ${activeView === 'config' ? 'active' : ''}`}
-            onClick={() => setActiveView('config')}
+            className={`btn-toggle-view ${activeTab === 'config' ? 'active' : ''}`}
+            onClick={() => setActiveTab('config')}
           >
             <Settings size={16} /> Connexions (Admin)
           </button>
         </div>
       </div>
 
-      {activeView === 'chat' ? (
+      {activeTab === 'chat' ? (
         <div className="inbox-layout">
           {/* Sidebar Ticket List */}
           <div className="inbox-sidebar glass-panel">
@@ -205,42 +205,100 @@ const UnifiedInbox = ({ pmsMode = 'pro' }) => {
         /* Setup / Configuration Panel */
         <div className="config-layout glass-panel hide-scrollbar">
           <div className="config-header">
-            <h3>Canaux de Communication</h3>
-            <p>Connectez vos différents canaux pour centraliser tous vos messages dans Antigravity. Le système réconciliera automatiquement les messages avec vos réservations (via numéro de téléphone ou email).</p>
-          </div>
-
-          <div className="channels-grid">
-            {channels.map(channel => (
-              <div key={channel.id} className="channel-card glass-card">
-                <div className="channel-top">
-                  <div className="channel-icon" style={{ backgroundColor: channel.color }}>
-                    {channel.id === 'whatsapp' ? 'WA' : channel.id === 'airbnb' ? 'ab' : channel.id === 'booking' ? 'B.' : channel.id.substring(0,2).toUpperCase()}
-                  </div>
-                  <div className={`status-badge ${channel.connected ? 'active' : 'inactive'}`}>
-                    {channel.connected ? 'Connecté' : 'Non Connecté'}
-                  </div>
-                </div>
-                <h4>{channel.name}</h4>
-                <p className="channel-desc">
-                  {channel.type === 'oauth' 
-                    ? 'Authentification en 1 clic via OAuth 2.0.' 
-                    : channel.type === 'api' ? 'Connexion sécurisée via Clé API ou Webhook.' : 'Synchronisation directe avec la plateforme.'}
-                </p>
-                <div className="channel-action">
-                  {channel.connected ? (
-                    <button className="btn-disconnect" onClick={() => toggleChannel(channel.id)}>Déconnecter</button>
-                  ) : (
-                    <button 
-                      className="btn-connect" 
-                      style={{ background: channel.color, color: 'white' }}
-                      onClick={() => toggleChannel(channel.id)}
-                    >
-                      <Plus size={16} /> Connecter
-                    </button>
-                  )}
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-2xl font-black text-slate-800">Messenger Omnicanal : Hub de Connexion</h3>
+                <p className="text-slate-500 font-medium max-w-2xl mt-2">Centralisez WhatsApp, Messenger, Airbnb et Booking dans une interface unique. L'IA HosFlow réconcilie automatiquement les conversations avec vos réservations.</p>
+              </div>
+              <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex flex-col items-end">
+                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Status Global Webhook</span>
+                <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  SYSTÈME ACTIF (200 OK)
                 </div>
               </div>
-            ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div className="space-y-6">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Plateformes Connectées</h4>
+              <div className="channels-grid">
+                {channels.map(channel => (
+                  <div key={channel.id} className="channel-card glass-card hover:shadow-lg transition-shadow">
+                    <div className="channel-top">
+                      <div className="channel-icon" style={{ backgroundColor: channel.color }}>
+                        {channel.id === 'whatsapp' ? 'WA' : channel.id === 'airbnb' ? 'ab' : channel.id === 'booking' ? 'B.' : channel.id.substring(0,2).toUpperCase()}
+                      </div>
+                      <div className={`status-badge ${channel.connected ? 'active' : 'inactive'}`}>
+                        {channel.connected ? 'Connecté' : 'Déconnecté'}
+                      </div>
+                    </div>
+                    <h4>{channel.name}</h4>
+                    <p className="channel-desc">
+                      {channel.type === 'oauth' 
+                        ? 'Auth OAuth 2.0 sécurisée.' 
+                        : channel.type === 'api' ? 'Clé API & Webhook.' : 'Synchro directe OTA.'}
+                    </p>
+                    <div className="channel-action">
+                      <button 
+                        className={channel.connected ? "btn-disconnect" : "btn-connect"}
+                        style={!channel.connected ? { background: channel.color, color: 'white' } : {}}
+                        onClick={() => toggleChannel(channel.id)}
+                      >
+                        {channel.connected ? 'Déconnecter' : <><Plus size={16} /> Connecter</>}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Configuration de l'IA (Autopilot)</h4>
+              <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-200 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-slate-800 text-sm">IA Smart-Reply</div>
+                    <p className="text-xs text-slate-500 font-medium">Suggérer des réponses automatiques basées sur le contexte PMS.</p>
+                  </div>
+                  <div className="w-10 h-5 bg-indigo-600 rounded-full relative cursor-pointer">
+                    <div className="absolute top-1 left-6 w-3 h-3 bg-white rounded-full"></div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase">Ton de la Voix</label>
+                      <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none">
+                        <option>Professionnel & Chaleureux</option>
+                        <option>Luxe / Haut de gamme</option>
+                        <option>Décontracté / Friendly</option>
+                      </select>
+                   </div>
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase">Délai avant réponse auto</label>
+                      <input type="range" className="w-full accent-indigo-600" />
+                      <div className="flex justify-between text-[10px] font-bold text-slate-400">
+                        <span>Immédiat</span>
+                        <span>5 min</span>
+                        <span>15 min</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-200">
+                  <h5 className="text-xs font-bold text-slate-800 mb-3">Réponses Automatiques Actives :</h5>
+                  <div className="space-y-2">
+                    {['Instructions Check-in', 'Code Wi-Fi', 'Parking & Accès', 'Late Check-out Rules'].map(rule => (
+                      <div key={rule} className="flex items-center gap-2 text-xs font-medium text-slate-600">
+                        <CheckCircle2 size={14} className="text-emerald-500" /> {rule}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

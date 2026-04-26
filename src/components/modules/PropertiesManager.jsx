@@ -163,6 +163,7 @@ const PropertiesManager = ({ pmsMode }) => {
       name: 'Riad Dar El Sadaka',
       type: 'Riad',
       status: 'Libre',
+      housekeepingStatus: 'dirty', // dirty, cleaning, clean
       channels: ['airbnb', 'booking'],
       image: 'https://images.unsplash.com/photo-1541123437800-1bb1317badc2?q=80&w=400',
       location: 'Marrakech, Médina',
@@ -174,6 +175,7 @@ const PropertiesManager = ({ pmsMode }) => {
       name: 'Villa Ocean View',
       type: 'Villa',
       status: 'Occupé',
+      housekeepingStatus: 'clean',
       channels: ['booking', 'expedia'],
       image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=400',
       location: 'Casablanca, Anfa',
@@ -185,6 +187,7 @@ const PropertiesManager = ({ pmsMode }) => {
       name: 'Appartement Sky Garden',
       type: 'Appartement',
       status: 'Libre',
+      housekeepingStatus: 'cleaning',
       channels: ['airbnb'],
       image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=400',
       location: 'Rabat, Agdal',
@@ -192,6 +195,13 @@ const PropertiesManager = ({ pmsMode }) => {
       active: false
     }
   ]);
+
+  const updateHousekeeping = (id, newStatus) => {
+    setProperties(prev => prev.map(p => 
+      p.id === id ? { ...p, housekeepingStatus: newStatus } : p
+    ));
+    showToast(`Statut ménage mis à jour : ${newStatus === 'clean' ? 'Propre' : newStatus === 'cleaning' ? 'En cours' : 'À nettoyer'}`);
+  };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('auto');
@@ -347,6 +357,12 @@ const PropertiesManager = ({ pmsMode }) => {
             <div className="card-image">
               <img src={prop.image} alt={prop.name} />
               <div className={`status-badge ${prop.status.toLowerCase()}`}>{prop.status}</div>
+              <div className={`housekeeping-badge ${prop.housekeepingStatus}`}>
+                 {prop.housekeepingStatus === 'clean' ? <Sparkles size={12} /> : 
+                  prop.housekeepingStatus === 'cleaning' ? <Zap size={12} className="spinning-icon" /> : 
+                  <AlertCircle size={12} />}
+                 <span>{prop.housekeepingStatus === 'clean' ? 'Propre' : prop.housekeepingStatus === 'cleaning' ? 'Ménage...' : 'À Nettoyer'}</span>
+              </div>
               <div className="property-type-tag">
                 {prop.type === 'Appartement' && <Building2 size={12} />}
                 {prop.type === 'Riad' && <Home size={12} />}
@@ -368,6 +384,22 @@ const PropertiesManager = ({ pmsMode }) => {
                   <span className="price-tag">{prop.price}€</span>
                   <span className="unit">/nuit</span>
                 </div>
+              </div>
+
+              {/* Housekeeping Action Button */}
+              <div className="housekeeping-actions" style={{ marginTop: '12px', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '12px' }}>
+                {prop.housekeepingStatus !== 'clean' ? (
+                  <button 
+                    className={`btn-housekeeping-action ${prop.housekeepingStatus}`}
+                    onClick={(e) => { e.stopPropagation(); updateHousekeeping(prop.id, prop.housekeepingStatus === 'dirty' ? 'cleaning' : 'clean'); }}
+                  >
+                    {prop.housekeepingStatus === 'dirty' ? 'Démarrer Ménage' : 'Terminer & Valider'}
+                  </button>
+                ) : (
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981', fontSize: '0.75rem', fontWeight: 600 }}>
+                     <CheckCircle size={14} /> Logement Prêt
+                   </div>
+                )}
               </div>
               <div className="card-footer">
                 <div className="connected-channels">

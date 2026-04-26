@@ -241,3 +241,38 @@
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
 }
 .edit-hint span { font-size: 0.9rem; font-weight: 600; }
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  .pro-dashboard-container {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pro-dashboard-container {
+    padding: 1rem;
+  }
+  
+  .pro-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .header-title-group h1 {
+    font-size: 1.5rem;
+  }
+
+  .kpi-master-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-embed-wrapper {
+    height: 350px;
+  }
+}

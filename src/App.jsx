@@ -1,49 +1,59 @@
-import { useState } from 'react'
-import './App.css'
+import React, { useState, Suspense, lazy } from 'react';
+import './App.css';
 
-// Layout & Common Components
-import Sidebar from './components/layout/Sidebar'
-import TopHeader from './components/layout/TopHeader'
-import TaskListView from './components/views/TaskListView'
-import TimelineView from './components/views/TimelineView'
-import ActivitySidePanel from './components/views/ActivitySidePanel'
-import OracleAssistant from './components/common/OracleAssistant'
+// Core Layout & Common Components (Eager Load)
+import Sidebar from './components/layout/Sidebar';
+import TopHeader from './components/layout/TopHeader';
+import ActivitySidePanel from './components/views/ActivitySidePanel';
+import OracleAssistant from './components/common/OracleAssistant';
 
-// Module Components
-import SmartAccess from './components/modules/SmartAccess'
-import ChannelManager from './components/modules/ChannelManager'
-import GuestJourneyDiagram from './components/modules/GuestJourneyDiagram'
-import AperçuGlobal from './components/modules/AperçuGlobal'
-import PropertyGallery from './components/modules/PropertyGallery'
-import ReportsDashboard from './components/modules/ReportsDashboard'
-import WebsiteBuilder from './components/modules/WebsiteBuilder'
-import WorkflowBuilder from './components/modules/WorkflowBuilder'
-import PropertyBuilder from './components/modules/PropertyBuilder'
-import SmartDesk from './components/modules/SmartDesk';
-import RevenueAI from './components/modules/RevenueAI';
-import PredictiveMaintenance from './components/modules/PredictiveMaintenance';
-import GuestCRM from './components/modules/GuestCRM';
-import ModularDashboard from './components/modules/ModularDashboard';
-import ServicesHub from './components/modules/ServicesHub';
-import BillingEngine from './components/modules/BillingEngine';
-import SystemAdmin from './components/modules/SystemAdmin';
-import UnifiedInbox from './components/modules/UnifiedInbox';
-import StaffHub from './components/modules/StaffHub';
-import AuthPage from './components/modules/AuthPage';
-import LandingPage from './components/modules/LandingPage';
-import SmartLockHub from './components/modules/SmartLockHub';
-import SmartInventory from './components/modules/SmartInventory';
-import PropertiesManager from './components/modules/PropertiesManager';
-import SuperAdmin from './components/modules/SuperAdmin';
-import ClientPlans from './components/modules/ClientPlans';
-import ReputationManager from './components/modules/ReputationManager';
-import AffiliateSystem from './components/modules/AffiliateSystem';
+// Lazy-loaded Views (Performance Optimization)
+const TaskListView = lazy(() => import('./components/views/TaskListView'));
+const TimelineView = lazy(() => import('./components/views/TimelineView'));
+
+// Lazy-loaded Module Components (Performance Optimization)
+const SmartAccess = lazy(() => import('./components/modules/SmartAccess'));
+const ChannelManager = lazy(() => import('./components/modules/ChannelManager'));
+const GuestJourneyDiagram = lazy(() => import('./components/modules/GuestJourneyDiagram'));
+const AperçuGlobal = lazy(() => import('./components/modules/AperçuGlobal'));
+const PropertyGallery = lazy(() => import('./components/modules/PropertyGallery'));
+const ReportsDashboard = lazy(() => import('./components/modules/ReportsDashboard'));
+const WebsiteBuilder = lazy(() => import('./components/modules/WebsiteBuilder'));
+const WorkflowBuilder = lazy(() => import('./components/modules/WorkflowBuilder'));
+const PropertyBuilder = lazy(() => import('./components/modules/PropertyBuilder'));
+const SmartDesk = lazy(() => import('./components/modules/SmartDesk'));
+const RevenueAI = lazy(() => import('./components/modules/RevenueAI'));
+const PredictiveMaintenance = lazy(() => import('./components/modules/PredictiveMaintenance'));
+const GuestCRM = lazy(() => import('./components/modules/GuestCRM'));
+const ModularDashboard = lazy(() => import('./components/modules/ModularDashboard'));
+const ServicesHub = lazy(() => import('./components/modules/ServicesHub'));
+const BillingEngine = lazy(() => import('./components/modules/BillingEngine'));
+const SystemAdmin = lazy(() => import('./components/modules/SystemAdmin'));
+const UnifiedInbox = lazy(() => import('./components/modules/UnifiedInbox'));
+const StaffHub = lazy(() => import('./components/modules/StaffHub'));
+const AuthPage = lazy(() => import('./components/modules/AuthPage'));
+const LandingPage = lazy(() => import('./components/modules/LandingPage'));
+const SmartLockHub = lazy(() => import('./components/modules/SmartLockHub'));
+const SmartInventory = lazy(() => import('./components/modules/SmartInventory'));
+const PropertiesManager = lazy(() => import('./components/modules/PropertiesManager'));
+const SuperAdmin = lazy(() => import('./components/modules/SuperAdmin'));
+const ClientPlans = lazy(() => import('./components/modules/ClientPlans'));
+const ReputationManager = lazy(() => import('./components/modules/ReputationManager'));
+const AffiliateSystem = lazy(() => import('./components/modules/AffiliateSystem'));
+
+// Fallback Loader UI
+const LoadingFallback = () => (
+  <div className="flex-center" style={{ height: '100%', width: '100%', color: 'var(--text-muted)' }}>
+    <div className="spinner">Loading module...</div>
+  </div>
+);
 
 function App() {
   const [isLanding, setIsLanding] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
   const [pmsMode, setPmsMode] = useState('hot'); // Default to HOT for demo
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Folio State: shared between ServicesHub and SmartInventory
   const [roomFolios, setRoomFolios] = useState({
@@ -95,7 +105,7 @@ function App() {
       case 'smart-access':
         return <SmartAccess />;
       case 'distribution':
-        return <ChannelManager pmsMode={pmsMode} />;
+        return <ChannelManager pmsMode={pmsMode} setActiveView={setActiveView} />;
       case 'guest-workflow':
         return <GuestJourneyDiagram />;
       case 'reports':
@@ -116,7 +126,7 @@ function App() {
       case 'guests':
         return pmsMode === 'pro' ? <GuestCRM /> : <AperçuGlobal pmsMode={pmsMode} />;
       case 'unified-inbox':
-        return <UnifiedInbox pmsMode={pmsMode} />;
+        return <UnifiedInbox pmsMode={pmsMode} setActiveView={setActiveView} />;
       case 'services-hub':
         return <ServicesHub addFolioCharge={addFolioCharge} />;
       case 'billing-engine':
@@ -129,7 +139,7 @@ function App() {
       case 'plans':
         return <ClientPlans pmsMode={pmsMode} />;
       case 'reputation':
-        return <ReputationManager pmsMode={pmsMode} />;
+        return <ReputationManager pmsMode={pmsMode} setActiveView={setActiveView} />;
       case 'staff-hub':
         return <StaffHub />;
       case 'locks':
@@ -145,46 +155,77 @@ function App() {
   };
 
   if (isLanding) {
-    return <LandingPage onGoToAuth={() => setIsLanding(false)} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <LandingPage onGoToAuth={() => setIsLanding(false)} />
+      </Suspense>
+    );
   }
 
   if (!isAuthenticated) {
     return (
-      <AuthPage 
-        onLogin={(mode) => {
-          setPmsMode(mode);
-          setIsAuthenticated(true);
-        }} 
-      />
+      <Suspense fallback={<LoadingFallback />}>
+        <AuthPage 
+          onLogin={(mode) => {
+            setPmsMode(mode);
+            setIsAuthenticated(true);
+          }} 
+        />
+      </Suspense>
     );
   }
 
   return (
-    <div className={`app-container mode-${pmsMode}`}>
+    <div className={`app-container mode-${pmsMode} ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="sidebar-mobile-overlay" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+          aria-label="Close mobile menu"
+          role="button"
+          tabIndex={0}
+        />
+      )}
+
       {/* Sidebar */}
       <Sidebar 
         activeView={activeView} 
-        setActiveView={setActiveView} 
+        setActiveView={(view) => {
+          setActiveView(view);
+          setIsMobileMenuOpen(false); // Auto-close on selection on mobile
+        }} 
         pmsMode={pmsMode}
       />
 
-      <div className="app-main-content">
+      <main className="app-main-content">
         {/* Top Header */}
         <header className="app-header glass-panel">
+          <button 
+            className="mobile-hamburger" 
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Open mobile menu"
+          >
+             <div className="bar" />
+             <div className="bar" />
+             <div className="bar" />
+          </button>
           <TopHeader pmsMode={pmsMode} setPmsMode={setPmsMode} />
         </header>
 
-        {/* Dynamic Content */}
+        {/* Dynamic Content Wrapped in Suspense */}
         <div className="app-content-grid">
-          {activeView === 'timeline' ? (
-            renderModule()
-          ) : (
-            <section className="app-full-module hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
-              {renderModule()}
-            </section>
-          )}
+          <Suspense fallback={<LoadingFallback />}>
+            {activeView === 'timeline' ? (
+              renderModule()
+            ) : (
+              <section className="app-full-module hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+                {renderModule()}
+              </section>
+            )}
+          </Suspense>
         </div>
-      </div>
+      </main>
       
       {/* Global AI Assistant */}
       <OracleAssistant />

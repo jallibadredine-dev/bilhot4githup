@@ -65,6 +65,17 @@ const ClientPlans = ({ pmsMode }) => {
     let business = rooms * 5.5;
     let ultimate = (rooms * 5.5) + 69;
     let addOnsTotal = Object.keys(addOns).reduce((sum, key) => addOns[key] ? sum + addOnConfig[key].price : sum, 0);
+    
+    if (duration.months === 999) {
+      return {
+        starter: Math.round((starter + addOnsTotal) * 36),
+        business: Math.round((business + addOnsTotal) * 36),
+        ultimate: Math.round((ultimate + addOnsTotal) * 36),
+        lifetime: 1999 + (rooms * 12),
+        suffix: " à vie"
+      };
+    }
+
     const suffix = duration.months === 1 ? " /mois" : " total";
     
     return {
@@ -138,19 +149,26 @@ const ClientPlans = ({ pmsMode }) => {
                 onChange={(e) => setRooms(parseInt(e.target.value))}
               />
               
-              <div className="luxe-toggle-grid">
-                <button 
-                  className={duration.months === 12 ? 'active' : ''} 
-                  onClick={() => setDuration({ months: 12, discount: 0.8, label: 'ANNUEL' })}
+              <div className="luxe-select-wrapper">
+                <label className="text-xs font-bold text-slate-500 mb-2 block uppercase">Durée d'abonnement</label>
+                <select 
+                  className="luxe-duration-select"
+                  value={duration.months}
+                  onChange={(e) => {
+                    const m = parseInt(e.target.value);
+                    const discounts = {1:1, 3:0.95, 6:0.90, 12:0.80, 24:0.75, 36:0.70, 999:1};
+                    const labels = {1:'MENSUEL', 3:'TRIMESTRIEL', 6:'SEMESTRIEL', 12:'ANNUEL', 24:'2 ANS', 36:'3 ANS', 999:'À VIE'};
+                    setDuration({ months: m, discount: discounts[m], label: labels[m] });
+                  }}
                 >
-                  Annuel <span className="discount">SAVE 20%</span>
-                </button>
-                <button 
-                  className={duration.months === 1 ? 'active' : ''}
-                  onClick={() => setDuration({ months: 1, discount: 1, label: 'MENSUEL' })}
-                >
-                  Mensuel
-                </button>
+                  <option value={1}>1 Mois (Mensuel)</option>
+                  <option value={3}>3 Mois (-5%)</option>
+                  <option value={6}>6 Mois (-10%)</option>
+                  <option value={12}>1 An (-20%)</option>
+                  <option value={24}>2 Ans (-25%)</option>
+                  <option value={36}>3 Ans (-30%)</option>
+                  <option value={999}>À Vie (Paiement Unique)</option>
+                </select>
               </div>
             </section>
 
