@@ -7,6 +7,7 @@ import {
   Bell, Lock, Mail 
 } from 'lucide-react';
 import AuthPage from './AuthPage';
+import PricingSimulator from './PricingSimulator';
 import './LandingPage.css';
 
 const LandingPage = ({ onLogin }) => {
@@ -305,32 +306,10 @@ const LandingPage = ({ onLogin }) => {
       {/* Pricing Section */}
       <section className="hp-pricing" id="pricing">
         <div className="hp-section-header">
-          <h2>Prêt à passer à l'échelle ?</h2>
-          <p>Un tarif adapté à chaque étape de votre croissance.</p>
+          <h2>Calculez votre tarif en direct</h2>
+          <p>Payez selon le nombre de chambres que vous gérez. Pas de surprise.</p>
         </div>
-        
-        <div className="hp-pricing-grid" style={{ display: 'flex', justifyContent: 'center' }}>
-          <motion.div className="hp-price-card popular" {...fadeInUp} style={{ maxWidth: '400px', width: '100%' }}>
-            <div className="hp-popular-tag">Offre Unique</div>
-            <div className="hp-price-header">
-              <h3>PMS Pro</h3>
-              <div className="hp-price-value">
-                <span className="hp-price-currency">€</span>
-                <span className="hp-price-amount">89</span>
-                <span className="hp-price-period">/mois</span>
-              </div>
-            </div>
-            <ul className="hp-price-features">
-              <li><Check size={16} /> Propriétés illimitées</li>
-              <li><Check size={16} /> Accès Intelligent (IoT)</li>
-              <li><Check size={16} /> IA Réponses Auto</li>
-              <li><Check size={16} /> Facturation Auto Stripe</li>
-              <li><Check size={16} /> Support Prioritaire</li>
-              <li><Check size={16} /> Channel Manager Full</li>
-            </ul>
-            <button className="td-btn-primary" onClick={handleOpenAuth}>Choisir PMS Pro</button>
-          </motion.div>
-        </div>
+        <PricingSimulator onStart={handleOpenAuth} />
       </section>
 
       {/* Testimonials */}

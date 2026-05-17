@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Terminal, Globe, Shield, Zap, Copy, Check, 
   Settings, Key, Database, Server, ExternalLink, 
-  Code, Activity, Share2, ArrowRight, Lock, Play
+  Code, Activity, Share2, ArrowRight, Lock, Play, BookOpen
 } from 'lucide-react';
 
 const APIIntegrationPage = () => {
@@ -180,7 +180,7 @@ const createBooking = async () => {
           <div className="space-y-3">
              <button className="w-full bg-white p-5 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-lg transition group">
                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition"><Book size={18}/></div>
+                   <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition"><BookOpen size={18}/></div>
                    <span className="text-sm font-black text-slate-800">API Documentation</span>
                 </div>
                 <ArrowRight size={18} className="text-slate-300 group-hover:text-indigo-600 transition" />

@@ -10,12 +10,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './ClientPlans.css';
 
 /* ─── Constants ─────────────────────────────────────────── */
+/* ── Pricing formulas (per room) ── */
+const calcStarter  = (rooms, annual) => Math.round(rooms * 3 * (annual ? 0.80 : 1));
+const calcPro      = (rooms, annual) => Math.round(Math.ceil(rooms / 15) * 20 * (annual ? 0.80 : 1));
+
 const PLANS = [
   {
     id: 'starter',
     tier: 'ESSENTIEL',
     name: 'Starter',
-    price: 199,
+    price: null,
+    unitLabel: '3€/chambre',
+    formula: calcStarter,
     period: '/mois',
     color: '#3B82F6',
     bg: '#EFF6FF',
@@ -33,7 +39,9 @@ const PLANS = [
     id: 'pro',
     tier: 'PRO',
     name: 'Intelligence',
-    price: 499,
+    price: null,
+    unitLabel: '20€ / pack 15ch',
+    formula: calcPro,
     period: '/mois',
     color: '#FF385C',
     bg: '#FFF1F3',
@@ -53,6 +61,8 @@ const PLANS = [
     tier: 'PACK À VIE',
     name: 'Elite Lifetime',
     price: 3490,
+    unitLabel: null,
+    formula: null,
     period: 'paiement unique',
     color: '#D97706',
     bg: '#FFFBEB',
@@ -223,6 +233,9 @@ const ClientPlans = ({ pmsMode }) => {
   const [activePlan]    = useState('pro');
   const [annual, setAnnual] = useState(false);
   const [faqOpen, setFaqOpen] = useState(null);
+  const [rooms, setRooms] = useState(10);
+
+  const changeRooms = (delta) => setRooms(r => Math.max(1, Math.min(500, r + delta)));
 
   const FAQ = [
     { q: 'Comment fonctionne le Pack à Vie ?', a: 'Vous payez une seule fois et accédez à toutes les fonctionnalités PRO à vie, y compris les mises à jour futures. Le Channel Manager est inclus mais nécessite une configuration initiale avec notre équipe.' },
@@ -248,6 +261,28 @@ const ClientPlans = ({ pmsMode }) => {
           <button className="cp-activate-btn" onClick={() => setActivateOpen(true)}>
             <Ticket size={14}/> Activer une licence
           </button>
+        </div>
+      </div>
+
+      {/* ── Room counter ── */}
+      <div className="cp-room-counter">
+        <div className="cp-rc-left">
+          <Building2 size={15} color="#FF385C"/>
+          <span className="cp-rc-label">Nombre de chambres</span>
+          <span className="cp-rc-hint">Le tarif s'adapte automatiquement</span>
+        </div>
+        <div className="cp-rc-stepper">
+          <button className="cp-rc-btn" onClick={() => changeRooms(-5)} disabled={rooms <= 1}>−5</button>
+          <button className="cp-rc-btn" onClick={() => changeRooms(-1)} disabled={rooms <= 1}>−</button>
+          <input
+            type="number"
+            className="cp-rc-input"
+            min={1} max={500}
+            value={rooms}
+            onChange={e => setRooms(Math.max(1, Math.min(500, parseInt(e.target.value) || 1)))}
+          />
+          <button className="cp-rc-btn" onClick={() => changeRooms(1)}>+</button>
+          <button className="cp-rc-btn" onClick={() => changeRooms(5)}>+5</button>
         </div>
       </div>
 
@@ -281,17 +316,33 @@ const ClientPlans = ({ pmsMode }) => {
             <div className="cp-card-top" style={{ '--plan-color': plan.color }}>
               <div className="cp-plan-tier" style={{ color: plan.color }}>{plan.tier}</div>
               <div className="cp-plan-name">{plan.name}</div>
-              <div className="cp-plan-price">
-                <span className="amount">
-                  {annual && !plan.lifetime
-                    ? Math.round(plan.price * 0.8)
-                    : plan.price}
-                  <span className="currency">MAD</span>
-                </span>
-                <span className="period">{plan.period}</span>
-              </div>
-              {annual && !plan.lifetime && (
-                <div className="cp-annual-save">Économie : {Math.round(plan.price * 0.2 * 12)} MAD/an</div>
+              {plan.formula ? (
+                <>
+                  <div className="cp-plan-price">
+                    <span className="amount">
+                      {plan.formula(rooms, annual)}
+                      <span className="currency">€</span>
+                    </span>
+                    <span className="period">{plan.period}</span>
+                  </div>
+                  <div className="cp-price-formula">
+                    <span>{plan.unitLabel}</span>
+                    {plan.id === 'pro' && rooms > 15 && (
+                      <span className="cp-packs-detail">{Math.ceil(rooms / 15)} packs × 20€</span>
+                    )}
+                  </div>
+                  {annual && (
+                    <div className="cp-annual-save">Économie : {Math.round(plan.formula(rooms, false) * 0.2 * 12)}€/an</div>
+                  )}
+                </>
+              ) : (
+                <div className="cp-plan-price">
+                  <span className="amount">
+                    {plan.price}
+                    <span className="currency">€</span>
+                  </span>
+                  <span className="period">{plan.period}</span>
+                </div>
               )}
             </div>
 

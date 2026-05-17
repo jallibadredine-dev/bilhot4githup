@@ -804,3 +804,94 @@
   .cp-cm-status { flex-direction: column; }
   .cp-modal-body { padding: 24px 20px 20px; }
 }
+
+/* ── Room counter ─────────────────────────────────────── */
+.cp-room-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFF1F3;
+  border: 1.5px solid #FECDD3;
+  border-radius: 14px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cp-rc-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.cp-rc-label {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #1E293B;
+}
+
+.cp-rc-hint {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.cp-rc-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cp-rc-btn {
+  background: white;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  min-width: 32px;
+}
+.cp-rc-btn:hover:not(:disabled) { background: #F1F5F9; border-color: #CBD5E1; color: #0F172A; }
+.cp-rc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.cp-rc-input {
+  width: 64px;
+  text-align: center;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9px;
+  padding: 7px 4px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0F172A;
+  background: white;
+  outline: none;
+  font-family: inherit;
+}
+.cp-rc-input:focus { border-color: #FF385C; box-shadow: 0 0 0 2px rgba(255,56,92,0.12); }
+.cp-rc-input::-webkit-outer-spin-button,
+.cp-rc-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* ── Per-room price formula label ── */
+.cp-price-formula {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.cp-packs-detail {
+  background: #EFF6FF;
+  color: #3B82F6;
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
