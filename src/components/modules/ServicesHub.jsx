@@ -140,30 +140,28 @@ const ServicesHub = ({ addFolioCharge, roomFolios = {} }) => {
   const handleAdvanceStatus = () => {
     if (!selectedOrder) return;
     setIsProcessing(true);
-    
+
     setTimeout(() => {
+      let nextStatus = 'completed';
+      if (selectedOrder.status === 'new') nextStatus = 'preparing';
+      else if (selectedOrder.status === 'preparing') nextStatus = 'delivering';
+
+      const updatedOrder = { ...selectedOrder, status: nextStatus };
+
       setOrders(prev => {
-        const tabOrders = prev[activeTab].map(o => {
-          if (o.id === selectedOrder.id) {
-            let nextStatus = 'completed';
-            if (o.status === 'new') nextStatus = 'preparing';
-            else if (o.status === 'preparing') nextStatus = 'delivering';
-            
-            const updatedOrder = { ...o, status: nextStatus };
-            if (selectedOrder.id === o.id) setSelectedOrder(updatedOrder); // Keep detail pane updated
-            
-            // Integration with App global folio — push with department type
-            if (nextStatus === 'completed' && chargeToRoom && addFolioCharge) {
-              const typeMap = { fnb: 'F&B', spa: 'Spa', concierge: 'Conciergerie' };
-              addFolioCharge(o.room, o.amount, o.items, typeMap[activeTab] || 'Service');
-            }
-            
-            return updatedOrder;
-          }
-          return o;
-        });
+        const tabOrders = prev[activeTab].map(o =>
+          o.id === selectedOrder.id ? updatedOrder : o
+        );
         return { ...prev, [activeTab]: tabOrders };
       });
+
+      setSelectedOrder(updatedOrder);
+
+      if (nextStatus === 'completed' && chargeToRoom && addFolioCharge) {
+        const typeMap = { fnb: 'F&B', spa: 'Spa', concierge: 'Conciergerie' };
+        addFolioCharge(selectedOrder.room, selectedOrder.amount, selectedOrder.items, typeMap[activeTab] || 'Service');
+      }
+
       setIsProcessing(false);
       setIsAdvanceModalOpen(false);
     }, 800);
