@@ -14,8 +14,8 @@ const PRODUCTS = [
   {
     planKey:     'pms_standard_monthly',
     name:        'PMS Standard',
-    description: 'Gestion PMS Cloud — 25 MAD par chambre / mois',
-    unitAmount:  2500,   // 25 MAD in centimes
+    description: 'Gestion PMS Cloud — 35 MAD par chambre / mois',
+    unitAmount:  3500,   // 35 MAD in centimes
     currency:    'mad',
     interval:    'month',
     mode:        'recurring',
@@ -25,8 +25,8 @@ const PRODUCTS = [
   {
     planKey:     'pms_integral_monthly',
     name:        'PMS Intégral',
-    description: 'PMS Cloud + Channel Manager inclus — 30 MAD par chambre / mois',
-    unitAmount:  3000,   // 30 MAD
+    description: 'PMS Cloud + Channel Manager inclus — 55 MAD par chambre / mois',
+    unitAmount:  5500,   // 55 MAD
     currency:    'mad',
     interval:    'month',
     mode:        'recurring',
@@ -35,8 +35,8 @@ const PRODUCTS = [
   {
     planKey:     'cm_addon_monthly',
     name:        'Channel Manager Add-on',
-    description: 'Module Channel Manager — 25 MAD par chambre / mois (add-on pour PMS Standard)',
-    unitAmount:  2500,   // 25 MAD
+    description: 'Module Channel Manager — 35 MAD par chambre / mois (add-on pour PMS Standard)',
+    unitAmount:  3500,   // 35 MAD
     currency:    'mad',
     interval:    'month',
     mode:        'recurring',

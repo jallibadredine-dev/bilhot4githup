@@ -284,8 +284,8 @@ const ClientPlans = ({ pmsMode }) => {
   };
 
   const eng        = ENGAGEMENTS.find(e => e.id === engId);
-  const priceStd   = Math.round(rooms * 25 * (1 - eng.discount / 100));
-  const priceInteg = Math.round(rooms * 30 * (1 - eng.discount / 100));
+  const priceStd   = Math.round(rooms * 35 * (1 - eng.discount / 100));
+  const priceInteg = Math.round(rooms * 55 * (1 - eng.discount / 100));
 
   const FAQ = [
     { q: 'Comment fonctionne le Pack à Vie ?', a: 'Vous payez une seule fois et accédez à toutes les fonctionnalités PRO à vie, y compris les mises à jour futures. Le Channel Manager est inclus mais nécessite une configuration initiale avec notre équipe.' },
@@ -397,7 +397,7 @@ const ClientPlans = ({ pmsMode }) => {
               <span className="period">/mois</span>
             </div>
             <div className="cp-price-breakdown">
-              <div className="cp-pb-row"><span>Prix unit.</span><span>25 MAD /ch</span></div>
+              <div className="cp-pb-row"><span>Prix unit.</span><span>35 MAD /ch</span></div>
               <div className="cp-pb-row"><span>Volume</span><span>{rooms} ch</span></div>
               {eng.discount > 0 && <div className="cp-pb-row discount"><span>Réduction {eng.label}</span><span>−{eng.discount}%</span></div>}
               <div className="cp-pb-total"><span>Total</span><span>{priceStd} MAD</span></div>
@@ -432,7 +432,7 @@ const ClientPlans = ({ pmsMode }) => {
               <span className="period">/mois</span>
             </div>
             <div className="cp-price-breakdown">
-              <div className="cp-pb-row"><span>Prix unit.</span><span>30 MAD /ch</span></div>
+              <div className="cp-pb-row"><span>Prix unit.</span><span>55 MAD /ch</span></div>
               <div className="cp-pb-row"><span>Volume</span><span>{rooms} ch</span></div>
               {eng.discount > 0 && <div className="cp-pb-row discount"><span>Réduction {eng.label}</span><span>−{eng.discount}%</span></div>}
               <div className="cp-pb-total"><span>À payer</span><span>{priceInteg} MAD</span></div>
@@ -505,10 +505,10 @@ const ClientPlans = ({ pmsMode }) => {
         </div>
         <div className="cp-cma-pricing">
           <div className="cp-cma-price">
-            <span className="cp-cma-amount">{rooms * 25}</span>
+            <span className="cp-cma-amount">{rooms * 35}</span>
             <span className="cp-cma-cur"> MAD/mois</span>
           </div>
-          <div className="cp-cma-formula">25 MAD × {rooms} chambres</div>
+          <div className="cp-cma-formula">35 MAD × {rooms} chambres</div>
         </div>
         <div className="cp-cma-actions">
           <button
