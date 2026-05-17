@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Building2, Layers, Plus, ChevronDown, ChevronRight, Search,
   Lock, Unlock, Wifi, WifiOff, Key, CheckCircle, XCircle,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SmartInventory.css';
+import { persistInventory, getInventoryBuildings } from '../../lib/inventoryStore';
 
 /* ─── CONSTANTS ─────────────────────────────────────────────── */
 const LOCK_PROVIDERS = {
@@ -109,7 +110,13 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
     return () => { window.removeEventListener('storage', sync); clearInterval(t); };
   }, []);
 
-  const [buildings,      setBuildings]      = useState(createInitialData);
+  const [buildings,      setBuildings]      = useState(() => getInventoryBuildings() || createInitialData());
+
+  /* ── Persist to shared inventory store on every change ── */
+  useEffect(() => {
+    persistInventory(buildings);
+  }, [buildings]);
+
   const [expandedFloors, setExpandedFloors] = useState({});
   const [selectedRoom,   setSelectedRoom]   = useState(null);
   const [panelTab,       setPanelTab]       = useState('room');

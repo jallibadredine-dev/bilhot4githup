@@ -9,6 +9,7 @@ import {
   LogIn, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { channexAPI } from '../../lib/channex';
+import { getInventoryRooms, roomsToOTAProducts, INVENTORY_STATUS_CFG } from '../../lib/inventoryStore';
 import './ChannelManager.css';
 
 /* ════════════════════════════════════════════════════════════
@@ -201,6 +202,28 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
   /* ─────────────────────────────────────────────────────────
      OTA CONNECT / DISCONNECT
   ───────────────────────────────────────────────────────── */
+  /* ── Inventory sync: live room status → product status ── */
+  useEffect(() => {
+    const syncFromInventory = () => {
+      const rooms = getInventoryRooms();
+      if (!rooms.length) return;
+      setOtaProducts(prev => {
+        const next = {};
+        Object.entries(prev).forEach(([otaId, prods]) => {
+          next[otaId] = prods.map(prod => {
+            if (!prod.inventoryRoomId) return prod;
+            const room = rooms.find(r => r.id === prod.inventoryRoomId);
+            return room ? { ...prod, status: room.status } : prod;
+          });
+        });
+        return next;
+      });
+    };
+    window.addEventListener('storage', syncFromInventory);
+    const t = setInterval(syncFromInventory, 5000);
+    return () => { window.removeEventListener('storage', syncFromInventory); clearInterval(t); };
+  }, []);
+
   const connectOTA = async (otaId) => {
     const ota    = OTA_DEFS.find(o => o.id === otaId);
     const form   = otaForms[otaId] || {};
@@ -212,27 +235,20 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
     setOtaErrors(prev => ({ ...prev, [otaId]: null }));
     setOtaConnecting(otaId);
 
-    /* Simulate API validation delay */
     await new Promise(r => setTimeout(r, 1200));
 
     const connData = { ...form, connectedAt: new Date().toISOString() };
     localStorage.setItem(`cm_ota_${otaId}`, JSON.stringify(connData));
 
-    /* Simulate importing products from this OTA */
-    const products = ota.demoProducts.map((p, i) => ({
-      id:       `${otaId}-${i}`,
-      otaId,
-      otaName:  ota.name,
-      otaLogo:  ota.logo,
-      otaColor: ota.color,
-      name:     p.name,
-      type:     p.type,
-      rooms:    p.rooms,
-      capacity: p.capacity,
-      price:    p.price,
-      currency: 'EUR',
-      status:   'active',
-    }));
+    /* Use real inventory rooms — fall back to demo products if empty */
+    const invRooms = getInventoryRooms();
+    const products = invRooms.length > 0
+      ? roomsToOTAProducts(invRooms, ota)
+      : ota.demoProducts.map((p, i) => ({
+          id: `${otaId}-${i}`, otaId, otaName: ota.name, otaLogo: ota.logo, otaColor: ota.color,
+          name: p.name, type: p.type, rooms: p.rooms, capacity: p.capacity, price: p.price, currency: 'EUR', status: 'active',
+        }));
+
     localStorage.setItem(`cm_prods_${otaId}`, JSON.stringify(products));
     setOtaProducts(prev => ({ ...prev, [otaId]: products }));
     setOtaConns(prev => ({ ...prev, [otaId]: connData }));
@@ -252,10 +268,13 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
     setOtaConnecting(otaId);
     await new Promise(r => setTimeout(r, 900));
     const ota = OTA_DEFS.find(o => o.id === otaId);
-    const products = ota.demoProducts.map((p, i) => ({
-      id: `${otaId}-${i}`, otaId, otaName: ota.name, otaLogo: ota.logo, otaColor: ota.color,
-      name: p.name, type: p.type, rooms: p.rooms, capacity: p.capacity, price: p.price, currency: 'EUR', status: 'active',
-    }));
+    const invRooms = getInventoryRooms();
+    const products = invRooms.length > 0
+      ? roomsToOTAProducts(invRooms, ota)
+      : ota.demoProducts.map((p, i) => ({
+          id: `${otaId}-${i}`, otaId, otaName: ota.name, otaLogo: ota.logo, otaColor: ota.color,
+          name: p.name, type: p.type, rooms: p.rooms, capacity: p.capacity, price: p.price, currency: 'EUR', status: 'active',
+        }));
     localStorage.setItem(`cm_prods_${otaId}`, JSON.stringify(products));
     setOtaProducts(prev => ({ ...prev, [otaId]: products }));
     setOtaConnecting(null);
@@ -949,7 +968,9 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                     </div>
                     <div className="cm-products-grid">
                       {prods.map(prod => {
-                        const isSel = selectedProduct?.id === prod.id;
+                        const isSel   = selectedProduct?.id === prod.id;
+                        const invStat = INVENTORY_STATUS_CFG[prod.status];
+                        const isInv   = !!prod.inventoryRoomId;
                         return (
                           <div key={prod.id} className={`cm-product-card${isSel ? ' selected' : ''}`}
                             style={isSel ? { borderColor: ota.color } : {}}
@@ -962,12 +983,16 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                                 <strong>{prod.name}</strong>
                                 <span>{prod.type}</span>
                               </div>
-                              <div className="cm-dot pulse" style={{ background: '#10B981' }} />
+                              {invStat
+                                ? <span className="cm-inv-status-dot" style={{ background: invStat.bg, color: invStat.color }}>{invStat.label}</span>
+                                : <div className="cm-dot pulse" style={{ background: '#10B981' }} />
+                              }
                             </div>
                             <div className="cm-product-metas">
                               <span className="cm-product-meta-chip"><Users size={10} />{prod.capacity} pers.</span>
-                              <span className="cm-product-meta-chip"><Home size={10} />{prod.rooms} pièce{prod.rooms > 1 ? 's' : ''}</span>
+                              {isInv && prod.buildingName && <span className="cm-product-meta-chip"><Building2 size={10} />{prod.buildingName}</span>}
                               {prod.price && <span className="cm-product-meta-chip cm-chip-active"><DollarSign size={10} />{prod.price}€/nuit</span>}
+                              {isInv && !prod.price && <span className="cm-product-meta-chip cm-chip-inv"><Tag size={10} /> Tarif à définir</span>}
                             </div>
                             {isSel && (
                               <div className="cm-product-detail">
@@ -975,9 +1000,24 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                                   <span>Centrale</span>
                                   <span style={{ color: ota.color, fontWeight: 700 }}>{ota.logo} {ota.name}</span>
                                 </div>
+                                {isInv && prod.floorLabel && (
+                                  <div className="cm-product-detail-row">
+                                    <span>Localisation</span>
+                                    <span>{prod.floorLabel}</span>
+                                  </div>
+                                )}
+                                {isInv && (
+                                  <div className="cm-product-detail-row">
+                                    <span>Statut inventaire</span>
+                                    {invStat
+                                      ? <span style={{ color: invStat.color, fontWeight: 700 }}>{invStat.label}</span>
+                                      : <span>—</span>
+                                    }
+                                  </div>
+                                )}
                                 <div className="cm-product-detail-row">
                                   <span>ID produit</span>
-                                  <code>{prod.id}</code>
+                                  <code style={{ fontSize: '0.65rem' }}>{prod.id.slice(0, 24)}</code>
                                 </div>
                                 <div className="cm-product-detail-actions">
                                   <button className="cm-btn-sm"><Tag size={11} /> Tarifs</button>

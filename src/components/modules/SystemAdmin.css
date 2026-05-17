@@ -607,3 +607,142 @@ input[type="checkbox"] {
 .h-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
 .h-val { font-size: 1.25rem; font-weight: 800; }
 
+
+/* ════════════════════════════════════════════════════════════
+   SETTINGS / NOTIFICATIONS TAB
+════════════════════════════════════════════════════════════ */
+.admin-settings-layout {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 820px;
+}
+
+.admin-notif-card {
+  background: var(--glass-bg, #FFFFFF);
+  border: 1.5px solid rgba(0,0,0,0.07);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.admin-notif-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.admin-notif-card-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-notif-card-title > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-notif-card-title strong { font-size: 0.88rem; font-weight: 700; color: var(--text-primary, #111); }
+.admin-notif-card-title span   { font-size: 0.74rem; color: var(--text-muted, #888); }
+
+.admin-notif-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 1rem;
+}
+
+.admin-notif-fields {
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(0,0,0,0.015);
+}
+
+.admin-notif-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.admin-notif-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-notif-field label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary, #555);
+  letter-spacing: 0.02em;
+}
+
+.admin-notif-field input,
+.admin-notif-textarea {
+  padding: 8px 11px;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--text-primary, #222);
+  background: var(--glass-bg, #fff);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.admin-notif-field input:focus,
+.admin-notif-textarea:focus { border-color: #FF385C; }
+.admin-notif-textarea { resize: vertical; }
+
+.admin-notif-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.73rem;
+  color: var(--text-muted, #777);
+  background: rgba(59, 130, 246, 0.06);
+  border-radius: 8px;
+  padding: 8px 12px;
+  line-height: 1.5;
+}
+
+.admin-notif-hint a { color: #3B82F6; font-weight: 600; }
+.admin-notif-hint code { background: rgba(79,70,229,0.1); border-radius: 4px; padding: 1px 4px; font-size: 0.7rem; color: #4F46E5; }
+
+.admin-notif-reset {
+  font-size: 0.7rem; color: #AAAAAA; background: none; border: none;
+  cursor: pointer; text-decoration: underline; padding: 0; font-family: inherit;
+  align-self: flex-start;
+}
+.admin-notif-reset:hover { color: #FF385C; }
+
+.admin-notif-save-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.admin-notif-scope-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+  margin: 0;
+}
+
+.admin-notif-scope-note strong { color: var(--text-secondary, #555); }
+
+@media (max-width: 640px) {
+  .admin-notif-row { grid-template-columns: 1fr; }
+  .admin-settings-layout { padding: 12px; }
+}

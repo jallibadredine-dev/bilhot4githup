@@ -1,30 +1,30 @@
 import React, { useState } from 'react';
 import { 
-  Shield, 
-  Users, 
-  Key, 
-  Settings, 
-  Activity, 
-  Server, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Search, 
-  Filter, 
-  Download,
-  Lock,
-  Globe,
-  Database,
-  Smartphone,
-  Mail,
-  MoreVertical,
-  Plus,
-  Zap
+  Shield, Users, Key, Settings, Activity, Server, AlertTriangle,
+  CheckCircle2, Search, Filter, Download, Lock, Globe, Database,
+  Smartphone, Mail, MoreVertical, Plus, Zap, Bell, MessageCircle,
+  ExternalLink, Check, CheckCheck, Send, Eye, EyeOff, RefreshCw,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  getStaffNotifConfig, saveStaffNotifConfig, DEFAULT_STAFF_SMS,
+} from '../../lib/staffNotifications';
 import './SystemAdmin.css';
 
 const SystemAdmin = () => {
   const [activeTab, setActiveTab] = useState('users');
+
+  /* ── Notifications config (shared with StaffHub) ── */
+  const [notifConfig, setNotifConfig] = useState(() => getStaffNotifConfig());
+  const [configSaved, setConfigSaved] = useState(false);
+  const [showToken,   setShowToken]   = useState(false);
+
+  const handleSaveNotifConfig = () => {
+    saveStaffNotifConfig(notifConfig);
+    setConfigSaved(true);
+    setTimeout(() => setConfigSaved(false), 2500);
+  };
 
   const users = [
     { id: 1, name: 'Marie Dupont', role: 'General Manager', modules: 'All', mfa: true, lastLogin: 'Il y a 2 min', status: 'active' },
@@ -359,6 +359,163 @@ const SystemAdmin = () => {
             </div>
           </div>
         )}
+        {/* ────────────────── SETTINGS / NOTIFICATIONS ────────────────── */}
+        {activeTab === 'settings' && (
+          <div className="admin-settings-layout">
+
+            {/* ── Email — EmailJS ── */}
+            <div className="admin-notif-card">
+              <div className="admin-notif-card-head">
+                <div className="admin-notif-card-title">
+                  <div className="admin-notif-icon" style={{ background: '#EFF6FF', color: '#3B82F6' }}><Mail size={16} /></div>
+                  <div>
+                    <strong>Email — EmailJS</strong>
+                    <span>Envoi d'email automatique (invitations staff, confirmations…)</span>
+                  </div>
+                </div>
+                <div
+                  className={`sh-toggle ${notifConfig.emailEnabled ? 'on' : ''}`}
+                  onClick={() => setNotifConfig(p => ({ ...p, emailEnabled: !p.emailEnabled }))}
+                ><div className="sh-toggle-knob" /></div>
+              </div>
+              {notifConfig.emailEnabled && (
+                <div className="admin-notif-fields">
+                  <div className="admin-notif-hint">
+                    <ExternalLink size={12} />
+                    <a href="https://www.emailjs.com" target="_blank" rel="noreferrer">Créez un compte EmailJS</a>
+                    {' '}→ Service → Template → Clé publique. Variables : <code>{'{{staff_name}}'}</code> <code>{'{{temp_password}}'}</code> <code>{'{{role_name}}'}</code>
+                  </div>
+                  <div className="admin-notif-row">
+                    <div className="admin-notif-field">
+                      <label>Service ID *</label>
+                      <input placeholder="service_xxxxxxx" value={notifConfig.ejsServiceId || ''} onChange={e => setNotifConfig(p => ({ ...p, ejsServiceId: e.target.value }))} />
+                    </div>
+                    <div className="admin-notif-field">
+                      <label>Template ID *</label>
+                      <input placeholder="template_xxxxxxx" value={notifConfig.ejsTemplateId || ''} onChange={e => setNotifConfig(p => ({ ...p, ejsTemplateId: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="admin-notif-row">
+                    <div className="admin-notif-field">
+                      <label>Clé Publique *</label>
+                      <input placeholder="xxxxxxxxxxxxxxxx" value={notifConfig.ejsPublicKey || ''} onChange={e => setNotifConfig(p => ({ ...p, ejsPublicKey: e.target.value }))} />
+                    </div>
+                    <div className="admin-notif-field">
+                      <label>Nom expéditeur</label>
+                      <input placeholder="Hova PMS" value={notifConfig.fromName || ''} onChange={e => setNotifConfig(p => ({ ...p, fromName: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="admin-notif-row">
+                    <div className="admin-notif-field">
+                      <label>Nom de la propriété</label>
+                      <input placeholder="Hôtel Riad Marrakech" value={notifConfig.propertyName || ''} onChange={e => setNotifConfig(p => ({ ...p, propertyName: e.target.value }))} />
+                    </div>
+                    <div className="admin-notif-field">
+                      <label>Objet de l'email</label>
+                      <input placeholder="Vos accès — Bienvenue {{staff_name}} !" value={notifConfig.emailSubject || ''} onChange={e => setNotifConfig(p => ({ ...p, emailSubject: e.target.value }))} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── SMS — Twilio ── */}
+            <div className="admin-notif-card">
+              <div className="admin-notif-card-head">
+                <div className="admin-notif-card-title">
+                  <div className="admin-notif-icon" style={{ background: '#FFF1F2', color: '#FF385C' }}><MessageCircle size={16} /></div>
+                  <div>
+                    <strong>SMS — Twilio</strong>
+                    <span>Envoi SMS via l'API Twilio REST (invitations, alertes…)</span>
+                  </div>
+                </div>
+                <div
+                  className={`sh-toggle ${notifConfig.smsEnabled ? 'on' : ''}`}
+                  onClick={() => setNotifConfig(p => ({ ...p, smsEnabled: !p.smsEnabled }))}
+                ><div className="sh-toggle-knob" /></div>
+              </div>
+              {notifConfig.smsEnabled && (
+                <div className="admin-notif-fields">
+                  <div className="admin-notif-hint">
+                    <ExternalLink size={12} />
+                    <a href="https://console.twilio.com" target="_blank" rel="noreferrer">Console Twilio</a>
+                    {' '}→ Account SID + Auth Token + Numéro d'envoi
+                  </div>
+                  <div className="admin-notif-row">
+                    <div className="admin-notif-field">
+                      <label>Account SID *</label>
+                      <input placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value={notifConfig.twilioSid || ''} onChange={e => setNotifConfig(p => ({ ...p, twilioSid: e.target.value }))} />
+                    </div>
+                    <div className="admin-notif-field">
+                      <label>Auth Token *</label>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <input
+                          type={showToken ? 'text' : 'password'}
+                          placeholder="••••••••••••••••••••••••••••••••"
+                          value={notifConfig.twilioToken || ''}
+                          onChange={e => setNotifConfig(p => ({ ...p, twilioToken: e.target.value }))}
+                          style={{ flex: 1 }}
+                        />
+                        <button className="btn-icon" onClick={() => setShowToken(v => !v)} style={{ flexShrink: 0, padding: '6px 8px' }}>
+                          {showToken ? <EyeOff size={13} /> : <Eye size={13} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="admin-notif-row">
+                    <div className="admin-notif-field">
+                      <label>Numéro From *</label>
+                      <input placeholder="+33600000000" value={notifConfig.twilioFrom || ''} onChange={e => setNotifConfig(p => ({ ...p, twilioFrom: e.target.value }))} />
+                    </div>
+                    <div style={{ flex: 1 }} />
+                  </div>
+                  <div className="admin-notif-field" style={{ marginTop: 4 }}>
+                    <label>Template SMS</label>
+                    <textarea
+                      className="admin-notif-textarea"
+                      rows={5}
+                      placeholder={DEFAULT_STAFF_SMS}
+                      value={notifConfig.smsTemplate || ''}
+                      onChange={e => setNotifConfig(p => ({ ...p, smsTemplate: e.target.value }))}
+                    />
+                    <button className="admin-notif-reset" onClick={() => setNotifConfig(p => ({ ...p, smsTemplate: '' }))}>
+                      Remettre le template par défaut
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── WhatsApp ── */}
+            <div className="admin-notif-card">
+              <div className="admin-notif-card-head">
+                <div className="admin-notif-card-title">
+                  <div className="admin-notif-icon" style={{ background: '#ECFDF5', color: '#10B981' }}>💬</div>
+                  <div>
+                    <strong>WhatsApp (lien direct)</strong>
+                    <span>Aucune configuration requise — ouvre WhatsApp avec le message pré-rempli</span>
+                  </div>
+                </div>
+                <div
+                  className={`sh-toggle ${notifConfig.whatsappEnabled !== false ? 'on' : ''}`}
+                  onClick={() => setNotifConfig(p => ({ ...p, whatsappEnabled: !(p.whatsappEnabled !== false) }))}
+                ><div className="sh-toggle-knob" /></div>
+              </div>
+            </div>
+
+            {/* ── Save ── */}
+            <div className="admin-notif-save-row">
+              <p className="admin-notif-scope-note">
+                <Bell size={12} /> Ces paramètres sont partagés avec <strong>StaffHub → Notifications</strong>. Toute modification ici s'applique immédiatement aux deux interfaces.
+              </p>
+              <button className="btn-primary" onClick={handleSaveNotifConfig}>
+                {configSaved ? <><CheckCheck size={14} /> Sauvegardé</> : <><Check size={14} /> Sauvegarder la configuration</>}
+              </button>
+            </div>
+
+          </div>
+        )}
+
       </div>
     </div>
   );

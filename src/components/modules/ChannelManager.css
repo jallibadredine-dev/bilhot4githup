@@ -1481,3 +1481,18 @@
   .cm-search-box input { width: 100%; }
   .cm-config-actions  { flex-direction: column; }
 }
+
+/* ── Inventory-linked product status ── */
+.cm-inv-status-dot {
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cm-chip-inv {
+  background: #F5F5F5;
+  color: #AAAAAA;
+}
