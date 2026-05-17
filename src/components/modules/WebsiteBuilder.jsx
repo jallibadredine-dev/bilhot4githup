@@ -311,6 +311,82 @@ const DomainPublishModal = ({ onClose, onProceed }) => {
   )
 }
 
+/* ─── HERO BLOCK COMPONENT (extracted to avoid hook violation) ─── */
+const HeroBlockBuilder = ({ block, isSelected, onSelect, globalFont, themeOptions }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const slides = block.slides || [block.image];
+  return (
+    <div 
+      onClick={onSelect}
+      className={`${block.bgColor || 'bg-slate-50'} p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 relative overflow-hidden cursor-pointer transition-all duration-300 m-2 rounded-2xl border-2 ${isSelected ? 'border-indigo-500 shadow-md ring-4 ring-indigo-50' : 'border-transparent hover:border-indigo-300/50 hover:bg-indigo-50/10'}`}
+    >
+      <div className={`absolute top-4 right-4 z-20 transition-all ${isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+        <div className="bg-indigo-600 flex text-white rounded-lg shadow-xl overflow-hidden backdrop-blur-sm">
+          <button className="p-2 hover:bg-indigo-700 transition"><GripHorizontal size={14}/></button>
+        </div>
+      </div>
+      <div className="flex-1 order-2 md:order-1 relative z-10 text-center md:text-left">
+        <h1 className={`text-4xl md:text-6xl ${globalFont} ${block.titleColor || 'text-slate-900'} leading-[1.1] mb-8 font-medium animate-in slide-in-from-left duration-700`}>{block.title}</h1>
+        <button className={`bg-${themeOptions?.primaryColor || 'indigo-600'} text-white px-8 py-4 rounded-${themeOptions?.borderRadius || 'xl'} font-bold shadow-lg shadow-indigo-200 hover:-translate-y-1 transition`}>{block.subtitle}</button>
+      </div>
+      <div className="flex-1 order-1 md:order-2 h-[450px] relative group/slider">
+        {slides.map((s, idx) => (
+          <img key={idx} src={s} className={`absolute inset-0 rounded-[2rem] shadow-2xl object-cover w-full h-full transition-opacity duration-1000 ${currentSlide === idx ? 'opacity-100' : 'opacity-0'}`} alt="Hero" />
+        ))}
+        {slides.length > 1 && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+            {slides.map((_, idx) => (
+              <button key={idx} onClick={e => { e.stopPropagation(); setCurrentSlide(idx); }} className={`w-2 h-2 rounded-full transition-all ${currentSlide === idx ? 'bg-white w-6' : 'bg-white/40'}`}></button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ─── GALLERY BLOCK COMPONENT (extracted to avoid hook violation) ─── */
+const GalleryBlockBuilder = ({ block, isSelected, onSelect, globalFont }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const isCarousel = block.variant === 'carousel';
+  return (
+    <div onClick={onSelect} className={`p-4 md:p-8 m-2 rounded-2xl border-2 transition-all cursor-pointer ${isSelected ? 'border-indigo-500/50 bg-white ring-2 ring-indigo-50 shadow-lg' : 'border-transparent hover:border-slate-200'}`}>
+      <h2 className={`text-4xl ${globalFont} text-slate-900 mb-8 text-center`}>{block.title}</h2>
+      {isCarousel ? (
+        <div className="relative group/carousel overflow-hidden rounded-[2.5rem]">
+          <div className="flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${activeIndex * 100}%)` }}>
+            {(block.images || []).map((img, idx) => (
+              <div key={idx} className="w-full shrink-0 aspect-[16/9] relative">
+                <img src={img} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-12 text-white">
+                  <div className="text-sm font-black uppercase tracking-widest text-lime-400 mb-2">Featured Property</div>
+                  <div className="text-3xl font-bold">{block.captions?.[idx] || 'Paradise Collection'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={e => { e.stopPropagation(); setActiveIndex(prev => (prev > 0 ? prev - 1 : (block.images?.length || 1) - 1)); }} className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover/carousel:opacity-100 transition"><ArrowLeft size={24}/></button>
+          <button onClick={e => { e.stopPropagation(); setActiveIndex(prev => (prev < (block.images?.length || 1) - 1 ? prev + 1 : 0)); }} className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover/carousel:opacity-100 transition"><ArrowRight size={24}/></button>
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+            {(block.images || []).map((_, idx) => (
+              <div key={idx} className={`w-2 h-2 rounded-full transition-all ${activeIndex === idx ? 'bg-white w-8' : 'bg-white/40'}`}></div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-4">
+          {(block.images || []).map((img, idx) => (
+            <div key={idx} className={`rounded-3xl overflow-hidden aspect-square ${idx === 0 ? 'col-span-2 row-span-2 aspect-auto shadow-xl' : 'shadow-md'}`}>
+              <img src={img} className="w-full h-full object-cover hover:scale-110 transition duration-700" />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 /* ─── 3. BUILDER PHASE ─── */
 const DEFAULT_BLOCKS = [
   { id: 'hero', type: 'hero', title: 'Experience the Art of Modern Travel', subtitle: 'Book Your Stay', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-white' },
@@ -323,107 +399,406 @@ const DEFAULT_BLOCKS = [
 const TEMPLATES = [
   {
      id: 'luxury_hotel',
-     name: 'Ultra-Luxury Hotel & Spa',
+     name: 'Grand Hôtel de Luxe & Spa',
      category: 'Luxe',
+     palette: ['#0a0a0a','#c9a84c','#f5f0e8'],
+     style: 'Élégant · Or & Noir',
      thumbnail: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80',
      blocks: [
-       { id: 'hero', type: 'hero', title: 'Where Luxury Meets Limitless Serenity', subtitle: 'Experience the Divine', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-white' },
-       { id: 'booking_engine', type: 'booking_engine', title: 'Book Your Master Suite', subtitle: 'Direct booking for the most exclusive experiences.' },
-       { id: 'features', type: 'features', title: 'Unparalleled Services', items: ['Private Butler', 'Michelin-star Dining', 'Full-service Wellness Spa', 'Helicopter Transfers'] },
-       { id: 'room_list', type: 'room_list', title: 'Prestigious Room Collection' },
-       { id: 'gallery', type: 'gallery', title: 'Glimpse into Paradise' },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'The Grand HosFlow Hotel', contactInfo: 'reservations@grandhosflow.com' }
+       { id: 'hero', type: 'hero', title: 'Where Luxury Meets Limitless Serenity', subtitle: 'Réserver ma Suite', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-white' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Réservez votre Suite Prestige', subtitle: 'Réservation directe — meilleur prix garanti.' },
+       { id: 'features', type: 'features', title: 'Services Inégalés', items: ['Majordome Privé', 'Restaurant Étoilé Michelin', 'Spa & Bien-être', 'Transfert Hélicoptère'] },
+       { id: 'room_list', type: 'room_list', title: 'Collection de Suites Prestige', price: '450€' },
+       { id: 'gallery', type: 'gallery', title: 'Aperçu du Paradis' },
+       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'The Grand Lumière Hotel', contactInfo: 'reservations@grandlumiere.com' }
      ]
   },
   {
-     id: 'modern_villa',
-     name: 'Boutique Mountain Chalet',
-     category: 'Nature',
-     thumbnail: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?auto=format&fit=crop&w=400&q=80',
+     id: 'azure_beach',
+     name: 'Azure Beach Resort & Spa',
+     category: 'Resort Balnéaire',
+     palette: ['#0077b6','#00b4d8','#caf0f8'],
+     style: 'Tropical · Bleu Océan',
+     thumbnail: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=400&q=80',
      blocks: [
-       { id: 'hero', type: 'hero', title: 'Chic Living in the Heart of the Alps', subtitle: 'Winter Season Open', image: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-slate-50' },
-       { id: 'booking_engine', type: 'booking_engine', title: 'Find Your Basecamp', subtitle: 'Exclusive mountain retreats for the modern adventurer.' },
-       { id: 'features', type: 'features', title: 'Mountain Highlights', items: ['Ski-in / Ski-out Access', 'Grand Fireplace Lounge', 'Outdoor Hot Tub', 'Private Ski Valet'] },
-       { id: 'gallery', type: 'gallery', title: 'The Alpine Experience' },
-       { id: 'footer', type: 'footer', bgColor: 'bg-black', brandInfo: 'Peak Point Chalets', contactInfo: 'ski@peakpoint.com' }
+       { id: 'hero', type: 'hero', title: 'Your Endless Ocean Escape Awaits', subtitle: 'Réserver maintenant', image: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-white', bgColor: 'bg-sky-50' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Réservez votre Bungalow', subtitle: 'Disponibilité en temps réel · Confirmation instantanée' },
+       { id: 'features', type: 'features', title: 'Paradis Balnéaire', items: ['Piscine Infinity sur la Mer', 'Activités Nautiques', 'Restaurant de Plage', 'Spa Thalasso'] },
+       { id: 'room_list', type: 'room_list', title: "Bungalows & Villas sur l\'Eau", image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80', price: '320€' },
+       { id: 'gallery', type: 'gallery', title: 'La Vie Côtière' },
+       { id: 'footer', type: 'footer', bgColor: 'bg-sky-900', brandInfo: 'Azure Sea Resort Collection', contactInfo: 'bookings@azuresea.com' }
      ]
   },
   {
      id: 'riad_boutique',
-     name: 'Authentic Moroccan Riad',
-     category: 'Culture',
+     name: 'Riad Prestige Marrakech',
+     category: 'Riad Marocain',
+     palette: ['#8B2500','#c9a84c','#fdf0e3'],
+     style: 'Oriental · Terracotta & Or',
      thumbnail: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=400&q=80',
      blocks: [
-       { id: 'hero', type: 'hero', title: 'Ancient Soul, Modern Comfort', subtitle: 'Discover the Medina', image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-orange-950', bgColor: 'bg-orange-50' },
-       { id: 'booking_engine', type: 'booking_engine', title: 'Reserve Your Sanctuary', subtitle: 'Immerse yourself in the tranquility of our traditional courtyard.' },
-       { id: 'room_list', type: 'room_list', title: 'Artisan Suites', image: 'https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80', price: '180€' },
-       { id: 'gallery', type: 'gallery', title: 'Moroccan Textures', images: ['https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80'] },
-       { id: 'footer', type: 'footer', bgColor: 'bg-stone-900', brandInfo: 'Riad Al Nour', contactInfo: 'contact@riadalnour.com' }
+       { id: 'hero', type: 'hero', title: 'Âme Ancestrale, Confort Moderne', subtitle: 'Découvrir la Médina', image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-orange-950', bgColor: 'bg-orange-50' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Réservez votre Havre de Paix', subtitle: 'Plongez dans la sérénité de notre patio traditionnel.' },
+       { id: 'room_list', type: 'room_list', title: 'Suites Artisanales', image: 'https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80', price: '180€' },
+       { id: 'gallery', type: 'gallery', title: 'Textures Marocaines' },
+       { id: 'footer', type: 'footer', bgColor: 'bg-stone-900', brandInfo: 'Riad Al Nour', contactInfo: 'contact@riadalnour.ma' }
+     ]
+  },
+  {
+     id: 'urban_boutique',
+     name: 'Boutique Urbain Contemporain',
+     category: 'City Hotel',
+     palette: ['#1a1a2e','#e94560','#ffffff'],
+     style: 'Moderne · Dark & Vibrant',
+     thumbnail: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80',
+     blocks: [
+       { id: 'hero', type: 'hero', title: 'The City Pulse, Redefine Your Stay', subtitle: 'Book Now', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-slate-900' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Séjour en Cœur de Ville', subtitle: 'Check-in rapide · Wi-Fi ultra-rapide · Bar rooftop' },
+       { id: 'features', type: 'features', title: "L\'Expérience Urbaine", items: ['Rooftop Bar & Lounge', 'Co-working Space 24/7', 'Concierge Numérique', 'Vélos Électriques Inclus'] },
+       { id: 'room_list', type: 'room_list', title: 'Lofts & Studios Design', price: '195€' },
+       { id: 'gallery', type: 'gallery', title: 'Architecture & Design' },
+       { id: 'footer', type: 'footer', bgColor: 'bg-zinc-900', brandInfo: 'Urbane Collective Hotels', contactInfo: 'hello@urbanecollective.com' }
+     ]
+  },
+  {
+     id: 'eco_lodge',
+     name: 'Éco-Lodge Nature & Bien-être',
+     category: 'Éco-Tourisme',
+     palette: ['#2d6a4f','#74c69d','#f0f7f4'],
+     style: 'Nature · Vert & Bois',
+     thumbnail: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=400&q=80',
+     blocks: [
+       { id: 'hero', type: 'hero', title: 'Reconnect with Nature, Rediscover Yourself', subtitle: 'Explorer le Lodge', image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-green-50' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Réservez votre Cabane', subtitle: "Hébergements durables au cœur de la forêt" },
+       { id: 'features', type: 'features', title: 'Vie en Harmonie', items: ['Cabanes dans les Arbres', 'Yoga & Méditation', 'Cuisine Bio du Jardin', 'Randonnées Guidées'] },
+       { id: 'room_list', type: 'room_list', title: 'Cabanes & Glamping', price: '150€' },
+       { id: 'gallery', type: 'gallery', title: 'Immersion Naturelle' },
+       { id: 'footer', type: 'footer', bgColor: 'bg-green-900', brandInfo: 'Green Soul Eco-Lodge', contactInfo: 'bonjour@greensoul.eco' }
+     ]
+  },
+  {
+     id: 'mountain_chalet',
+     name: 'Chalet Alpin Prestige',
+     category: 'Montagne',
+     palette: ['#2c3e50','#e67e22','#ecf0f1'],
+     style: 'Rustique · Chaud & Enveloppant',
+     thumbnail: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?auto=format&fit=crop&w=400&q=80',
+     blocks: [
+       { id: 'hero', type: 'hero', title: 'Chic Alpine Living Above the Clouds', subtitle: 'Saison Hiver Ouverte', image: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-slate-50' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Trouvez votre Base Camp', subtitle: 'Retraites alpines exclusives pour les aventuriers modernes.' },
+       { id: 'features', type: 'features', title: "L\'Expérience Alpine", items: ['Accès Ski-in / Ski-out', 'Cheminée Grand Foyer', 'Jacuzzi Extérieur Vue Panoramique', 'Valet de Ski Privé'] },
+       { id: 'gallery', type: 'gallery', title: "L\'Expérience Alpine" },
+       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Peak Point Chalets', contactInfo: 'ski@peakpoint.com' }
      ]
   }
 ];
 
-const REAL_DEMOS = [
+const DEMO_HOTEL_SITES = [
   {
-    id: 'demo-hotel',
-    name: 'The Azure Grand Hotel',
-    type: 'Hotel',
-    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80',
-    status: 'Published',
-    domain: 'azure-grand.hosflow.site',
-    visits: '1.2k',
-    conversion: '4.8%',
-    blocks: [
-      { id: 'hero', type: 'hero', title: 'Sophistication Meets Serenity', subtitle: 'Experience Grandeur', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80', bgColor: 'bg-slate-50' },
-      { id: 'booking_engine', type: 'booking_engine', title: 'Find Your Suite', subtitle: 'Check live availability for the upcoming season.' },
-      { id: 'features', type: 'features', title: 'World-Class Amenities', items: ['Michelin Star Dining', 'Infinity Rooftop Pool', 'Luxury Spa & Wellness', '24/7 Concierge'] },
-      { id: 'room_list', type: 'room_list', title: 'Our Prestigious Suites', price: '450€' },
-      { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Azure Grand Hotel Group', contactInfo: 'reservations@azuregrand.com' }
+    id: 'demo-luxury',
+    name: 'Le Grand Lumière Palace',
+    type: 'Hôtel 5 Étoiles',
+    tagline: 'Luxe & Élégance Intemporelle',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80',
+    heroImg: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1400&q=80',
+    status: 'En Ligne',
+    domain: 'grand-lumiere.hova.site',
+    visits: '2.4k', conversion: '5.8%', revenue: '€124,500',
+    accent: '#c9a84c', bg: '#0a0a0a',
+    rooms: [
+      { name: 'Suite Royale', img: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80', price: '750€', size: '85m²', tags: ['King Bed', 'Vue Panoramique', 'Bain à remous'] },
+      { name: 'Chambre Prestige', img: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=600&q=80', price: '350€', size: '45m²', tags: ['King Bed', 'Vue Jardin', 'Mini-bar'] },
+      { name: 'Suite Junior', img: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80', price: '250€', size: '38m²', tags: ['Queen Bed', 'Salon Privé', 'Terrasse'] },
+    ],
+    amenities: ['🍽️ Restaurant Étoilé', '♾️ Piscine Infinity', '💆 Spa 5 étoiles', '🏋️ Fitness Premium', '🚗 Voiturier', '✈️ Navette Aéroport'],
+    reviews: [
+      { author: 'Sophie M.', flag: '🇫🇷', stars: 5, text: "Une expérience inoubliable. Le service est d\'une qualité exceptionnelle, le spa est paradisiaque." },
+      { author: 'James K.', flag: '🇬🇧', stars: 5, text: 'Best hotel in the city by far. The suite was immaculate and the restaurant deserves every star.' },
     ]
   },
   {
-    id: 'demo-villa',
-    name: 'Villa Serena Santorini',
-    type: 'Villa',
-    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80',
-    status: 'Published',
-    domain: 'serena-santorini.hosflow.site',
-    visits: '850',
-    conversion: '6.2%',
-    blocks: [
-      { id: 'hero', type: 'hero', title: 'Your Private Island Escape', subtitle: 'Reserve Villa', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', bgColor: 'bg-sky-50' },
-      { id: 'booking_engine', type: 'booking_engine', title: 'Secure Your Stay', subtitle: 'Exclusive direct booking for our private collection.' },
-      { id: 'gallery', type: 'gallery', title: 'The Property', images: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=600&q=80'] },
-      { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Serena Villa Collection', contactInfo: 'vip@serenavilla.com' }
+    id: 'demo-riad',
+    name: 'Riad Kasbah Marrakech',
+    type: 'Riad Boutique',
+    tagline: 'Authenticité Marocaine au Cœur de la Médina',
+    image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+    heroImg: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1400&q=80',
+    status: 'En Ligne',
+    domain: 'riad-kasbah.hova.site',
+    visits: '1.8k', conversion: '7.2%', revenue: '€38,200',
+    accent: '#c9a84c', bg: '#8B2500',
+    rooms: [
+      { name: 'Suite Berbère', img: 'https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80', price: '280€', size: '55m²', tags: ['Lit Baldaquin', 'Patio Privé', 'Hammam'] },
+      { name: 'Chambre Zellige', img: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80', price: '180€', size: '35m²', tags: ['Décor Artisanal', 'AC', 'Wi-Fi'] },
+      { name: 'Suite Patio', img: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80', price: '220€', size: '48m²', tags: ['Vue Patio', 'Salon', 'Breakfast inclus'] },
+    ],
+    amenities: ['🫗 Thé à la Menthe', '🛁 Hammam Traditionnel', '🌿 Jardin Andalou', '🍊 Petit-déj Marocain', '🧖 Massages', '🛵 Excursions Médina'],
+    reviews: [
+      { author: 'Camille B.', flag: '🇫🇷', stars: 5, text: 'Un riad absolument magnifique. Le patio est un havre de paix au cœur de la médina animée.' },
+      { author: 'Ahmed R.', flag: '🇲🇦', stars: 5, text: 'Le meilleur riad de Marrakech. Accueil chaleureux, décoration somptueuse et cuisine délicieuse.' },
+    ]
+  },
+  {
+    id: 'demo-beach',
+    name: 'Azure Sea Resort & Spa',
+    type: 'Resort Balnéaire',
+    tagline: 'Votre Évasion Tropicale Privée',
+    image: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=800&q=80',
+    heroImg: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=1400&q=80',
+    status: 'En Ligne',
+    domain: 'azure-sea.hova.site',
+    visits: '3.1k', conversion: '4.5%', revenue: '€89,700',
+    accent: '#00b4d8', bg: '#0077b6',
+    rooms: [
+      { name: "Villa sur l\'Eau", img: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80', price: '850€', size: '120m²', tags: ['Accès Mer Direct', 'Piscine Privée', 'Butler'] },
+      { name: 'Bungalow Plage', img: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&w=600&q=80', price: '420€', size: '65m²', tags: ['Vue Mer', 'Terrasse', 'Beach Club'] },
+      { name: 'Suite Garden', img: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80', price: '280€', size: '50m²', tags: ['Jardin Tropical', 'Piscine', 'Petit-déj'] },
+    ],
+    amenities: ['🏊 Piscine Infinity', '🤿 Plongée & Snorkeling', '🍹 Beach Bar', '💆 Thalasso Spa', '⛵ Excursions Nautiques', '🎾 Tennis & Sports'],
+    reviews: [
+      { author: 'Marie-Claire L.', flag: '🇫🇷', stars: 5, text: "La villa sur l\'eau est un rêve devenu réalité, vue imprenable sur le lagon." },
+      { author: 'David & Emma', flag: '🇬🇧', stars: 5, text: "Honeymoon perfection. Private pool, stunning sunsets, and the most attentive staff." },
     ]
   }
 ];
 
+const REAL_DEMOS = DEMO_HOTEL_SITES;
+const FullHotelDemoPreview = ({ site, onClose, onUseTemplate }) => {
+  const [checkin, setCheckin] = React.useState('2025-06-15');
+  const [checkout, setCheckout] = React.useState('2025-06-18');
+  const [guests, setGuests] = React.useState(2);
+  const [activeSection, setActiveSection] = React.useState('rooms');
+
+  const nights = 3;
+  const navStyle = { background: site.bg, color: '#fff', padding: '0 2rem', height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[200] flex flex-col" style={{fontFamily:"'Inter',sans-serif"}}>
+      {/* Demo toolbar */}
+      <div className="h-12 bg-slate-900 flex items-center justify-between px-4 shrink-0 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1.5"><div className="w-3 h-3 rounded-full bg-red-500"></div><div className="w-3 h-3 rounded-full bg-yellow-500"></div><div className="w-3 h-3 rounded-full bg-green-500"></div></div>
+          <span className="text-white/60 text-xs font-mono">{site.domain}</span>
+          <span className="bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Live</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={onUseTemplate} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition flex items-center gap-1.5"><Wand2 size={12}/> Utiliser ce template</button>
+          <button onClick={onClose} className="text-white/50 hover:text-white transition p-1"><X size={18}/></button>
+        </div>
+      </div>
+
+      {/* Hotel Website */}
+      <div className="flex-1 overflow-y-auto" style={{background:'#f8f9fa'}}>
+
+        {/* NAV */}
+        <nav style={navStyle}>
+          <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>
+            <div style={{width:'36px',height:'36px',background:site.accent,borderRadius:'8px',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'900',fontSize:'18px',color:site.bg}}>H</div>
+            <span style={{fontWeight:'800',fontSize:'18px',letterSpacing:'-0.02em'}}>{site.name}</span>
+          </div>
+          <div style={{display:'flex',gap:'2rem',alignItems:'center'}}>
+            {['Chambres','Équipements','Galerie','Contact'].map(n=>(
+              <span key={n} style={{color:'rgba(255,255,255,0.7)',fontSize:'13px',fontWeight:'600',cursor:'pointer',transition:'color 0.2s'}}>{n}</span>
+            ))}
+            <button style={{background:site.accent,color:site.bg,padding:'10px 24px',borderRadius:'100px',fontWeight:'800',fontSize:'13px',border:'none',cursor:'pointer',letterSpacing:'-0.01em'}}>Réserver</button>
+          </div>
+        </nav>
+
+        {/* HERO */}
+        <div style={{position:'relative',height:'600px',overflow:'hidden'}}>
+          <img src={site.heroImg} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.65) 100%)'}}/>
+          <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 2rem',textAlign:'center',color:'white'}}>
+            <div style={{background:'rgba(255,255,255,0.15)',backdropFilter:'blur(10px)',border:'1px solid rgba(255,255,255,0.2)',padding:'6px 16px',borderRadius:'100px',fontSize:'11px',fontWeight:'700',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:'1.5rem'}}>{site.type}</div>
+            <h1 style={{fontSize:'clamp(2.5rem,5vw,4rem)',fontWeight:'900',letterSpacing:'-0.03em',lineHeight:1.1,marginBottom:'1rem'}}>{site.name}</h1>
+            <p style={{fontSize:'1.125rem',opacity:0.85,maxWidth:'500px',lineHeight:1.6,marginBottom:'2.5rem'}}>{site.tagline}</p>
+          </div>
+
+          {/* BOOKING WIDGET */}
+          <div style={{position:'absolute',bottom:'-40px',left:'50%',transform:'translateX(-50%)',width:'min(900px,90%)',background:'white',borderRadius:'24px',padding:'1.5rem',boxShadow:'0 25px 60px -15px rgba(0,0,0,0.35)',display:'flex',gap:'1rem',alignItems:'center'}}>
+            <div style={{flex:1,background:'#f8fafc',borderRadius:'16px',padding:'14px 20px',border:'1.5px solid #e2e8f0'}}>
+              <div style={{fontSize:'9px',fontWeight:'800',color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'4px'}}>Arrivée</div>
+              <input type="date" value={checkin} onChange={e=>setCheckin(e.target.value)} style={{border:'none',background:'transparent',fontSize:'15px',fontWeight:'700',color:'#0f172a',width:'100%',outline:'none'}}/>
+            </div>
+            <div style={{flex:1,background:'#f8fafc',borderRadius:'16px',padding:'14px 20px',border:'1.5px solid #e2e8f0'}}>
+              <div style={{fontSize:'9px',fontWeight:'800',color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'4px'}}>Départ</div>
+              <input type="date" value={checkout} onChange={e=>setCheckout(e.target.value)} style={{border:'none',background:'transparent',fontSize:'15px',fontWeight:'700',color:'#0f172a',width:'100%',outline:'none'}}/>
+            </div>
+            <div style={{flex:1,background:'#f8fafc',borderRadius:'16px',padding:'14px 20px',border:'1.5px solid #e2e8f0',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+              <div>
+                <div style={{fontSize:'9px',fontWeight:'800',color:'#94a3b8',textTransform:'uppercase',letterSpacing:'0.12em',marginBottom:'4px'}}>Voyageurs</div>
+                <span style={{fontSize:'15px',fontWeight:'700',color:'#0f172a'}}>{guests} Adulte{guests>1?'s':''}</span>
+              </div>
+              <div style={{display:'flex',gap:'6px'}}>
+                <button onClick={()=>setGuests(Math.max(1,guests-1))} style={{width:'28px',height:'28px',borderRadius:'50%',border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',fontWeight:'700',fontSize:'16px'}}>-</button>
+                <button onClick={()=>setGuests(Math.min(10,guests+1))} style={{width:'28px',height:'28px',borderRadius:'50%',border:'1.5px solid #e2e8f0',background:'white',cursor:'pointer',fontWeight:'700',fontSize:'16px'}}>+</button>
+              </div>
+            </div>
+            <button style={{background:site.bg,color:'white',padding:'18px 32px',borderRadius:'16px',fontWeight:'800',fontSize:'14px',border:'none',cursor:'pointer',letterSpacing:'-0.01em',whiteSpace:'nowrap',boxShadow:`0 8px 20px ${site.bg}40`}}>Vérifier disponibilité</button>
+          </div>
+        </div>
+
+        {/* STATS BAR */}
+        <div style={{paddingTop:'80px',background:'white',borderBottom:'1px solid #f1f5f9'}}>
+          <div style={{maxWidth:'1100px',margin:'0 auto',padding:'1.5rem 2rem',display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'1rem'}}>
+            {[
+              {icon:'⭐',val:'4.9/5',label:'Note Moyenne'},
+              {icon:'🏆',val:site.visits,label:'Visites / mois'},
+              {icon:'💳',val:site.conversion,label:'Taux de conversion'},
+              {icon:'💰',val:'Meilleur Prix',label:'Garanti en direct'},
+            ].map((s,i)=>(
+              <div key={i} style={{textAlign:'center',padding:'1rem',borderRadius:'16px',background:'#f8fafc'}}>
+                <div style={{fontSize:'24px',marginBottom:'6px'}}>{s.icon}</div>
+                <div style={{fontWeight:'800',fontSize:'20px',color:'#0f172a',letterSpacing:'-0.02em'}}>{s.val}</div>
+                <div style={{fontSize:'11px',color:'#94a3b8',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.08em',marginTop:'2px'}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ROOMS */}
+        <div style={{maxWidth:'1100px',margin:'0 auto',padding:'5rem 2rem'}}>
+          <div style={{textAlign:'center',marginBottom:'3rem'}}>
+            <div style={{fontSize:'11px',fontWeight:'800',color:site.bg,textTransform:'uppercase',letterSpacing:'0.2em',marginBottom:'12px'}}>Hébergements</div>
+            <h2 style={{fontSize:'2.5rem',fontWeight:'900',letterSpacing:'-0.03em',color:'#0f172a'}}>Nos Chambres & Suites</h2>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1.5rem'}}>
+            {site.rooms.map((room,i)=>(
+              <div key={i} style={{background:'white',borderRadius:'24px',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,0.08)',transition:'all 0.3s'}}>
+                <div style={{aspectRatio:'4/3',overflow:'hidden',position:'relative'}}>
+                  <img src={room.img} alt={room.name} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                  <div style={{position:'absolute',top:'12px',right:'12px',background:'rgba(0,0,0,0.6)',backdropFilter:'blur(10px)',color:'white',padding:'6px 12px',borderRadius:'100px',fontSize:'12px',fontWeight:'700'}}>{room.size}</div>
+                </div>
+                <div style={{padding:'1.5rem'}}>
+                  <h3 style={{fontWeight:'800',fontSize:'1.1rem',marginBottom:'8px',color:'#0f172a'}}>{room.name}</h3>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:'6px',marginBottom:'1rem'}}>
+                    {room.tags.map((t,j)=>(
+                      <span key={j} style={{background:'#f1f5f9',color:'#64748b',fontSize:'11px',fontWeight:'600',padding:'4px 10px',borderRadius:'100px'}}>{t}</span>
+                    ))}
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                    <div>
+                      <div style={{fontSize:'11px',color:'#94a3b8',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.08em'}}>À partir de</div>
+                      <div style={{fontSize:'1.5rem',fontWeight:'900',color:site.bg}}>{room.price}<span style={{fontSize:'12px',fontWeight:'600',color:'#94a3b8'}}>/nuit</span></div>
+                    </div>
+                    <button style={{background:site.bg,color:'white',padding:'10px 20px',borderRadius:'12px',fontWeight:'700',fontSize:'13px',border:'none',cursor:'pointer'}}>Réserver</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AMENITIES */}
+        <div style={{background:site.bg,padding:'5rem 2rem'}}>
+          <div style={{maxWidth:'1100px',margin:'0 auto',textAlign:'center'}}>
+            <div style={{fontSize:'11px',fontWeight:'800',color:site.accent,textTransform:'uppercase',letterSpacing:'0.2em',marginBottom:'12px'}}>Services</div>
+            <h2 style={{fontSize:'2.5rem',fontWeight:'900',letterSpacing:'-0.03em',color:'white',marginBottom:'3rem'}}>Nos Équipements Premium</h2>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:'1rem'}}>
+              {site.amenities.map((a,i)=>(
+                <div key={i} style={{background:'rgba(255,255,255,0.1)',borderRadius:'16px',padding:'1.25rem 0.75rem',backdropFilter:'blur(10px)',border:'1px solid rgba(255,255,255,0.15)'}}>
+                  <div style={{fontSize:'28px',marginBottom:'8px'}}>{a.split(' ')[0]}</div>
+                  <div style={{fontSize:'11px',color:'rgba(255,255,255,0.8)',fontWeight:'600',lineHeight:1.3}}>{a.split(' ').slice(1).join(' ')}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* REVIEWS */}
+        <div style={{padding:'5rem 2rem',background:'#f8fafc'}}>
+          <div style={{maxWidth:'900px',margin:'0 auto',textAlign:'center'}}>
+            <div style={{fontSize:'11px',fontWeight:'800',color:site.bg,textTransform:'uppercase',letterSpacing:'0.2em',marginBottom:'12px'}}>Avis Clients</div>
+            <h2 style={{fontSize:'2.5rem',fontWeight:'900',letterSpacing:'-0.03em',color:'#0f172a',marginBottom:'3rem'}}>Ce que Disent nos Hôtes</h2>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'1.5rem'}}>
+              {site.reviews.map((r,i)=>(
+                <div key={i} style={{background:'white',borderRadius:'24px',padding:'2rem',boxShadow:'0 4px 20px rgba(0,0,0,0.06)',textAlign:'left'}}>
+                  <div style={{display:'flex',gap:'2px',marginBottom:'12px'}}>
+                    {'★★★★★'.split('').map((s,j)=>(<span key={j} style={{color:'#f59e0b',fontSize:'18px'}}>{s}</span>))}
+                  </div>
+                  <p style={{color:'#475569',lineHeight:1.7,marginBottom:'1.5rem',fontStyle:'italic'}}>"{r.text}"</p>
+                  <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                    <div style={{width:'40px',height:'40px',borderRadius:'50%',background:site.bg,display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:'800',fontSize:'16px'}}>{r.flag}</div>
+                    <div style={{fontWeight:'700',color:'#0f172a'}}>{r.author}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div style={{background:'#0f172a',color:'white',padding:'3rem 2rem'}}>
+          <div style={{maxWidth:'1100px',margin:'0 auto',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div>
+              <div style={{fontWeight:'800',fontSize:'1.25rem',marginBottom:'6px'}}>{site.name}</div>
+              <div style={{color:'rgba(255,255,255,0.5)',fontSize:'13px'}}>{site.domain} · Propulsé par Hova</div>
+            </div>
+            <button style={{background:site.accent,color:site.bg,padding:'12px 28px',borderRadius:'12px',fontWeight:'800',fontSize:'14px',border:'none',cursor:'pointer'}}>Réserver un Séjour</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 const TemplateLibraryModal = ({ onSelect, onClose }) => {
+  const [filter, setFilter] = React.useState('all');
+  const categories = ['all', 'Luxe', 'Resort Balnéaire', 'Riad Marocain', 'City Hotel', 'Éco-Tourisme', 'Montagne'];
+
+  const filtered = filter === 'all' ? TEMPLATES : TEMPLATES.filter(t => t.category === filter);
+
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 lg:p-12">
-      <div className="bg-white rounded-3xl w-full max-w-5xl shadow-2xl h-full max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="bg-white rounded-3xl w-full max-w-6xl shadow-2xl h-full max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
          <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10 shrink-0">
             <div>
-               <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3"><LayoutTemplate className="text-indigo-600"/> Bibliothèque de Templates</h2>
-               <p className="text-slate-500 font-medium mt-1">Choisissez une structure professionnelle générée par l'IA ou sélectionnez un thème métier.</p>
+               <h2 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3"><LayoutTemplate className="text-indigo-600"/> Templates Hôteliers</h2>
+               <p className="text-slate-500 font-medium mt-1">6 designs professionnels spécialement conçus pour les hôtels, riads, et resorts.</p>
             </div>
             <button onClick={onClose} className="w-10 h-10 bg-slate-50 hover:bg-slate-100 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-800 transition"><X size={20}/></button>
          </div>
+
+         {/* Category Filter */}
+         <div className="px-8 py-4 border-b border-slate-100 flex gap-2 overflow-x-auto shrink-0 bg-slate-50/50">
+           {categories.map(cat => (
+             <button key={cat} onClick={() => setFilter(cat)}
+               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition ${filter === cat ? 'bg-slate-900 text-white shadow' : 'bg-white text-slate-500 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'}`}>
+               {cat === 'all' ? 'Tous les templates' : cat}
+             </button>
+           ))}
+         </div>
+
          <div className="flex-1 overflow-y-auto p-8 bg-slate-50">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {TEMPLATES.map(t => (
-                  <div key={t.id} onClick={() => onSelect(t.blocks)} className="bg-white rounded-3xl p-4 border-2 border-transparent hover:border-indigo-500 shadow-sm hover:shadow-xl transition duration-300 cursor-pointer group hover:-translate-y-1">
-                     <div className="aspect-[4/3] rounded-2xl bg-slate-100 overflow-hidden mb-5 relative group-hover:ring-4 group-hover:ring-indigo-100 transition">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               {filtered.map(t => (
+                  <div key={t.id} onClick={() => onSelect(t.blocks)}
+                    className="bg-white rounded-3xl overflow-hidden border-2 border-transparent hover:border-indigo-500 shadow-sm hover:shadow-xl transition duration-300 cursor-pointer group hover:-translate-y-1">
+                     <div className="aspect-[16/9] relative overflow-hidden">
                         <img src={t.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition duration-700"/>
-                        <div className="absolute inset-0 bg-indigo-900/0 group-hover:bg-indigo-900/50 transition duration-300 flex items-center justify-center">
-                           <button className="bg-white text-indigo-700 font-black px-6 py-3 rounded-full shadow-lg opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition duration-300">Utiliser ce Template</button>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+
+                        {/* Palette overlay */}
+                        <div className="absolute top-3 right-3 flex gap-1.5">
+                          {(t.palette || []).map((color, i) => (
+                            <div key={i} style={{backgroundColor: color}} className="w-5 h-5 rounded-full border-2 border-white shadow-md"></div>
+                          ))}
+                        </div>
+
+                        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between opacity-0 group-hover:opacity-100 transition duration-300">
+                           <button className="bg-white text-indigo-700 font-black text-xs px-4 py-2.5 rounded-full shadow-xl translate-y-2 group-hover:translate-y-0 transition duration-300 flex items-center gap-1.5">
+                             <Play size={12} fill="currentColor"/> Utiliser
+                           </button>
                         </div>
                      </div>
-                     <div className="px-2">
-                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 inline-block px-2.5 py-1 rounded-lg mb-2">{t.category}</div>
-                        <h3 className="text-xl font-bold text-slate-800 tracking-tight">{t.name}</h3>
-                        <p className="text-sm text-slate-500 mt-1 font-medium">{t.blocks.length} sections premium incluses.</p>
+                     <div className="p-5">
+                        <div className="flex items-center justify-between mb-2">
+                           <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-1 rounded-lg">{t.category}</span>
+                           <span className="text-[10px] text-slate-400 font-bold">{t.blocks?.length || 6} sections</span>
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-1">{t.name}</h3>
+                        <p className="text-xs text-slate-500 font-medium">{t.style}</p>
                      </div>
                   </div>
                ))}
@@ -433,7 +808,6 @@ const TemplateLibraryModal = ({ onSelect, onClose }) => {
     </div>
   )
 }
-
 const BuilderPhase = ({ siteContext, onPublish, initialBlocks, initialTheme }) => {
   const [device, setDevice] = useState('desktop'); // 'desktop' | 'tablet' | 'mobile'
   const [isPublishing, setIsPublishing] = useState(false);
@@ -593,46 +967,7 @@ const BuilderPhase = ({ siteContext, onPublish, initialBlocks, initialTheme }) =
                  }
 
                  if (block.type === 'hero') {
-                    const [currentSlide, setCurrentSlide] = useState(0);
-                    const slides = block.slides || [block.image];
-                    
-                    return (
-                      <div 
-                         key={block.id} 
-                         onClick={() => setSelectedBlockId(block.id)}
-                         className={`${block.bgColor || 'bg-slate-50'} p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 relative overflow-hidden cursor-pointer transition-all duration-300 m-2 rounded-2xl border-2 ${isSelected ? 'border-indigo-500 shadow-md ring-4 ring-indigo-50' : 'border-transparent hover:border-indigo-300/50 hover:bg-indigo-50/10'}`}
-                      >
-                         <div className={`absolute top-4 right-4 z-20 transition-all ${isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-                            <div className="bg-indigo-600 flex text-white rounded-lg shadow-xl overflow-hidden backdrop-blur-sm">
-                               <button className="p-2 hover:bg-indigo-700 transition"><GripHorizontal size={14}/></button>
-                            </div>
-                         </div>
-                         
-                         <div className="flex-1 order-2 md:order-1 relative z-10 text-center md:text-left">
-                            <h1 className={`text-4xl md:text-6xl ${globalFont} ${block.titleColor || 'text-slate-900'} leading-[1.1] mb-8 font-medium animate-in slide-in-from-left duration-700`}>
-                              {block.title}
-                            </h1>
-                            <button className={`bg-${themeOptions.primaryColor} text-white px-8 py-4 rounded-${themeOptions.borderRadius} font-bold shadow-lg shadow-indigo-200 hover:-translate-y-1 transition`}>{block.subtitle}</button>
-                         </div>
-                         <div className="flex-1 order-1 md:order-2 h-[450px] relative group/slider">
-                            {slides.map((s, idx) => (
-                               <img 
-                                 key={idx}
-                                 src={s} 
-                                 className={`absolute inset-0 rounded-[2rem] shadow-2xl object-cover w-full h-full transition-opacity duration-1000 ${currentSlide === idx ? 'opacity-100' : 'opacity-0'}`} 
-                                 alt="Hero" 
-                               />
-                            ))}
-                            {slides.length > 1 && (
-                               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-                                  {slides.map((_, idx) => (
-                                     <button key={idx} onClick={(e) => { e.stopPropagation(); setCurrentSlide(idx); }} className={`w-2 h-2 rounded-full transition-all ${currentSlide === idx ? 'bg-white w-6' : 'bg-white/40'}`}></button>
-                                  ))}
-                               </div>
-                            )}
-                         </div>
-                      </div>
-                    )
+                    return <HeroBlockBuilder key={block.id} block={block} isSelected={isSelected} onSelect={() => setSelectedBlockId(block.id)} globalFont={globalFont} themeOptions={themeOptions} />;
                  }
 
                  if (block.type === 'booking_bar') {
@@ -703,49 +1038,8 @@ const BuilderPhase = ({ siteContext, onPublish, initialBlocks, initialTheme }) =
                  }
 
                  if (block.type === 'gallery') {
-                    const [activeIndex, setActiveIndex] = useState(0);
-                    const isCarousel = block.variant === 'carousel';
-
-                    return (
-                      <div key={block.id} onClick={() => setSelectedBlockId(block.id)} className={`p-4 md:p-8 m-2 rounded-2xl border-2 transition-all cursor-pointer ${isSelected ? 'border-indigo-500/50 bg-white ring-2 ring-indigo-50 shadow-lg' : 'border-transparent hover:border-slate-200'}`}>
-                         <h2 className={`text-4xl ${globalFont} text-slate-900 mb-8 text-center`}>{block.title}</h2>
-                         
-                         {isCarousel ? (
-                            <div className="relative group/carousel overflow-hidden rounded-[2.5rem]">
-                               <div className="flex transition-transform duration-700 ease-in-out" style={{ transform: `translateX(-${activeIndex * 100}%)` }}>
-                                  {block.images.map((img, idx) => (
-                                     <div key={idx} className="w-full shrink-0 aspect-[16/9] relative">
-                                        <img src={img} className="w-full h-full object-cover" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-12 text-white">
-                                           <div className="text-sm font-black uppercase tracking-widest text-lime-400 mb-2">Featured Property</div>
-                                           <div className="text-3xl font-bold">{block.captions?.[idx] || 'Paradise Collection'}</div>
-                                        </div>
-                                     </div>
-                                  ))}
-                               </div>
-                               {/* Navigation Arrows */}
-                               <button onClick={(e) => { e.stopPropagation(); setActiveIndex(prev => (prev > 0 ? prev - 1 : block.images.length - 1)); }} className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover/carousel:opacity-100 transition"><ArrowLeft size={24}/></button>
-                               <button onClick={(e) => { e.stopPropagation(); setActiveIndex(prev => (prev < block.images.length - 1 ? prev + 1 : 0)); }} className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover/carousel:opacity-100 transition"><ArrowRight size={24}/></button>
-                               {/* Dots */}
-                               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-                                  {block.images.map((_, idx) => (
-                                     <div key={idx} className={`w-2 h-2 rounded-full transition-all ${activeIndex === idx ? 'bg-white w-8' : 'bg-white/40'}`}></div>
-                                  ))}
-                               </div>
-                            </div>
-                         ) : (
-                            <div className="grid grid-cols-3 gap-4">
-                               {block.images.map((img, idx) => (
-                                  <div key={idx} className={`rounded-3xl overflow-hidden aspect-square ${idx === 0 ? 'col-span-2 row-span-2 aspect-auto shadow-xl' : 'shadow-md'}`}>
-                                     <img src={img} className="w-full h-full object-cover hover:scale-110 transition duration-700" />
-                                  </div>
-                               ))}
-                            </div>
-                         )}
-                      </div>
-                    )
+                    return <GalleryBlockBuilder key={block.id} block={block} isSelected={isSelected} onSelect={() => setSelectedBlockId(block.id)} globalFont={globalFont} />;
                  }
-
                  if (block.type === 'footer') {
                     return (
                       <div key={block.id} onClick={() => setSelectedBlockId(block.id)} className={`p-12 md:p-16 m-2 rounded-[2rem] border-2 transition-all cursor-pointer flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-8 ${block.bgColor} ${isSelected ? 'border-indigo-500 shadow-xl' : 'border-transparent'}`}>
@@ -1703,6 +1997,8 @@ const WebsiteBuilder = () => {
   const [editingSiteId, setEditingSiteId] = useState(null);
   const [showDnsModal, setShowDnsModal] = useState(null);
   const [showDomainSearch, setShowDomainSearch] = useState(false);
+  const [dashTab, setDashTab] = useState('sites');
+  const [previewDemo, setPreviewDemo] = useState(null);
 
   const handleGenerate = (prompt) => {
     setSiteContext(prompt);
@@ -1736,44 +2032,42 @@ const WebsiteBuilder = () => {
   // 1. Dashboard Phase
   if (phase === 'dashboard') {
      return (
-        <div className="p-8 md:p-12 min-h-[calc(100vh-80px)] font-sans relative overflow-hidden bg-slate-50 [background-image:linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] [background-size:2.5rem_2.5rem]">
+        <div className="min-h-[calc(100vh-80px)] font-sans relative overflow-hidden bg-slate-50 [background-image:linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] [background-size:2.5rem_2.5rem]">
            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-100/30 rounded-full blur-[120px] -mr-48 -mt-48 pointer-events-none"></div>
-           <div className="max-w-6xl mx-auto relative z-10">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
+
+           <div className="max-w-6xl mx-auto relative z-10 p-8 md:p-12">
+
+              {/* HEADER */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
                  <div>
                     <div className="flex items-center gap-2 mb-3">
-                       <div className="bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest">Pro Studio</div>
+                       <div className="bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest">Booking Engine Studio</div>
                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                     </div>
-                    <h1 className="text-5xl font-black text-slate-800 tracking-tight">Website Manager</h1>
-                    <p className="text-slate-500 mt-2 text-lg font-medium">Gérez vos sites de réservation et connectez vos domaines en direct.</p>
+                    <h1 className="text-4xl font-black text-slate-800 tracking-tight">Mes Sites de Réservation</h1>
+                    <p className="text-slate-500 mt-2 font-medium">Créez, personnalisez et publiez votre site hôtelier en quelques minutes.</p>
                  </div>
-                 <div className="flex gap-3">
-                    <button 
-                      onClick={() => setShowDomainSearch(true)}
-                      className="bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 px-6 py-4 rounded-xl font-bold transition flex items-center gap-2"
-                    >
-                      <Globe size={20}/> Acheter un Domaine
+                 <div className="flex gap-3 flex-wrap">
+                    <button onClick={() => setShowDomainSearch(true)} className="bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 px-5 py-3 rounded-xl font-bold transition flex items-center gap-2 text-sm shadow-sm">
+                      <Globe size={16}/> Acheter un Domaine
                     </button>
-                    <button 
-                      onClick={() => { setSiteContext(''); setPhase('hero'); }}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-xl font-bold shadow-xl shadow-indigo-200 transition active:scale-95 flex items-center gap-2"
-                    >
-                      <Wand2 size={20}/> Créer un Site via IA
+                    <button onClick={() => { setSiteContext(''); setPhase('hero'); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-bold shadow-xl shadow-indigo-200 transition active:scale-95 flex items-center gap-2 text-sm">
+                      <Wand2 size={16}/> Créer un Site via IA
                     </button>
-                  </div>
+                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+              {/* STATS */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                  {[
-                   { label: 'Total Bookings', value: '1,284', icon: <Sparkles className="text-indigo-600"/>, trend: '+12%' },
-                   { label: 'Total Revenue', value: '€42,500', icon: <Heart className="text-pink-500"/>, trend: '+8%' },
-                   { label: 'Active Sites', value: sites.length, icon: <Globe className="text-blue-500"/>, trend: 'Stable' },
-                   { label: 'Sync Status', value: 'Direct', icon: <RefreshCcw className="text-green-500"/>, trend: 'Online' },
+                   { label: 'Réservations', value: '1,284', icon: <CalendarDays className="text-indigo-600" size={20}/>, trend: '+12%', bg: 'bg-indigo-50' },
+                   { label: 'Revenus', value: '€42,500', icon: <Star className="text-amber-500" size={20}/>, trend: '+8%', bg: 'bg-amber-50' },
+                   { label: 'Sites Actifs', value: sites.length || '0', icon: <Globe className="text-blue-500" size={20}/>, trend: sites.length > 0 ? 'Actif' : 'Créer', bg: 'bg-blue-50' },
+                   { label: 'Conversion', value: '5.2%', icon: <Zap className="text-green-500" size={20}/>, trend: '+0.8%', bg: 'bg-green-50' },
                  ].map((stat, i) => (
-                   <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                      <div className="flex justify-between items-start mb-4">
-                         <div className="p-3 bg-slate-50 rounded-2xl">{stat.icon}</div>
+                   <div key={i} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+                      <div className="flex justify-between items-start mb-3">
+                         <div className={`p-2.5 ${stat.bg} rounded-xl`}>{stat.icon}</div>
                          <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${stat.trend.startsWith('+') ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>{stat.trend}</span>
                       </div>
                       <div className="text-2xl font-black text-slate-800 tracking-tight">{stat.value}</div>
@@ -1782,83 +2076,150 @@ const WebsiteBuilder = () => {
                  ))}
               </div>
 
-              <div className="flex items-center justify-between mb-8">
-                 <h2 className="text-xl font-bold text-slate-800">Your Active Channels</h2>
-                 <div className="flex gap-2">
-                    <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition">Featured</button>
-                    <button className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition">All Sites</button>
-                 </div>
+              {/* TABS */}
+              <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl mb-8 w-fit">
+                 {[
+                   { id: 'sites', label: 'Mes Sites' },
+                   { id: 'demos', label: 'Sites Démo Hôteliers' },
+                   { id: 'templates', label: '6 Templates' },
+                 ].map(tab => (
+                   <button key={tab.id} onClick={() => setDashTab(tab.id)}
+                     className={`px-5 py-2.5 rounded-xl text-sm font-bold transition ${dashTab === tab.id ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                     {tab.label}
+                   </button>
+                 ))}
               </div>
 
-              {sites.length === 0 ? (
-                 <div className="bg-white/70 backdrop-blur-xl border-2 border-slate-100 rounded-[3rem] p-20 text-center shadow-xl relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition duration-1000"></div>
-                    <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-inner group-hover:scale-110 transition duration-500">
-                       <Sparkles size={48} className="animate-pulse" />
-                    </div>
-                    <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Bienvenue dans Antigravity Pro Studio</h2>
-                    <p className="text-slate-500 max-w-md mx-auto mb-12 text-lg font-medium leading-relaxed">Prêt à transformer votre établissement ? Laissez l'IA générer un site de réservation professionnel, sécurisé et synchronisé en quelques secondes.</p>
-                    <button 
-                      onClick={() => { setSiteContext(''); setPhase('hero'); }}
-                      className="bg-slate-900 hover:bg-black text-white px-10 py-5 rounded-2xl font-bold transition shadow-2xl shadow-indigo-100 inline-flex items-center gap-3 group/btn active:scale-95"
-                    >
-                      <Wand2 size={24} className="group-hover/btn:rotate-12 transition" /> Générer mon premier site Pro
-                    </button>
-                    <div className="mt-12 flex items-center justify-center gap-8 opacity-40 grayscale group-hover:grayscale-0 transition duration-1000">
-                       <div className="flex items-center gap-2 font-black text-slate-400">SiteMinder <span className="text-[8px] font-bold border border-slate-300 px-1 rounded">INSPIRED</span></div>
-                       <div className="flex items-center gap-2 font-black text-slate-400">SSL <span className="text-[8px] font-bold border border-slate-300 px-1 rounded">SECURE</span></div>
-                    </div>
-                 </div>
-              ) : (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sites.map(site => (
-                       <div key={site.id} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition duration-300 group">
-                          <div className="aspect-video bg-slate-100 rounded-2xl mb-6 relative overflow-hidden group-hover:ring-2 group-hover:ring-indigo-500/50 transition">
-                             {/* Mock Thumbnail using the site's hero image if available */}
-                             <img src={site.blocks?.find(b => b.type === 'hero')?.image || "https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=400&q=80"} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500" />
-                             <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] uppercase font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
-                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> {site.status}
-                             </div>
-                          </div>
-                          <h3 className="font-bold text-xl text-slate-800 truncate">{site.name}</h3>
-                          <a href={`https://${site.domain}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-600 text-sm font-medium mt-1 mb-6 hover:underline"><Globe size={14}/> {site.domain}</a>
-                          
-                          <div className="flex items-center gap-3">
-                             <button 
-                               onClick={() => { 
-                                 setEditingSiteId(site.id); 
-                                 setSiteContext(site.name); 
-                                 setPhase('builder'); 
-                               }}
-                               className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm transition border border-slate-200 shadow-sm active:scale-[0.98]"
-                             >
-                               Éditer le site
-                             </button>
-                             <button 
-                               onClick={() => setShowDnsModal(site)}
-                               className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition border border-slate-200 outline-none"
-                               title="Paramètres DNS"
-                             >
-                               <Settings size={20}/>
-                             </button>
-                          </div>
-                       </div>
-                    ))}
-                 </div>
+              {/* TAB: MES SITES */}
+              {dashTab === 'sites' && (
+                sites.length === 0 ? (
+                   <div className="bg-white/70 backdrop-blur-xl border-2 border-slate-100 rounded-[3rem] p-20 text-center shadow-xl relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+                      <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-10 shadow-inner group-hover:scale-110 transition duration-500">
+                         <Sparkles size={48} className="animate-pulse" />
+                      </div>
+                      <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Aucun site pour le moment</h2>
+                      <p className="text-slate-500 max-w-md mx-auto mb-10 text-lg font-medium leading-relaxed">Créez votre premier site hôtelier professionnel avec l'IA en moins de 2 minutes.</p>
+                      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <button onClick={() => { setSiteContext(''); setPhase('hero'); }} className="bg-slate-900 hover:bg-black text-white px-10 py-4 rounded-2xl font-bold transition shadow-2xl inline-flex items-center gap-3 active:scale-95">
+                          <Wand2 size={20}/> Générer avec l'IA
+                        </button>
+                        <button onClick={() => setDashTab('demos')} className="bg-white border-2 border-slate-200 text-slate-700 px-10 py-4 rounded-2xl font-bold transition hover:border-indigo-300 inline-flex items-center gap-3">
+                          <Play size={20}/> Voir les démos
+                        </button>
+                      </div>
+                   </div>
+                ) : (
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {sites.map(site => (
+                         <div key={site.id} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition duration-300 group">
+                            <div className="aspect-video bg-slate-100 rounded-2xl mb-5 relative overflow-hidden group-hover:ring-2 group-hover:ring-indigo-500/50 transition">
+                               <img src={site.blocks?.find(b => b.type === 'hero')?.image || "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80"} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500" />
+                               <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] uppercase font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
+                                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> En ligne
+                               </div>
+                            </div>
+                            <h3 className="font-bold text-xl text-slate-800 truncate">{site.name}</h3>
+                            <a href={`https://${site.domain}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-indigo-600 text-sm font-medium mt-1 mb-5 hover:underline"><Globe size={14}/> {site.domain}</a>
+                            <div className="flex items-center gap-3">
+                               <button onClick={() => { setEditingSiteId(site.id); setSiteContext(site.name); setPhase('builder'); }} className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm transition border border-slate-200 shadow-sm active:scale-[0.98]">Éditer le site</button>
+                               <button onClick={() => setShowDnsModal(site)} className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition border border-slate-200 outline-none" title="Paramètres DNS"><Settings size={20}/></button>
+                            </div>
+                         </div>
+                      ))}
+                   </div>
+                )
               )}
+
+              {/* TAB: DÉMOS */}
+              {dashTab === 'demos' && (
+                <div>
+                  <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-8 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center shrink-0"><Sparkles size={20}/></div>
+                    <div>
+                      <div className="font-bold text-indigo-900 text-sm">Sites démo en direct</div>
+                      <div className="text-indigo-600 text-xs mt-0.5">Explorez des exemples complets de sites de réservation hôteliers — cliquez "Voir le site" pour un aperçu grandeur nature, puis utilisez le template pour créer le vôtre.</div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {DEMO_HOTEL_SITES.map(demo => (
+                      <div key={demo.id} className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl transition duration-300 group">
+                        <div className="aspect-video relative overflow-hidden">
+                          <img src={demo.image} className="w-full h-full object-cover group-hover:scale-105 transition duration-700"/>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-5">
+                            <div className="text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1">{demo.type}</div>
+                            <h3 className="text-white font-black text-lg tracking-tight">{demo.name}</h3>
+                          </div>
+                          <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> {demo.status}
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <a href={`https://${demo.domain}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-indigo-600 text-xs font-bold mb-4 hover:underline"><Globe size={12}/>{demo.domain}</a>
+                          <div className="grid grid-cols-3 gap-2 mb-5">
+                            {[
+                              {label:'Visites',val:demo.visits},
+                              {label:'Conversion',val:demo.conversion},
+                              {label:'Revenus',val:demo.revenue},
+                            ].map((s,i)=>(
+                              <div key={i} className="bg-slate-50 rounded-xl p-2 text-center">
+                                <div className="font-black text-sm text-slate-800">{s.val}</div>
+                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{s.label}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => setPreviewDemo(demo)} className="flex-1 bg-slate-900 hover:bg-black text-white py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2"><Play size={14} fill="white"/>Voir le site</button>
+                            <button onClick={() => { const t = TEMPLATES.find(t => t.id.includes(demo.id.split('-')[1])) || TEMPLATES[0]; setSiteContext(demo.name); setPhase('builder'); }} className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-3 rounded-xl font-bold text-sm transition flex items-center justify-center gap-2"><Wand2 size={14}/>Utiliser</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: TEMPLATES */}
+              {dashTab === 'templates' && (
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {TEMPLATES.map(t => (
+                      <div key={t.id} onClick={() => { setSiteContext(t.name); setPhase('builder'); }}
+                        className="bg-white rounded-3xl overflow-hidden border-2 border-transparent hover:border-indigo-500 shadow-sm hover:shadow-xl transition duration-300 cursor-pointer group hover:-translate-y-1">
+                        <div className="aspect-[16/9] relative overflow-hidden">
+                          <img src={t.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition duration-700"/>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                          <div className="absolute top-3 right-3 flex gap-1.5">
+                            {(t.palette || []).map((color, i) => (
+                              <div key={i} style={{backgroundColor: color}} className="w-5 h-5 rounded-full border-2 border-white shadow-md"></div>
+                            ))}
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition duration-300">
+                            <button className="bg-white text-indigo-700 font-black text-xs px-4 py-2.5 rounded-full shadow-xl translate-y-2 group-hover:translate-y-0 transition duration-300 flex items-center gap-1.5"><Play size={12} fill="currentColor"/>Utiliser ce template</button>
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-1 rounded-lg">{t.category}</span>
+                            <span className="text-[10px] text-slate-400 font-bold">{t.blocks?.length || 6} sections</span>
+                          </div>
+                          <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-1">{t.name}</h3>
+                          <p className="text-xs text-slate-500 font-medium">{t.style}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
            </div>
 
-            {showDnsModal && <DnsSettingsModal site={showDnsModal} onClose={() => setShowDnsModal(null)} />}
-            {showDomainSearch && <DomainSearchModal onClose={() => setShowDomainSearch(false)} onPurchase={(domain) => {
-               setPhase('hero');
-               setActiveDomain(domain);
-               setShowDomainSearch(false);
-            }} />}
-         </div>
+           {showDnsModal && <DnsSettingsModal site={showDnsModal} onClose={() => setShowDnsModal(null)} />}
+           {showDomainSearch && <DomainSearchModal onClose={() => setShowDomainSearch(false)} onPurchase={(domain) => { setPhase('hero'); setActiveDomain(domain); setShowDomainSearch(false); }} />}
+           {previewDemo && <FullHotelDemoPreview site={previewDemo} onClose={() => setPreviewDemo(null)} onUseTemplate={() => { setSiteContext(previewDemo.name); setPhase('builder'); setPreviewDemo(null); }} />}
+        </div>
      );
   }
-
-  // 2. AI Prompt Phase
   if (phase === 'hero') {
     return <AIPromptPhase onGenerate={handleGenerate} />;
   }
