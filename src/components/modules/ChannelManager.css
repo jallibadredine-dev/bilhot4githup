@@ -1107,6 +1107,300 @@
 .cm-empty-state p  { font-size: 0.8rem; color: #94A3B8; margin: 0; max-width: 320px; }
 
 /* ══════════════════════════════════════════════════════════
+   SETUP PAGE — additions
+══════════════════════════════════════════════════════════ */
+.cm-setup-skip-btn {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  background: #0F172A; color: white;
+  border: none; border-radius: 10px;
+  font-size: 0.77rem; font-weight: 700;
+  cursor: pointer; min-height: unset; transition: all 0.15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.cm-setup-skip-btn:hover { background: #1E293B; }
+
+.cm-setup-direct-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px;
+  background: white; color: #0F172A;
+  border: 1.5px solid #E2E8F0; border-radius: 12px;
+  font-size: 0.85rem; font-weight: 800;
+  cursor: pointer; min-height: unset; transition: all 0.15s;
+  margin-top: 4px;
+}
+.cm-setup-direct-btn:hover { background: #F8FAFC; border-color: #CBD5E1; }
+
+.cm-setup-ota-chip-link { cursor: pointer; transition: all 0.15s; }
+.cm-setup-ota-chip-link:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+.cm-setup-ota-connected {
+  margin-left: auto; flex-shrink: 0;
+  width: 20px; height: 20px;
+  background: #DCFCE7; color: #16A34A;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ══════════════════════════════════════════════════════════
+   HEADER — OTA PILLS
+══════════════════════════════════════════════════════════ */
+.cm-ota-pills {
+  display: flex; gap: 5px; flex-wrap: wrap; max-width: 400px;
+}
+.cm-ota-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  font-size: 0.68rem; font-weight: 700;
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════
+   TABS — additions
+══════════════════════════════════════════════════════════ */
+.cm-tab-badge-green {
+  background: #10B981; color: white;
+  font-size: 0.58rem; font-weight: 800;
+  padding: 1px 5px; border-radius: 7px;
+  min-width: 16px; text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════
+   OTA OVERVIEW GRID (dashboard)
+══════════════════════════════════════════════════════════ */
+.cm-ota-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  padding: 14px 16px;
+}
+.cm-ota-overview-card {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 11px;
+  transition: all 0.15s;
+}
+.cm-ota-overview-card.connected { background: #FAFFFE; }
+.cm-ota-overview-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+.cm-ota-overview-logo {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; flex-shrink: 0;
+}
+.cm-ota-overview-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cm-ota-overview-active   { font-size: 0.63rem; color: #10B981; font-weight: 600; }
+.cm-ota-overview-inactive { font-size: 0.63rem; color: #CBD5E1; font-weight: 600; }
+.cm-ota-overview-connect {
+  width: 20px; height: 20px;
+  background: #F1F5F9; color: #94A3B8;
+  border: none; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; min-height: unset; flex-shrink: 0;
+  transition: all 0.15s;
+}
+.cm-ota-overview-connect:hover { background: #EEF2FF; color: #4F46E5; }
+
+/* ══════════════════════════════════════════════════════════
+   OTA CONNECTION CARDS (canaux ota tab)
+══════════════════════════════════════════════════════════ */
+.cm-conn-summary {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; color: #475569; font-weight: 600;
+  background: #F0FDF4; padding: 7px 12px;
+  border-radius: 9px; border: 1px solid #BBF7D0;
+  white-space: nowrap;
+}
+
+.cm-ota-connect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.cm-ota-conn-card {
+  background: white;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.cm-ota-conn-card:hover    { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.cm-ota-conn-card.connected { box-shadow: 0 2px 12px rgba(16,185,129,0.12); }
+
+/* Card head — click to expand */
+.cm-ota-conn-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  user-select: none;
+}
+.cm-ota-conn-logo   { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+.cm-ota-conn-identity { flex: 1; min-width: 0; }
+.cm-ota-conn-name   { display: block; font-size: 0.88rem; font-weight: 900; }
+.cm-ota-conn-desc   { display: block; font-size: 0.62rem; color: #94A3B8; font-weight: 500; margin-top: 2px; }
+.cm-ota-conn-live   {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.65rem; font-weight: 800; color: #15803D;
+  white-space: nowrap; flex-shrink: 0;
+}
+.cm-ota-conn-toggle-arrow {
+  color: #94A3B8; flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.cm-ota-conn-toggle-arrow.open { transform: rotate(180deg); }
+
+/* Collapsed hint row */
+.cm-ota-conn-collapsed {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 0.7rem; color: #CBD5E1; font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.cm-ota-conn-collapsed:hover { background: #FAFAFA; color: #94A3B8; }
+
+/* Card body (both connected and expanded form) */
+.cm-ota-conn-body {
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  border-top: 1px solid #F1F5F9;
+}
+
+/* Stats row in connected state */
+.cm-ota-conn-stats {
+  display: flex; gap: 0;
+  background: #F8FAFC; border-radius: 10px; overflow: hidden;
+}
+
+/* Products preview in connected state */
+.cm-ota-prods-preview {
+  display: flex; flex-direction: column; gap: 4px;
+  background: #FAFFFE;
+  border: 1px solid #DCFCE7;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.cm-ota-prod-row {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.72rem; color: #475569;
+}
+.cm-ota-prod-row span:nth-child(2) { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cm-ota-prod-price { margin-left: auto; font-size: 0.67rem; font-weight: 700; color: #10B981; white-space: nowrap; }
+.cm-ota-prod-more  { font-size: 0.65rem; color: #94A3B8; text-align: center; padding-top: 2px; }
+
+/* Actions in connected state */
+.cm-ota-conn-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.cm-ota-connect-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 10px;
+  color: white; border: none; border-radius: 10px;
+  font-size: 0.82rem; font-weight: 800;
+  cursor: pointer; min-height: unset; transition: all 0.15s;
+  margin-top: 4px;
+}
+.cm-ota-connect-btn:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+.cm-ota-connect-btn:disabled { background: #CBD5E1 !important; cursor: not-allowed; transform: none; }
+
+.cm-ota-disconnect-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 12px;
+  background: white; color: #94A3B8;
+  border: 1.5px solid #E2E8F0; border-radius: 9px;
+  font-size: 0.72rem; font-weight: 700;
+  cursor: pointer; min-height: unset; transition: all 0.15s;
+  white-space: nowrap;
+}
+.cm-ota-disconnect-btn:hover { color: #EF4444; border-color: #FECACA; background: #FEF2F2; }
+
+/* Form error */
+.cm-ota-form-err {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 11px;
+  background: #FEF2F2; color: #B91C1C;
+  border: 1px solid #FECACA; border-radius: 9px;
+  font-size: 0.73rem; font-weight: 600;
+}
+
+/* Form fields */
+.cm-ota-form-fields { display: flex; flex-direction: column; gap: 10px; }
+.cm-ota-form-group  { display: flex; flex-direction: column; gap: 5px; }
+.cm-ota-form-group label {
+  font-size: 0.68rem; font-weight: 800; color: #475569;
+}
+.cm-ota-form-input {
+  display: flex; align-items: center;
+  height: 36px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.cm-ota-form-input:focus-within {
+  border-color: #818CF8; background: white;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+}
+.cm-ota-form-input input {
+  flex: 1; border: none; background: transparent;
+  padding: 0 10px;
+  font-size: 0.78rem; color: #0F172A; outline: none;
+}
+.cm-ota-form-input input::placeholder { color: #CBD5E1; }
+.cm-ota-form-eye {
+  background: none; border: none; color: #94A3B8;
+  cursor: pointer; min-height: unset;
+  padding: 0 10px; height: 100%;
+  display: flex; align-items: center;
+  border-left: 1px solid #E2E8F0;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.cm-ota-form-eye:hover { color: #475569; }
+.cm-ota-form-hint {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.62rem; color: #94A3B8;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CHANNEX HUB SECTION (at bottom of OTA tab)
+══════════════════════════════════════════════════════════ */
+.cm-channex-hub-section {
+  background: white;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.cm-channex-hub-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #F1F5F9;
+  flex-wrap: wrap;
+}
+.cm-channex-hub-icon {
+  width: 36px; height: 36px;
+  background: #EEF2FF; color: #4F46E5;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cm-channex-hub-header h3 { font-size: 0.9rem; font-weight: 800; color: #0F172A; margin: 0 0 2px; }
+.cm-channex-hub-header p  { font-size: 0.68rem; color: #94A3B8; margin: 0; }
+.cm-channex-hub-form {
+  display: flex; gap: 10px; align-items: center;
+  padding: 14px 18px;
+  flex-wrap: wrap;
+}
+.cm-channex-hub-form .cm-setup-input-wrap { flex: 1; min-width: 200px; }
+
+/* ══════════════════════════════════════════════════════════
    RESPONSIVE
 ══════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
