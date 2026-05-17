@@ -1368,6 +1368,49 @@
   font-size: 0.62rem; color: #94A3B8;
 }
 
+/* ── Login form additions ── */
+.cm-ota-login-notice {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 11px;
+  border: 1.5px solid;
+  border-radius: 10px;
+  font-size: 0.71rem; color: #475569;
+  line-height: 1.4;
+}
+.cm-ota-login-notice strong { font-weight: 800; }
+.cm-ota-login-link {
+  margin-left: auto; flex-shrink: 0;
+  display: flex; align-items: center; gap: 4px;
+  font-size: 0.65rem; font-weight: 700;
+  text-decoration: none; white-space: nowrap;
+  opacity: 0.85;
+}
+.cm-ota-login-link:hover { opacity: 1; text-decoration: underline; }
+
+.cm-ota-form-label-row {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cm-ota-forgot-link {
+  font-size: 0.63rem; color: #94A3B8;
+  text-decoration: none; font-weight: 600;
+  transition: color 0.15s;
+}
+.cm-ota-forgot-link:hover { color: #475569; text-decoration: underline; }
+
+.cm-ota-form-prefix {
+  padding: 0 10px;
+  font-size: 0.8rem; font-weight: 700; color: #94A3B8;
+  border-right: 1px solid #E2E8F0;
+  height: 100%; display: flex; align-items: center;
+  flex-shrink: 0;
+}
+
+.cm-ota-secure-note {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  font-size: 0.63rem; color: #CBD5E1; font-weight: 500;
+  padding-top: 2px;
+}
+
 /* ══════════════════════════════════════════════════════════
    CHANNEX HUB SECTION (at bottom of OTA tab)
 ══════════════════════════════════════════════════════════ */

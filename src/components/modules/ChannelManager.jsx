@@ -18,10 +18,10 @@ const OTA_DEFS = [
   {
     id: 'airbnb', name: 'Airbnb', color: '#FF5A5F', bg: '#FFF0F0', logo: '🏠',
     desc: 'Locations courte durée', keywords: ['airbnb'],
+    loginUrl: 'https://www.airbnb.com/login',
     fields: [
-      { key: 'client_id',     label: 'Client ID',      type: 'text',     placeholder: 'api_xxxxxxxxxxxxxxxx',          hint: 'Airbnb Partner API → App Dashboard' },
-      { key: 'client_secret', label: 'Client Secret',  type: 'password', placeholder: 'Votre secret Airbnb',           hint: 'Généré dans votre espace partenaire Airbnb' },
-      { key: 'property_id',   label: 'Property ID',    type: 'text',     placeholder: 'ex: 123456',                    hint: 'ID de votre annonce sur Airbnb' },
+      { key: 'email',    label: 'Adresse e-mail',  type: 'email',    placeholder: 'votre@email.com',    hint: 'L\'e-mail associé à votre compte Airbnb' },
+      { key: 'password', label: 'Mot de passe',    type: 'password', placeholder: 'Votre mot de passe Airbnb', hint: 'Le même mot de passe que sur airbnb.com' },
     ],
     demoProducts: [
       { name: 'Studio Cosy Centre-Ville', type: 'Appartement', rooms: 1, capacity: 2, price: 85 },
@@ -32,51 +32,52 @@ const OTA_DEFS = [
   {
     id: 'booking', name: 'Booking.com', color: '#003580', bg: '#E8F0FF', logo: '🔵',
     desc: 'Standard hôtelier mondial', keywords: ['booking'],
+    loginUrl: 'https://account.booking.com/sign-in',
     fields: [
-      { key: 'property_id', label: 'Property ID',   type: 'text',     placeholder: 'ex: 1234567',               hint: 'Votre ID propriété sur Booking.com Extranet' },
-      { key: 'username',    label: 'Nom d\'utilisateur', type: 'text', placeholder: 'ex: hotel@booking.com',    hint: 'Login Connectivity API Booking.com' },
-      { key: 'password',    label: 'Mot de passe',  type: 'password', placeholder: 'Votre mot de passe',        hint: 'Fourni par votre account manager Booking.com' },
+      { key: 'email',    label: 'Adresse e-mail',  type: 'email',    placeholder: 'votre@email.com',    hint: 'E-mail de votre compte Booking.com Extranet' },
+      { key: 'password', label: 'Mot de passe',    type: 'password', placeholder: 'Votre mot de passe', hint: 'Le même mot de passe que sur extranet.booking.com' },
     ],
     demoProducts: [
-      { name: 'Chambre Standard',          type: 'Chambre d\'hôtel', rooms: 1, capacity: 2, price: 95 },
-      { name: 'Chambre Supérieure',        type: 'Chambre d\'hôtel', rooms: 1, capacity: 2, price: 130 },
-      { name: 'Suite Junior',              type: 'Suite',            rooms: 2, capacity: 3, price: 190 },
-      { name: 'Suite Présidentielle',      type: 'Suite',            rooms: 3, capacity: 4, price: 350 },
+      { name: 'Chambre Standard',     type: 'Chambre d\'hôtel', rooms: 1, capacity: 2, price: 95 },
+      { name: 'Chambre Supérieure',   type: 'Chambre d\'hôtel', rooms: 1, capacity: 2, price: 130 },
+      { name: 'Suite Junior',         type: 'Suite',            rooms: 2, capacity: 3, price: 190 },
+      { name: 'Suite Présidentielle', type: 'Suite',            rooms: 3, capacity: 4, price: 350 },
     ],
   },
   {
     id: 'expedia', name: 'Expedia', color: '#FFC72C', bg: '#FFF8E0', logo: '✈️',
     desc: 'Vols & séjours', keywords: ['expedia', 'hotels.com'],
+    loginUrl: 'https://apps.expediapartnercentral.com/',
     fields: [
-      { key: 'hotel_id',    label: 'Hotel ID',      type: 'text',     placeholder: 'ex: 9876543',               hint: 'ID de votre établissement sur Expedia Partner Central' },
-      { key: 'api_key',     label: 'API Key',       type: 'text',     placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx',   hint: 'Expedia Partner Central → API Credentials' },
-      { key: 'api_secret',  label: 'API Secret',    type: 'password', placeholder: 'Votre secret API',          hint: 'Généré avec votre API Key' },
+      { key: 'email',    label: 'Adresse e-mail',  type: 'email',    placeholder: 'votre@email.com',    hint: 'E-mail de votre compte Expedia Partner Central' },
+      { key: 'password', label: 'Mot de passe',    type: 'password', placeholder: 'Votre mot de passe', hint: 'Le même mot de passe que sur apps.expediapartnercentral.com' },
     ],
     demoProducts: [
-      { name: 'Classic Room',     type: 'Room',  rooms: 1, capacity: 2, price: 89 },
-      { name: 'Deluxe Room',      type: 'Room',  rooms: 1, capacity: 2, price: 125 },
-      { name: 'Family Suite',     type: 'Suite', rooms: 2, capacity: 5, price: 200 },
+      { name: 'Classic Room',  type: 'Room',  rooms: 1, capacity: 2, price: 89 },
+      { name: 'Deluxe Room',   type: 'Room',  rooms: 1, capacity: 2, price: 125 },
+      { name: 'Family Suite',  type: 'Suite', rooms: 2, capacity: 5, price: 200 },
     ],
   },
   {
     id: 'tripadvisor', name: 'TripAdvisor', color: '#00AA6C', bg: '#E0F7EE', logo: '🦉',
     desc: 'Avis & réservations', keywords: ['tripadvisor', 'trip'],
+    loginUrl: 'https://www.tripadvisor.com/Owners',
     fields: [
-      { key: 'property_id', label: 'Property ID',  type: 'text',     placeholder: 'ex: 456789',                hint: 'TripAdvisor Manage → Infos du compte' },
-      { key: 'api_key',     label: 'API Key',      type: 'password', placeholder: 'ta_xxxxxxxxxxxxxxxxxxxx',   hint: 'TripAdvisor Developer Hub → Mes applications' },
+      { key: 'email',    label: 'Adresse e-mail',  type: 'email',    placeholder: 'votre@email.com',    hint: 'E-mail de votre compte TripAdvisor propriétaire' },
+      { key: 'password', label: 'Mot de passe',    type: 'password', placeholder: 'Votre mot de passe', hint: 'Le même mot de passe que sur tripadvisor.com' },
     ],
     demoProducts: [
-      { name: 'Chambre Vue Jardin',  type: 'Chambre', rooms: 1, capacity: 2, price: 105 },
-      { name: 'Chambre Vue Mer',     type: 'Chambre', rooms: 1, capacity: 2, price: 145 },
+      { name: 'Chambre Vue Jardin', type: 'Chambre', rooms: 1, capacity: 2, price: 105 },
+      { name: 'Chambre Vue Mer',    type: 'Chambre', rooms: 1, capacity: 2, price: 145 },
     ],
   },
   {
     id: 'vrbo', name: 'Vrbo', color: '#1B468A', bg: '#E8EEFF', logo: '🏡',
     desc: 'Villas & grandes propriétés', keywords: ['vrbo', 'homeaway'],
+    loginUrl: 'https://www.vrbo.com/account/login',
     fields: [
-      { key: 'property_id',   label: 'Property ID',   type: 'text',     placeholder: 'ex: 5678901',             hint: 'Vrbo Dashboard → Mes annonces → ID propriété' },
-      { key: 'client_id',     label: 'Client ID',     type: 'text',     placeholder: 'vrbo_xxxxxxxxxxxxxxxx',   hint: 'Vrbo Connectivity Hub → App Credentials' },
-      { key: 'client_secret', label: 'Client Secret', type: 'password', placeholder: 'Votre secret Vrbo',       hint: 'Généré avec votre Client ID' },
+      { key: 'email',    label: 'Adresse e-mail',  type: 'email',    placeholder: 'votre@email.com',    hint: 'E-mail de votre compte Vrbo / HomeAway' },
+      { key: 'password', label: 'Mot de passe',    type: 'password', placeholder: 'Votre mot de passe', hint: 'Le même mot de passe que sur vrbo.com' },
     ],
     demoProducts: [
       { name: 'Villa Provençale 4 Ch.', type: 'Villa',  rooms: 4, capacity: 8, price: 420 },
@@ -86,27 +87,28 @@ const OTA_DEFS = [
   {
     id: 'agoda', name: 'Agoda', color: '#E0113A', bg: '#FFE8EC', logo: '🌏',
     desc: 'Marché asiatique', keywords: ['agoda'],
+    loginUrl: 'https://ycs.agoda.com/en-us/account/login',
     fields: [
-      { key: 'hotel_id', label: 'Hotel ID',  type: 'text',     placeholder: 'ex: 345678',               hint: 'Agoda YCS → Votre compte → ID Hôtel' },
-      { key: 'api_key',  label: 'API Key',   type: 'password', placeholder: 'agoda_xxxxxxxxxxxxxxxx',    hint: 'Agoda YCS → API Management → Clés API' },
+      { key: 'email',    label: 'Adresse e-mail',  type: 'email',    placeholder: 'votre@email.com',    hint: 'E-mail de votre compte Agoda YCS (partenaire)' },
+      { key: 'password', label: 'Mot de passe',    type: 'password', placeholder: 'Votre mot de passe', hint: 'Le même mot de passe que sur ycs.agoda.com' },
     ],
     demoProducts: [
-      { name: 'Standard Room',    type: 'Room',  rooms: 1, capacity: 2, price: 75 },
-      { name: 'Superior Room',    type: 'Room',  rooms: 1, capacity: 2, price: 95 },
-      { name: 'Executive Suite',  type: 'Suite', rooms: 2, capacity: 3, price: 180 },
+      { name: 'Standard Room',   type: 'Room',  rooms: 1, capacity: 2, price: 75 },
+      { name: 'Superior Room',   type: 'Room',  rooms: 1, capacity: 2, price: 95 },
+      { name: 'Executive Suite', type: 'Suite', rooms: 2, capacity: 3, price: 180 },
     ],
   },
   {
     id: 'google', name: 'Google Hotels', color: '#4285F4', bg: '#E8F0FF', logo: '🔍',
     desc: 'Moteur de recherche', keywords: ['google'],
+    loginUrl: 'https://accounts.google.com/signin',
     fields: [
-      { key: 'hotel_id',   label: 'Hotel ID',           type: 'text', placeholder: 'ex: /g/1tf…',              hint: 'Google Hotel Center → Propriétés' },
-      { key: 'partner_id', label: 'Channel Partner ID', type: 'text', placeholder: 'ex: GCP-XXXXXXXXXX',       hint: 'Google Hotel Ads → Paramètres du partenaire' },
-      { key: 'api_key',    label: 'API Key',            type: 'password', placeholder: 'AIzaSy…',              hint: 'Google Cloud Console → API & Services → Identifiants' },
+      { key: 'email',    label: 'Adresse Gmail',   type: 'email',    placeholder: 'votre@gmail.com',    hint: 'Compte Google associé à votre Hotel Center' },
+      { key: 'password', label: 'Mot de passe',    type: 'password', placeholder: 'Votre mot de passe Google', hint: 'Le même mot de passe que votre compte Google' },
     ],
     demoProducts: [
-      { name: 'Chambre Standard Google', type: 'Chambre', rooms: 1, capacity: 2, price: 99 },
-      { name: 'Suite Premium',           type: 'Suite',   rooms: 2, capacity: 4, price: 220 },
+      { name: 'Chambre Standard', type: 'Chambre', rooms: 1, capacity: 2, price: 99 },
+      { name: 'Suite Premium',    type: 'Suite',   rooms: 2, capacity: 4, price: 220 },
     ],
   },
 ];
@@ -772,24 +774,48 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                     {/* Not connected — expandable form */}
                     {!conn && expanded && (
                       <div className="cm-ota-conn-body">
+                        {/* Login notice */}
+                        <div className="cm-ota-login-notice" style={{ borderColor: ota.color + '30', background: ota.bg }}>
+                          <Lock size={12} style={{ color: ota.color, flexShrink: 0 }} />
+                          <span>Identifiants de votre compte <strong style={{ color: ota.color }}>{ota.name}</strong> — les mêmes que sur le site officiel</span>
+                          {ota.loginUrl && (
+                            <a href={ota.loginUrl} target="_blank" rel="noreferrer" className="cm-ota-login-link" style={{ color: ota.color }}>
+                              <ExternalLink size={11} /> Site
+                            </a>
+                          )}
+                        </div>
+
                         {err && (
                           <div className="cm-ota-form-err">
                             <AlertCircle size={13} /><span>{err}</span>
                           </div>
                         )}
+
                         <div className="cm-ota-form-fields">
                           {ota.fields.map(field => {
                             const showKey = `${ota.id}_${field.key}`;
-                            const isVisible = field.type === 'text' || otaShow[showKey];
+                            const isEmail = field.type === 'email';
+                            const inputType = field.type === 'password' && !otaShow[showKey]
+                              ? 'password'
+                              : isEmail ? 'email' : 'text';
                             return (
                               <div key={field.key} className="cm-ota-form-group">
-                                <label>{field.label}</label>
+                                <div className="cm-ota-form-label-row">
+                                  <label>{field.label}</label>
+                                  {field.type === 'password' && ota.loginUrl && (
+                                    <a href={ota.loginUrl} target="_blank" rel="noreferrer" className="cm-ota-forgot-link">
+                                      Mot de passe oublié ?
+                                    </a>
+                                  )}
+                                </div>
                                 <div className="cm-ota-form-input">
+                                  {isEmail && <span className="cm-ota-form-prefix">@</span>}
                                   <input
-                                    type={field.type === 'password' && !otaShow[showKey] ? 'password' : 'text'}
+                                    type={inputType}
                                     value={form[field.key] || ''}
                                     onChange={e => setOtaField(ota.id, field.key, e.target.value)}
                                     placeholder={field.placeholder}
+                                    autoComplete={isEmail ? 'email' : field.type === 'password' ? 'current-password' : 'off'}
                                     onKeyDown={e => e.key === 'Enter' && allFilled && !isBusy && connectOTA(ota.id)}
                                   />
                                   {field.type === 'password' && (
@@ -803,6 +829,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                             );
                           })}
                         </div>
+
                         <button
                           className="cm-ota-connect-btn"
                           style={{ background: `linear-gradient(135deg, ${ota.color}, ${ota.color}cc)` }}
@@ -811,9 +838,13 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                         >
                           {isBusy
                             ? <><RefreshCw size={14} className="cm-spin" /> Connexion & import en cours...</>
-                            : <><LogIn size={14} /> Connecter {ota.name}</>
+                            : <><LogIn size={14} /> Se connecter à {ota.name}</>
                           }
                         </button>
+
+                        <div className="cm-ota-secure-note">
+                          <Shield size={10} /> Connexion sécurisée · Données chiffrées localement
+                        </div>
                       </div>
                     )}
 
