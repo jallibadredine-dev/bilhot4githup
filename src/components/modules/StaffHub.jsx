@@ -147,6 +147,8 @@ const StaffHub = () => {
       email: newStaff.email, phone: newStaff.phone, whatsapp: newStaff.whatsapp,
       role: newStaff.role, roleLabel, status: 'offline',
       joined: new Date().toISOString().slice(0,10), nps: 0,
+      tempPassword,
+      passwordSetAt: new Date().toISOString(),
       notes: [{ date: new Date().toLocaleDateString('fr-FR'), author: 'System', text: `Compte créé. Mot de passe provisoire : ${tempPassword}` }],
       customPermissions: newStaff.permissions,
     };
@@ -706,6 +708,65 @@ const StaffHub = () => {
                       <div className="sh-detail-kpi"><Activity size={16} color="#3B82F6"/><span>{selectedStaff.status === 'online' ? 'En ligne' : 'Hors ligne'}</span><label>Statut</label></div>
                       <div className="sh-detail-kpi"><Shield size={16} color={role.color}/><span>{role.emoji} {role.label}</span><label>Rôle</label></div>
                     </div>
+
+                    {/* ── Login credentials ── */}
+                    {selectedStaff.tempPassword && (
+                      <div className="sh-detail-section sh-credentials-section">
+                        <div className="sh-detail-section-title-row">
+                          <span className="sh-detail-section-title"><Key size={13}/> Identifiants de connexion</span>
+                          <button
+                            className="sh-btn-add-note"
+                            onClick={() => {
+                              const newPwd = generateTempPassword();
+                              setStaffList(prev => prev.map(s => s.id !== selectedStaff.id ? s : {
+                                ...s,
+                                tempPassword: newPwd,
+                                passwordSetAt: new Date().toISOString(),
+                                notes: [{ date: new Date().toLocaleDateString('fr-FR'), author: 'Manager', text: `Mot de passe réinitialisé : ${newPwd}` }, ...s.notes],
+                              }));
+                              setSelectedStaff(s => ({ ...s, tempPassword: newPwd, passwordSetAt: new Date().toISOString() }));
+                            }}
+                          >
+                            <RefreshCw size={12}/> Réinitialiser
+                          </button>
+                        </div>
+                        <div className="sh-credentials-box">
+                          <div className="sh-cred-row">
+                            <span className="sh-cred-label"><Mail size={11}/> Email</span>
+                            <div className="sh-cred-value-wrap">
+                              <span className="sh-cred-value">{selectedStaff.email || '—'}</span>
+                              {selectedStaff.email && (
+                                <button className="sh-cred-copy" onClick={() => navigator.clipboard.writeText(selectedStaff.email)}>
+                                  <Copy size={11}/>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="sh-cred-row">
+                            <span className="sh-cred-label"><Lock size={11}/> Mot de passe</span>
+                            <div className="sh-cred-value-wrap">
+                              <code className="sh-cred-password">{selectedStaff.tempPassword}</code>
+                              <button className="sh-cred-copy" onClick={() => navigator.clipboard.writeText(selectedStaff.tempPassword)}>
+                                <Copy size={11}/>
+                              </button>
+                            </div>
+                          </div>
+                          {selectedStaff.passwordSetAt && (
+                            <p className="sh-cred-hint">
+                              Généré le {new Date(selectedStaff.passwordSetAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}
+                            </p>
+                          )}
+                          <button
+                            className="sh-cred-share-btn"
+                            onClick={() => navigator.clipboard.writeText(
+                              `Bonjour ${selectedStaff.name},\n\nVoici vos accès Hova PMS :\nEmail : ${selectedStaff.email}\nMot de passe : ${selectedStaff.tempPassword}\n\nChangez votre mot de passe dès la première connexion.`
+                            )}
+                          >
+                            <Copy size={12}/> Copier le message complet à partager
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Role description + accesses */}
                     <div className="sh-detail-section">
