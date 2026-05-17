@@ -1,275 +1,489 @@
-.revenue-ai-container {
-  padding: 2.5rem;
-  background: #f8fafc;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+/* RevenueAI v2 — Portfolio Management Style */
+
+.rai2-root {
+  height: calc(100vh - 56px);
   overflow-y: auto;
-}
-
-.revenue-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.revenue-header h1 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: #1e293b;
-}
-
-.btn-sync {
-  background: #1e293b;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-}
-
-.btn-sync:hover {
-  transform: translateY(-2px);
-  background: #334155;
-}
-
-.btn-sync.syncing svg {
-  animation: spin 1s infinite linear;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.revenue-summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-}
-
-.summary-card {
-  padding: 1.5rem;
+  background: #F1F5F9;
+  font-family: 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-.summary-card .label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #64748b;
+.rai2-root::-webkit-scrollbar { width: 5px; }
+.rai2-root::-webkit-scrollbar-track { background: transparent; }
+.rai2-root::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+/* ── Hero ─────────────────────────────────────────────── */
+.rai2-hero {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #1E3A5F 100%);
+  padding: 24px 32px 20px;
+  flex-shrink: 0;
 }
 
-.summary-card .value {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: #1e293b;
-}
-
-.summary-card .trend {
+.rai2-hero-top {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.trend.positive { color: #10b981; }
-
-.revenue-main-grid {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 2rem;
-}
-
-/* Chart Section */
-.chart-section {
-  padding: 2rem;
-  position: relative;
-}
-
-.chart-visual {
-  margin: 2rem 0;
-  position: relative;
-}
-
-.revenue-svg {
-  width: 100%;
-  height: 200px;
-  overflow: visible;
-}
-
-.path-animate {
-  stroke-dasharray: 1000;
-  stroke-dashoffset: 1000;
-  animation: draw 3s forwards;
-}
-
-@keyframes draw {
-  to { stroke-dashoffset: 0; }
-}
-
-.chart-labels {
-  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0 10px;
-  margin-top: 1rem;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  font-weight: 600;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
-.chart-legend {
-  display: flex;
-  gap: 20px;
-}
-
-.chart-legend span {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dot { width: 8px; height: 8px; border-radius: 50%; }
-.dot.price { background: var(--accent-blue); }
-.dot.occupancy { background: rgba(0,0,0,0.1); }
-
-/* Insight Box */
-.ai-insight-box {
-  background: white;
-  border-left: 4px solid var(--accent-blue);
-  padding: 1.5rem;
-  border-radius: 12px;
-  display: flex;
-  gap: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-}
-
-.insight-content h4 {
-  font-weight: 800;
-  margin-bottom: 6px;
-  color: #1e293b;
-}
-
-.insight-content p {
-  font-size: 0.9rem;
-  color: #475569;
-  margin-bottom: 1rem;
-}
-
-.btn-apply-suggestion {
-  background: #eff6ff;
-  color: #3b82f6;
-  border: 1px solid #dbeafe;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-/* Factors Section */
-.factors-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 1.5rem;
-}
-
-.factor-item {
+.rai2-hero-title {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f8fafc;
 }
 
-.factor-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+.rai2-hero-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255,56,92,0.2);
+  color: #FF385C;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.factor-icon.blue { background: #eff6ff; color: #3b82f6; }
-.factor-icon.orange { background: #fff7ed; color: #f97316; }
-.factor-icon.purple { background: #f5f3ff; color: #8b5cf6; }
-
-.factor-info {
-  flex: 1;
+.rai2-hero-title h1 {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #F8FAFC;
+  margin: 0;
+  letter-spacing: -0.025em;
 }
 
-.factor-info strong { display: block; font-size: 0.85rem; }
-.factor-info span { font-size: 0.7rem; color: #94a3b8; }
-
-.factor-impact {
-  font-weight: 800;
-  font-size: 0.85rem;
+.rai2-hero-title p {
+  font-size: 0.78rem;
+  color: #64748B;
+  margin: 3px 0 0;
 }
 
-/* OTA Distribution */
-.ota-distribution {
-  padding: 1.5rem;
-  margin-top: 2rem;
-}
-
-.ota-bar {
+.rai2-hero-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.ota-bar label { width: 100px; font-size: 0.75rem; font-weight: 600; color: #64748b; }
-.ota-bar span { font-size: 0.75rem; font-weight: 700; color: #1e293b; width: 40px; text-align: right; }
-
-.bar-wrap {
-  flex: 1;
-  height: 6px;
-  background: #f1f5f9;
-  border-radius: 3px;
-  overflow: hidden;
+/* Period tabs */
+.rai2-period-tabs {
+  display: flex;
+  background: rgba(255,255,255,0.07);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
 }
 
-.bar-wrap .fill {
-  height: 100%;
-  background: var(--accent-blue);
+.rai2-period-tab {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #64748B;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 7px;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
 }
+.rai2-period-tab.active { background: rgba(255,255,255,0.12); color: #F8FAFC; }
+.rai2-period-tab:hover:not(.active) { color: #CBD5E1; }
 
-.ota-tip {
-  margin-top: 1.5rem;
-  font-size: 0.7rem;
-  color: #64748b;
+.rai2-sync-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-style: italic;
+  padding: 7px 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: #CBD5E1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
 }
+.rai2-sync-btn:hover { background: rgba(255,255,255,0.1); }
+.rai2-sync-btn.syncing svg { animation: rai2-spin 1s linear infinite; }
+@keyframes rai2-spin { to { transform: rotate(360deg); } }
 
-.revenue-footer {
-  display: flex;
-  justify-content: space-between;
-  padding: 1rem 0;
-  border-top: 1px solid #e2e8f0;
-  margin-top: 2rem;
-  color: #94a3b8;
-  font-size: 0.7rem;
-}
-
-.trust-badge, .global-reach {
+/* KPI Strip */
+.rai2-kpi-strip {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.rai2-kpi {
+  flex: 1;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rai2-kpi.accent { background: rgba(255,56,92,0.12); border-left: 1px solid rgba(255,56,92,0.25); }
+
+.rai2-kpi-divider {
+  width: 1px;
+  background: rgba(255,255,255,0.07);
+  align-self: stretch;
+}
+
+.rai2-kpi-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748B;
+}
+
+.rai2-kpi-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.rai2-kpi-value span { font-size: 0.85rem; font-weight: 600; color: #94A3B8; }
+
+.rai2-kpi-trend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748B;
+}
+.rai2-kpi-trend.up   { color: #10B981; }
+.rai2-kpi-trend.down { color: #EF4444; }
+
+/* ── Body ─────────────────────────────────────────────── */
+.rai2-body {
+  flex: 1;
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Cards ────────────────────────────────────────────── */
+.rai2-card {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.rai2-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.rai2-card-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.rai2-card-action {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 7px;
+  background: white;
+  color: #64748B;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.rai2-card-action:hover { background: #F8FAFC; }
+
+.rai2-card-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94A3B8;
+  background: #F1F5F9;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.rai2-badge-ai {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #FF385C;
+  background: #FFF1F3;
+  border: 1px solid #FFD6DC;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+/* ── Portfolio Table ──────────────────────────────────── */
+.rai2-table-wrap { overflow-x: auto; }
+
+.rai2-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.rai2-table thead th {
+  padding: 10px 14px;
+  text-align: right;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94A3B8;
+  background: #FAFAFA;
+  border-bottom: 1px solid #F1F5F9;
+  white-space: nowrap;
+  user-select: none;
+}
+.rai2-table thead th.left { text-align: left; }
+.rai2-table thead th.clickable { cursor: pointer; }
+.rai2-table thead th.clickable:hover { color: #475569; background: #F4F6F8; }
+
+.rai2-table tbody tr {
+  border-bottom: 1px solid #F8FAFC;
+  transition: background 0.12s;
+  cursor: pointer;
+}
+.rai2-table tbody tr:hover { background: #FAFAFA; }
+.rai2-table tbody tr:last-child { border-bottom: none; }
+.rai2-table tbody tr.expanded { background: #FAFEFF; }
+
+.rai2-table td {
+  padding: 12px 14px;
+  text-align: right;
+  color: #1E293B;
+  vertical-align: middle;
+}
+.rai2-table td.left { text-align: left; }
+
+/* Property cell */
+.rai2-prop-cell { display: flex; align-items: center; gap: 10px; }
+.rai2-prop-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #FF385C, #FF6B8A);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.rai2-prop-name { font-size: 0.82rem; font-weight: 700; color: #0F172A; white-space: nowrap; }
+.rai2-prop-meta { font-size: 0.7rem; color: #94A3B8; margin-top: 1px; }
+
+/* Value cells */
+.rai2-val-main { font-weight: 700; color: #0F172A; }
+.rai2-val-main.green { color: #10B981; }
+.rai2-val { font-weight: 600; color: #475569; }
+
+/* Occupancy bar */
+.rai2-occ-cell { display: flex; align-items: center; gap: 7px; justify-content: flex-end; }
+.rai2-occ-bar { width: 50px; height: 5px; background: #F1F5F9; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+.rai2-occ-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+/* Commission cell */
+.rai2-comm-cell { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.rai2-comm-pct { font-size: 0.82rem; font-weight: 700; color: #F59E0B; }
+.rai2-comm-amt { font-size: 0.7rem; color: #94A3B8; }
+
+/* Sparkline */
+.rai2-sparkline { display: flex; align-items: flex-end; gap: 2px; height: 28px; justify-content: flex-end; }
+.rai2-spark-bar { width: 7px; border-radius: 2px 2px 0 0; flex-shrink: 0; }
+
+/* Status badge */
+.rai2-status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rai2-status-badge.up     { background: #ECFDF5; color: #10B981; }
+.rai2-status-badge.down   { background: #FEF2F2; color: #EF4444; }
+.rai2-status-badge.stable { background: #F1F5F9; color: #64748B; }
+
+/* Total row */
+.rai2-total-row {
+  background: #F8FAFC !important;
+  border-top: 2px solid #E2E8F0 !important;
+}
+.rai2-total-row td { font-size: 0.84rem; padding: 13px 14px; }
+.rai2-total-row .green { color: #10B981; }
+
+.rai2-yield-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #FF385C;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* ── Analytics Row ────────────────────────────────────── */
+.rai2-analytics-row {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr;
+  gap: 16px;
+}
+
+/* Monthly bars */
+.rai2-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 140px;
+  padding: 16px 18px 0;
+}
+
+.rai2-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  gap: 4px;
+}
+
+.rai2-bar-label-top {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94A3B8;
+  white-space: nowrap;
+}
+
+.rai2-bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: transparent;
+}
+
+.rai2-bar-fill {
+  width: 100%;
+  background: #E2E8F0;
+  border-radius: 5px 5px 0 0;
+  transition: height 0.5s;
+}
+.rai2-bar-fill.current { background: #FF385C; }
+
+.rai2-bar-month {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94A3B8;
+  padding-bottom: 10px;
+}
+
+/* OTA list */
+.rai2-ota-list { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+.rai2-ota-row { display: flex; align-items: center; gap: 8px; }
+.rai2-ota-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rai2-ota-name { font-size: 0.78rem; font-weight: 600; color: #475569; width: 90px; flex-shrink: 0; }
+.rai2-ota-track { flex: 1; height: 6px; background: #F1F5F9; border-radius: 3px; overflow: hidden; }
+.rai2-ota-fill { height: 100%; border-radius: 3px; }
+.rai2-ota-pct { font-size: 0.75rem; font-weight: 700; color: #1E293B; width: 30px; text-align: right; }
+.rai2-ota-rev { font-size: 0.72rem; color: #94A3B8; width: 75px; text-align: right; }
+
+.rai2-ota-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 18px 14px;
+  padding: 9px 12px;
+  background: #FFFBEB;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #92400E;
+  line-height: 1.4;
+}
+
+/* ── AI Tips ──────────────────────────────────────────── */
+.rai2-ai-tips { padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+
+.rai2-ai-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid #F1F5F9;
+  border-radius: 10px;
+  background: #FAFAFA;
+  transition: border-color 0.15s;
+}
+.rai2-ai-tip:hover { border-color: #E2E8F0; background: white; }
+
+.rai2-ai-tip-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rai2-ai-tip-body { flex: 1; }
+.rai2-ai-tip-title { font-size: 0.84rem; font-weight: 700; color: #0F172A; margin-bottom: 3px; }
+.rai2-ai-tip-text  { font-size: 0.78rem; color: #64748B; line-height: 1.5; }
+
+.rai2-ai-tip-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+  align-self: center;
+}
+.rai2-ai-tip-btn:hover { opacity: 0.8; }
+
+/* ── Flex utilities ───────────────────────────────────── */
+.flex-2 { grid-column: span 1; }
+
+@media (max-width: 1100px) {
+  .rai2-kpi-strip { flex-wrap: wrap; }
+  .rai2-analytics-row { grid-template-columns: 1fr; }
+  .rai2-hero { padding: 18px 16px; }
+  .rai2-body { padding: 14px 12px; }
+}
+
+@media (max-width: 800px) {
+  .rai2-table thead th:nth-child(n+5) { display: none; }
+  .rai2-table td:nth-child(n+5)       { display: none; }
+  .rai2-kpi { padding: 10px 12px; }
+  .rai2-kpi-value { font-size: 1rem; }
 }
