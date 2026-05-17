@@ -12,6 +12,7 @@
 
 import { channexAPI } from './channex';
 import { ttlockAPI } from './ttlock';
+import { sendPinNotifications } from './notifications';
 
 const STORAGE_KEY = 'hosflow_automation_log';
 const MAPPING_KEY = 'hosflow_property_lock_map';
@@ -169,6 +170,33 @@ export const AutomationEngine = {
             departureDate,
             message: `PIN ${pin} créé pour ${guestName} · Arrivée ${arrivalDate} → Départ ${departureDate}`,
           });
+
+          // Fire notifications (email + WhatsApp) — best effort, don't fail the loop
+          try {
+            const notifResults = await sendPinNotifications({
+              guestName,
+              guestEmail:  customer.email || '',
+              guestPhone:  customer.phone || '',
+              propertyName: mapping.propertyName || propertyId,
+              pin,
+              lockName: mapping.lockName || `Lock ${mapping.ttlockLockId}`,
+              arrivalDate,
+              departureDate,
+              bookingId: booking.id,
+            });
+
+            if (notifResults.email?.success) {
+              addLogEntry({
+                type: 'notification',
+                status: 'success',
+                bookingId: booking.id,
+                guestName,
+                message: `Email envoyé à ${customer.email} pour ${guestName}`,
+              });
+            }
+          } catch (notifErr) {
+            // Notification failures are non-critical
+          }
         } catch (err) {
           errors++;
           addLogEntry({
