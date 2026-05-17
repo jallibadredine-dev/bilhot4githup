@@ -155,9 +155,40 @@ const DemoHotelSite = ({ site, onClose, onUse }) => {
   const [checkin, setCheckin] = useState('2025-07-10');
   const [checkout, setCheckout] = useState('2025-07-13');
   const [guests, setGuests] = useState(2);
+  const [device, setDevice] = useState('desktop');
+  const rooms = site.rooms || [];
+  const amenities = site.amenities || [];
+  const reviews = site.reviews || [];
 
   return (
     <div className="fixed inset-0 z-[500] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <style>{`
+        .demo-site-wrap { background: #f8f9fa; }
+        .demo-nav-links { display: flex; gap: 2rem; align-items: center; }
+        .demo-hero { position: relative; height: 580px; overflow: hidden; }
+        .demo-booking-widget { position: absolute; bottom: -36px; left: 50%; transform: translateX(-50%); width: min(880px,92%); background: white; border-radius: 20px; padding: 1.25rem 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.25); display: flex; gap: .75rem; align-items: center; }
+        .demo-stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; }
+        .demo-rooms-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.25rem; }
+        .demo-amenities-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 1rem; }
+        .demo-reviews-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.25rem; }
+        @media(max-width:900px){
+          .demo-nav-links { display: none; }
+          .demo-hero { height: 420px; }
+          .demo-booking-widget { flex-direction: column; bottom: -80px; padding: 1rem; gap: .5rem; }
+          .demo-booking-widget > div { width: 100%; }
+          .demo-booking-widget > button { width: 100%; }
+          .demo-stats-grid { grid-template-columns: repeat(2,1fr); }
+          .demo-rooms-grid { grid-template-columns: 1fr; }
+          .demo-amenities-grid { grid-template-columns: repeat(3,1fr); }
+          .demo-reviews-grid { grid-template-columns: 1fr; }
+        }
+        @media(max-width:480px){
+          .demo-amenities-grid { grid-template-columns: repeat(2,1fr); }
+          .demo-stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .demo-frame-tablet { max-width: 768px; margin: 0 auto; }
+        .demo-frame-mobile { max-width: 390px; margin: 0 auto; border-radius: 2rem; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.4); border: 8px solid #1e293b; }
+      `}</style>
       {/* Demo bar */}
       <div className="h-11 bg-zinc-900 flex items-center justify-between px-4 shrink-0 border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -170,29 +201,36 @@ const DemoHotelSite = ({ site, onClose, onUse }) => {
           <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">● En Ligne</span>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex gap-1 bg-zinc-800 p-1 rounded-lg">
+            {[['desktop',Monitor],['tablet',Tablet],['mobile',Smartphone]].map(([d,Icon])=>(
+              <button key={d} onClick={()=>setDevice(d)} className={`p-1.5 rounded-md transition ${device===d ? 'bg-zinc-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}><Icon size={13}/></button>
+            ))}
+          </div>
           <button onClick={onUse} className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition flex items-center gap-1.5"><Wand2 size={12}/> Utiliser ce template</button>
           <button onClick={onClose} className="text-white/40 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition"><X size={16}/></button>
         </div>
       </div>
 
       {/* Website content */}
-      <div className="flex-1 overflow-y-auto" style={{ background: '#f8f9fa' }}>
+      <div className={`flex-1 overflow-y-auto demo-site-wrap ${device !== 'desktop' ? 'bg-slate-200 p-4' : ''}`}>
+        <div className={device === 'mobile' ? 'demo-frame-mobile' : device === 'tablet' ? 'demo-frame-tablet' : ''}>
         {/* NAV */}
-        <nav style={{ background: site.bg, color: '#fff', padding: '0 2.5rem', height: '68px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
+        <nav style={{ background: site.bg, color: '#fff', padding: '0 1.5rem', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ width: '32px', height: '32px', background: site.accent, borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', color: site.bg, fontSize: '16px' }}>H</div>
-            <span style={{ fontWeight: '800', fontSize: '17px' }}>{site.name}</span>
+            <span style={{ fontWeight: '800', fontSize: '16px' }}>{site.name}</span>
           </div>
-          <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+          <div className="demo-nav-links">
             {['Chambres', 'Services', 'Galerie', 'Contact'].map(n => (
               <span key={n} style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13px', fontWeight: '600', cursor: 'pointer' }}>{n}</span>
             ))}
-            <button style={{ background: site.accent, color: site.bg, padding: '9px 22px', borderRadius: '100px', fontWeight: '800', fontSize: '13px', border: 'none', cursor: 'pointer' }}>Réserver</button>
+            <button style={{ background: site.accent, color: site.bg, padding: '8px 18px', borderRadius: '100px', fontWeight: '800', fontSize: '12px', border: 'none', cursor: 'pointer' }}>Réserver</button>
           </div>
+          <button style={{ display: 'none' }} className="demo-mobile-menu">☰</button>
         </nav>
 
         {/* HERO */}
-        <div style={{ position: 'relative', height: '580px', overflow: 'hidden' }}>
+        <div className="demo-hero">
           <img src={site.heroImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 100%)' }} />
           <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', color: 'white', padding: '0 2rem' }}>
@@ -225,79 +263,87 @@ const DemoHotelSite = ({ site, onClose, onUse }) => {
 
         {/* STATS */}
         <div style={{ paddingTop: '70px', background: 'white', borderBottom: '1px solid #f1f5f9' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.25rem 2rem', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '1rem' }}>
-            {[{ icon: '⭐', val: '4.9/5', label: 'Note Clients' }, { icon: '🏆', val: site.visits, label: 'Visites/mois' }, { icon: '💳', val: site.conversion, label: 'Conversion' }, { icon: '💰', val: 'Prix Direct', label: 'Meilleur tarif' }].map((s, i) => (
-              <div key={i} style={{ textAlign: 'center', padding: '1rem', borderRadius: '14px', background: '#f8fafc' }}>
-                <div style={{ fontSize: '22px', marginBottom: '5px' }}>{s.icon}</div>
-                <div style={{ fontWeight: '800', fontSize: '18px', color: '#0f172a', letterSpacing: '-0.02em' }}>{s.val}</div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '2px' }}>{s.label}</div>
-              </div>
-            ))}
+          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1.25rem 2rem' }}>
+            <div className="demo-stats-grid">
+              {[{ icon: '⭐', val: '4.9/5', label: 'Note Clients' }, { icon: '🏆', val: site.visits || '—', label: 'Visites/mois' }, { icon: '💳', val: site.conversion || '—', label: 'Conversion' }, { icon: '💰', val: 'Prix Direct', label: 'Meilleur tarif' }].map((s, i) => (
+                <div key={i} style={{ textAlign: 'center', padding: '1rem', borderRadius: '14px', background: '#f8fafc' }}>
+                  <div style={{ fontSize: '22px', marginBottom: '5px' }}>{s.icon}</div>
+                  <div style={{ fontWeight: '800', fontSize: '18px', color: '#0f172a', letterSpacing: '-0.02em' }}>{s.val}</div>
+                  <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: '2px' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* ROOMS */}
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '5rem 2rem' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <div style={{ fontSize: '10px', fontWeight: '800', color: site.bg, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '10px' }}>Hébergements</div>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '900', letterSpacing: '-0.03em', color: '#0f172a' }}>Nos Chambres & Suites</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.25rem' }}>
-            {site.rooms.map((room, i) => (
-              <div key={i} style={{ background: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
-                <div style={{ aspectRatio: '4/3', overflow: 'hidden', position: 'relative' }}>
-                  <img src={room.img} alt={room.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'white', padding: '4px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '700' }}>{room.price}<span style={{ fontSize: '9px', opacity: 0.7 }}>/nuit</span></div>
-                </div>
-                <div style={{ padding: '1.25rem' }}>
-                  <h3 style={{ fontWeight: '800', fontSize: '1rem', marginBottom: '8px', color: '#0f172a' }}>{room.name}</h3>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '1rem' }}>
-                    {room.tags.map((t, j) => <span key={j} style={{ background: '#f1f5f9', color: '#64748b', fontSize: '10px', fontWeight: '600', padding: '3px 8px', borderRadius: '100px' }}>{t}</span>)}
+        {rooms.length > 0 && (
+          <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '5rem 2rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <div style={{ fontSize: '10px', fontWeight: '800', color: site.bg, textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '10px' }}>Hébergements</div>
+              <h2 style={{ fontSize: '2.25rem', fontWeight: '900', letterSpacing: '-0.03em', color: '#0f172a' }}>Nos Chambres & Suites</h2>
+            </div>
+            <div className="demo-rooms-grid">
+              {rooms.map((room, i) => (
+                <div key={i} style={{ background: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
+                  <div style={{ aspectRatio: '4/3', overflow: 'hidden', position: 'relative' }}>
+                    <img src={room.img} alt={room.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)', color: 'white', padding: '4px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: '700' }}>{room.price}<span style={{ fontSize: '9px', opacity: 0.7 }}>/nuit</span></div>
                   </div>
-                  <button style={{ width: '100%', background: site.bg, color: 'white', padding: '10px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', border: 'none', cursor: 'pointer' }}>Réserver</button>
+                  <div style={{ padding: '1.25rem' }}>
+                    <h3 style={{ fontWeight: '800', fontSize: '1rem', marginBottom: '8px', color: '#0f172a' }}>{room.name}</h3>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '1rem' }}>
+                      {(room.tags || []).map((t, j) => <span key={j} style={{ background: '#f1f5f9', color: '#64748b', fontSize: '10px', fontWeight: '600', padding: '3px 8px', borderRadius: '100px' }}>{t}</span>)}
+                    </div>
+                    <button style={{ width: '100%', background: site.bg, color: 'white', padding: '10px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', border: 'none', cursor: 'pointer' }}>Réserver</button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* AMENITIES */}
-        <div style={{ background: site.bg, padding: '5rem 2rem' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '900', letterSpacing: '-0.03em', color: 'white', marginBottom: '2.5rem' }}>Services Premium</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '1rem' }}>
-              {site.amenities.map((a, i) => (
-                <div key={i} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '14px', padding: '1.25rem 0.75rem', border: '1px solid rgba(255,255,255,0.12)' }}>
-                  <div style={{ fontSize: '26px', marginBottom: '8px' }}>{a.split(' ')[0]}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.75)', fontWeight: '600', lineHeight: 1.3 }}>{a.split(' ').slice(1).join(' ')}</div>
-                </div>
-              ))}
+        {amenities.length > 0 && (
+          <div style={{ background: site.bg, padding: '5rem 2rem' }}>
+            <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
+              <h2 style={{ fontSize: '2.25rem', fontWeight: '900', letterSpacing: '-0.03em', color: 'white', marginBottom: '2.5rem' }}>Services Premium</h2>
+              <div className="demo-amenities-grid">
+                {amenities.map((a, i) => (
+                  <div key={i} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '14px', padding: '1.25rem 0.75rem', border: '1px solid rgba(255,255,255,0.12)' }}>
+                    <div style={{ fontSize: '26px', marginBottom: '8px' }}>{a.split(' ')[0]}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.75)', fontWeight: '600', lineHeight: 1.3 }}>{a.split(' ').slice(1).join(' ')}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* REVIEWS */}
-        <div style={{ padding: '5rem 2rem', background: '#f8fafc' }}>
-          <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '900', letterSpacing: '-0.03em', color: '#0f172a', marginBottom: '2.5rem' }}>Avis de nos Hôtes</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '1.25rem' }}>
-              {site.reviews.map((r, i) => (
-                <div key={i} style={{ background: 'white', borderRadius: '20px', padding: '1.75rem', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', textAlign: 'left' }}>
-                  <div style={{ display: 'flex', gap: '2px', marginBottom: '10px' }}>{'★★★★★'.split('').map((s, j) => <span key={j} style={{ color: '#f59e0b', fontSize: '16px' }}>{s}</span>)}</div>
-                  <p style={{ color: '#475569', lineHeight: 1.7, marginBottom: '1.25rem', fontStyle: 'italic' }}>"{r.text}"</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: site.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>{r.flag}</div>
-                    <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '14px' }}>{r.author}</div>
+        {reviews.length > 0 && (
+          <div style={{ padding: '5rem 2rem', background: '#f8fafc' }}>
+            <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
+              <h2 style={{ fontSize: '2.25rem', fontWeight: '900', letterSpacing: '-0.03em', color: '#0f172a', marginBottom: '2.5rem' }}>Avis de nos Hôtes</h2>
+              <div className="demo-reviews-grid">
+                {reviews.map((r, i) => (
+                  <div key={i} style={{ background: 'white', borderRadius: '20px', padding: '1.75rem', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', textAlign: 'left' }}>
+                    <div style={{ display: 'flex', gap: '2px', marginBottom: '10px' }}>{'★★★★★'.split('').map((s, j) => <span key={j} style={{ color: '#f59e0b', fontSize: '16px' }}>{s}</span>)}</div>
+                    <p style={{ color: '#475569', lineHeight: 1.7, marginBottom: '1.25rem', fontStyle: 'italic' }}>"{r.text}"</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: site.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>{r.flag}</div>
+                      <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '14px' }}>{r.author}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* FOOTER */}
         <div style={{ background: '#0f172a', color: 'white', padding: '2.5rem 2rem' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
               <div style={{ fontWeight: '800', fontSize: '1.1rem', marginBottom: '4px' }}>{site.name}</div>
               <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{site.domain} · Propulsé par Hova PMS</div>
@@ -305,6 +351,7 @@ const DemoHotelSite = ({ site, onClose, onUse }) => {
             <button style={{ background: site.accent, color: site.bg, padding: '10px 24px', borderRadius: '10px', fontWeight: '800', fontSize: '13px', border: 'none', cursor: 'pointer' }}>Réserver maintenant</button>
           </div>
         </div>
+        </div>{/* end device frame wrapper */}
       </div>
     </div>
   );
@@ -668,87 +715,277 @@ const BlockInspector = ({ block, onUpdate, themeAccent, setThemeAccent, activeAI
 };
 
 /* ═══════════════════════════════════════════════
-   PUBLISH MODAL
+   DNS COPY BUTTON HELPER
+═══════════════════════════════════════════════ */
+const CopyBtn = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button onClick={() => { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800); }}
+      className={`text-[9px] font-bold px-2 py-1 rounded-md transition ml-2 ${copied ? 'bg-green-100 text-green-700' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}>
+      {copied ? '✓ Copié' : 'Copier'}
+    </button>
+  );
+};
+
+const DnsRecordRow = ({ type, host, value, ttl }) => (
+  <div className="grid grid-cols-[60px_80px_1fr_60px] gap-2 items-center py-2.5 border-b border-slate-100 last:border-0 text-xs">
+    <span className={`font-black px-2 py-0.5 rounded text-center ${type === 'A' ? 'bg-blue-100 text-blue-700' : type === 'CNAME' ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'}`}>{type}</span>
+    <code className="font-mono text-slate-700 font-bold">{host}</code>
+    <div className="flex items-center min-w-0">
+      <code className="font-mono text-slate-800 truncate text-[11px]">{value}</code>
+      <CopyBtn text={value} />
+    </div>
+    <span className="text-slate-400 font-medium text-center">{ttl}</span>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════
+   PUBLISH MODAL — Professional DNS Setup
 ═══════════════════════════════════════════════ */
 const PublishModal = ({ siteName, onPublish, onClose }) => {
   const [tab, setTab] = useState('free');
+  const [dnsMode, setDnsMode] = useState('arecord');
   const [customDomain, setCustomDomain] = useState('');
-  const [subdomain, setSubdomain] = useState(siteName?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'mon-hotel');
+  const [subdomain, setSubdomain] = useState(
+    siteName?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'mon-hotel'
+  );
   const [step, setStep] = useState(1);
+  const [checking, setChecking] = useState(false);
+  const [dnsStatus, setDnsStatus] = useState(null);
 
   const freeUrl = `${subdomain}.hova.site`;
+  const HOVA_IP = '76.223.105.230';
+  const HOVA_IP6 = '2600:1f14:7ef:5200::1';
+
+  const checkDns = () => {
+    if (!customDomain) return;
+    setChecking(true);
+    setDnsStatus(null);
+    setTimeout(() => {
+      setChecking(false);
+      setDnsStatus(Math.random() > 0.4 ? 'propagated' : 'pending');
+    }, 2200);
+  };
 
   const handlePublish = () => {
     setStep(2);
-    setTimeout(() => {
-      setStep(3);
-      setTimeout(() => onPublish(tab === 'free' ? freeUrl : customDomain), 1500);
-    }, 2000);
+    const steps = [
+      'Allocation de l\'espace serveur...',
+      'Génération du certificat SSL...',
+      'Configuration du CDN...',
+      'Mise en ligne du site...',
+    ];
+    let i = 0;
+    const iv = setInterval(() => {
+      i++;
+      if (i >= steps.length) {
+        clearInterval(iv);
+        setStep(3);
+        setTimeout(() => onPublish(tab === 'free' ? freeUrl : customDomain || freeUrl), 1200);
+      }
+    }, 700);
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
+
         {step === 1 && (
           <>
-            <div className="p-8 border-b border-slate-100">
-              <h2 className="text-2xl font-black text-slate-900 mb-1 flex items-center gap-3"><Globe className="text-indigo-600"/> Mettre en ligne</h2>
-              <p className="text-slate-500 text-sm">Choisissez comment publier votre site hôtelier.</p>
+            {/* Header */}
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 flex items-center gap-2"><Globe size={20} className="text-indigo-600"/> Publier le site</h2>
+                <p className="text-slate-500 text-xs mt-0.5">Configurez votre domaine et mettez votre site en ligne.</p>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition"><X size={18}/></button>
             </div>
-            <div className="p-8 space-y-6">
+
+            <div className="flex-1 overflow-y-auto">
               {/* Tabs */}
-              <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
-                {[{ id: 'free', label: 'Sous-domaine gratuit' }, { id: 'custom', label: 'Domaine personnalisé' }].map(t => (
-                  <button key={t.id} onClick={() => setTab(t.id)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${tab === t.id ? 'bg-white shadow text-slate-900' : 'text-slate-500'}`}>{t.label}</button>
-                ))}
+              <div className="px-8 pt-6">
+                <div className="flex gap-1 bg-slate-100 p-1 rounded-2xl">
+                  {[
+                    { id: 'free', label: '🟢 Sous-domaine Gratuit', sub: 'Prêt en 30 sec' },
+                    { id: 'custom', label: '🌐 Domaine Personnalisé', sub: 'Configuration DNS' },
+                  ].map(t => (
+                    <button key={t.id} onClick={() => setTab(t.id)}
+                      className={`flex-1 py-3 px-4 rounded-xl text-left transition ${tab === t.id ? 'bg-white shadow-md text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}>
+                      <div className="text-sm font-bold">{t.label}</div>
+                      <div className="text-[10px] font-medium opacity-60 mt-0.5">{t.sub}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {tab === 'free' && (
-                <div>
-                  <label className="text-xs font-bold text-slate-500 mb-2 block uppercase tracking-wider">Votre URL gratuite</label>
-                  <div className="flex bg-slate-50 border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 transition">
-                    <input value={subdomain} onChange={e => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                      className="flex-1 px-4 py-3 bg-transparent outline-none text-slate-800 font-bold text-sm" />
-                    <span className="px-4 py-3 bg-indigo-50 text-indigo-600 font-bold text-sm border-l border-slate-200">.hova.site</span>
+              <div className="px-8 py-6 space-y-5">
+                {/* ── FREE SUBDOMAIN ── */}
+                {tab === 'free' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Votre URL gratuite</label>
+                      <div className="flex bg-slate-50 border-2 border-slate-200 rounded-2xl overflow-hidden focus-within:border-indigo-500 transition">
+                        <input value={subdomain}
+                          onChange={e => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                          className="flex-1 px-5 py-3.5 bg-transparent outline-none text-slate-800 font-bold text-base" />
+                        <span className="px-5 py-3.5 bg-indigo-50 text-indigo-600 font-bold text-sm border-l-2 border-slate-200 flex items-center">.hova.site</span>
+                      </div>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 rounded-2xl p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-green-700 font-bold text-sm"><Check size={16}/> {freeUrl} — disponible</div>
+                      <div className="grid grid-cols-3 gap-2 mt-3">
+                        {[{ icon: '🔒', label: 'SSL / HTTPS', val: 'Inclus & auto' }, { icon: '⚡', label: 'CDN Global', val: '30+ PoP' }, { icon: '💰', label: 'Prix', val: '0€ / mois' }].map((f, i) => (
+                          <div key={i} className="bg-white rounded-xl p-3 text-center border border-green-100">
+                            <div className="text-lg">{f.icon}</div>
+                            <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mt-1">{f.label}</div>
+                            <div className="text-xs font-bold text-slate-700 mt-0.5">{f.val}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center gap-2 text-green-600 text-xs font-bold"><Check size={12}/> {freeUrl} disponible · SSL inclus · 0€/mois</div>
-                </div>
-              )}
+                )}
 
-              {tab === 'custom' && (
-                <div>
-                  <label className="text-xs font-bold text-slate-500 mb-2 block uppercase tracking-wider">Votre domaine</label>
-                  <div className="flex bg-slate-50 border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-indigo-500 transition">
-                    <span className="px-4 py-3 text-slate-400 font-medium text-sm bg-slate-100 border-r border-slate-200">https://</span>
-                    <input value={customDomain} onChange={e => setCustomDomain(e.target.value)}
-                      placeholder="www.mon-hotel.com" className="flex-1 px-4 py-3 bg-transparent outline-none text-slate-800 font-bold text-sm" />
-                  </div>
-                  <div className="mt-3 bg-amber-50 border border-amber-100 rounded-xl p-3 text-xs text-amber-700 font-medium">
-                    Configuration DNS requise : pointez votre domaine vers <code className="bg-amber-100 px-1 rounded font-mono">76.223.105.230</code>
-                  </div>
-                </div>
-              )}
+                {/* ── CUSTOM DOMAIN ── */}
+                {tab === 'custom' && (
+                  <div className="space-y-5">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Votre domaine</label>
+                      <div className="flex bg-slate-50 border-2 border-slate-200 rounded-2xl overflow-hidden focus-within:border-indigo-500 transition">
+                        <span className="px-4 py-3.5 text-slate-400 bg-slate-100 border-r-2 border-slate-200 text-sm font-medium">https://</span>
+                        <input value={customDomain} onChange={e => setCustomDomain(e.target.value.toLowerCase())}
+                          placeholder="www.mon-hotel.com"
+                          className="flex-1 px-4 py-3.5 bg-transparent outline-none text-slate-800 font-bold text-sm" />
+                        <button onClick={checkDns} disabled={!customDomain || checking}
+                          className="px-4 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold transition disabled:opacity-40 flex items-center gap-1.5">
+                          {checking ? <RefreshCcw size={12} className="animate-spin"/> : <Search size={12}/>} Vérifier
+                        </button>
+                      </div>
+                      {dnsStatus === 'propagated' && <div className="mt-2 flex items-center gap-2 text-green-600 text-xs font-bold"><Check size={12}/> DNS propagé — domaine prêt à être connecté</div>}
+                      {dnsStatus === 'pending' && <div className="mt-2 flex items-center gap-2 text-amber-600 text-xs font-bold"><RefreshCcw size={12}/> DNS en cours de propagation (peut prendre jusqu'à 48h)</div>}
+                    </div>
 
-              <div className="flex gap-3">
-                <button onClick={onClose} className="flex-1 border-2 border-slate-200 text-slate-600 py-3 rounded-xl font-bold text-sm hover:bg-slate-50 transition">Annuler</button>
-                <button onClick={handlePublish} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-indigo-200 transition flex items-center justify-center gap-2"><Globe size={15}/> Publier maintenant</button>
+                    {/* DNS Method selector */}
+                    <div>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Méthode de configuration</label>
+                      <div className="flex gap-2">
+                        {[
+                          { id: 'arecord', label: 'Enregistrements A', icon: '📋', desc: 'Config chez votre registrar' },
+                          { id: 'nameservers', label: 'Nameservers Hova', icon: '🔄', desc: 'DNS entièrement géré' },
+                        ].map(m => (
+                          <button key={m.id} onClick={() => setDnsMode(m.id)}
+                            className={`flex-1 p-3 rounded-xl border-2 text-left transition ${dnsMode === m.id ? 'border-indigo-500 bg-indigo-50' : 'border-slate-200 hover:border-slate-300'}`}>
+                            <div className="text-lg mb-1">{m.icon}</div>
+                            <div className="font-bold text-xs text-slate-800">{m.label}</div>
+                            <div className="text-[10px] text-slate-400 mt-0.5">{m.desc}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* A Records method */}
+                    {dnsMode === 'arecord' && (
+                      <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
+                        <div className="px-4 py-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between">
+                          <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Enregistrements DNS à configurer</span>
+                          <span className="text-[10px] text-slate-400 font-medium">Chez votre registrar (OVH, Namecheap, GoDaddy...)</span>
+                        </div>
+                        <div className="px-4">
+                          <div className="grid grid-cols-[60px_80px_1fr_60px] gap-2 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200">
+                            <span>Type</span><span>Hôte</span><span>Valeur</span><span>TTL</span>
+                          </div>
+                          <DnsRecordRow type="A" host="@" value={HOVA_IP} ttl="Auto" />
+                          <DnsRecordRow type="A" host="www" value={HOVA_IP} ttl="Auto" />
+                          <DnsRecordRow type="AAAA" host="@" value={HOVA_IP6} ttl="Auto" />
+                          <DnsRecordRow type="CNAME" host="www" value="sites.hova.site" ttl="Auto" />
+                        </div>
+                        <div className="px-4 py-3 bg-blue-50 border-t border-blue-100 text-xs text-blue-700 font-medium flex items-start gap-2">
+                          <span className="text-lg leading-none">💡</span>
+                          <span>Utilisez soit les enregistrements A + AAAA, soit le CNAME pour <code className="font-mono bg-blue-100 px-1 rounded">www</code>. La propagation DNS prend entre 1 et 48h.</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Nameservers method */}
+                    {dnsMode === 'nameservers' && (
+                      <div className="space-y-3">
+                        <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden">
+                          <div className="px-4 py-3 bg-slate-100 border-b border-slate-200">
+                            <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Nameservers Hova à configurer</span>
+                          </div>
+                          <div className="p-4 space-y-2">
+                            {['ns1.hova.site', 'ns2.hova.site', 'ns3.hova.site'].map((ns, i) => (
+                              <div key={ns} className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-4 py-2.5">
+                                <div>
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wide mr-2">NS {i + 1}</span>
+                                  <code className="font-mono font-bold text-slate-800 text-sm">{ns}</code>
+                                </div>
+                                <CopyBtn text={ns} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-indigo-50 rounded-2xl border border-indigo-100 p-4 text-xs text-indigo-700 font-medium space-y-1">
+                          <div className="font-black text-indigo-800 flex items-center gap-1.5"><Check size={13}/> Avantages de la méthode Nameservers</div>
+                          <div>• DNS entièrement géré par Hova (zero config)</div>
+                          <div>• Renouvellement SSL automatique</div>
+                          <div>• Protection DDoS incluse</div>
+                          <div>• Redirections & sous-domaines via dashboard</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SSL Badge */}
+                    <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
+                      <ShieldCheck size={20} className="text-green-600 shrink-0"/>
+                      <div>
+                        <div className="font-bold text-green-800 text-sm">SSL/TLS automatique</div>
+                        <div className="text-green-600 text-xs mt-0.5">Certificat Let's Encrypt renouvelé automatiquement · HSTS activé · TLS 1.3</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-5 border-t border-slate-100 flex gap-3 shrink-0">
+              <button onClick={onClose} className="flex-1 border-2 border-slate-200 text-slate-600 py-3 rounded-2xl font-bold text-sm hover:bg-slate-50 transition">Annuler</button>
+              <button onClick={handlePublish}
+                disabled={tab === 'custom' && !customDomain}
+                className="flex-[2] bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white py-3 rounded-2xl font-bold text-sm shadow-xl shadow-indigo-200 transition active:scale-[0.98] flex items-center justify-center gap-2">
+                <Globe size={15}/> Publier sur {tab === 'free' ? freeUrl : (customDomain || 'votre domaine')}
+              </button>
             </div>
           </>
         )}
 
         {step === 2 && (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse"><Globe size={32}/></div>
-            <h3 className="font-black text-xl text-slate-800 mb-2">Déploiement en cours...</h3>
-            <p className="text-slate-500 text-sm">Configuration DNS · Génération SSL · Mise en ligne</p>
+          <div className="p-14 text-center">
+            <div className="relative mb-6 inline-block">
+              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto"><Globe size={28} className="text-indigo-600 animate-spin" style={{ animationDuration: '3s' }}/></div>
+              <div className="absolute -inset-2 border-2 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
+            </div>
+            <h3 className="font-black text-xl text-slate-800 mb-3">Déploiement en cours...</h3>
+            <div className="space-y-2 max-w-xs mx-auto">
+              {['Allocation du serveur', 'Certificat SSL', 'CDN & cache', 'Mise en ligne'].map((s, i) => (
+                <div key={s} className="flex items-center gap-3 text-sm">
+                  <div className="w-4 h-4 rounded-full bg-indigo-500 flex items-center justify-center shrink-0 animate-pulse" style={{ animationDelay: `${i * 0.3}s` }}>
+                    <Check size={10} className="text-white"/>
+                  </div>
+                  <span className="text-slate-600 font-medium">{s}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle size={32}/></div>
+          <div className="p-14 text-center">
+            <div className="relative mb-6 inline-block">
+              <div className="absolute inset-0 bg-green-400 blur-xl opacity-30 animate-pulse rounded-full"></div>
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center relative"><Check size={32} className="text-white"/></div>
+            </div>
             <h3 className="font-black text-xl text-slate-800 mb-2">Votre site est en ligne !</h3>
             <p className="text-slate-500 text-sm">Redirection vers le dashboard...</p>
           </div>
