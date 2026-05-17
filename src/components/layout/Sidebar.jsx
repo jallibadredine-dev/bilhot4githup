@@ -1,28 +1,27 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, ClipboardCheck, Activity, Settings, Moon, Key, Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database, ShieldCheck, CreditCard, Bot, Building2, Star, XCircle, UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code, Workflow, ClipboardList } from 'lucide-react';
+import {
+  LayoutDashboard, Calendar, ClipboardCheck, Settings, Moon, Key,
+  Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database,
+  ShieldCheck, CreditCard, Bot, Building2, Star, XCircle,
+  UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code,
+  Workflow, ClipboardList, Home
+} from 'lucide-react';
 import './Sidebar.css';
 
 const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCount, color, isBold, extraStyle }) => {
   const isActive = activeView === id;
-  const itemStyle = extraStyle || {};
-  if (color) {
-    itemStyle.color = color;
-  }
-  if (isBold) {
-    itemStyle.fontWeight = 600;
-  }
 
   return (
-    <button 
-      className={`menu-item ${isActive ? 'active' : ''}`} 
+    <button
+      className={`menu-item ${isActive ? 'active' : ''}`}
       onClick={() => setActiveView(id)}
-      style={itemStyle}
+      style={extraStyle || {}}
       aria-label={`Navigate to ${label}`}
       aria-current={isActive ? 'page' : undefined}
       title={label}
     >
-      <Icon size={18} style={color ? { color } : {}} />
-      <span style={isBold ? { fontWeight: 'inherit' } : {}}>{label}</span>
+      <Icon size={17} />
+      <span>{label}</span>
       {alertCount && <span className="badge-alert">{alertCount}</span>}
     </button>
   );
@@ -31,21 +30,21 @@ const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCo
 const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
   return (
     <nav className="sidebar-container hide-scrollbar" aria-label="Main Navigation">
-      {/* Logo Area */}
+
+      {/* ── Logo ── */}
       <div className="sidebar-logo">
         <div className="logo-icon">H</div>
         <h2>Hova</h2>
-
         <button
           className="mobile-sidebar-close"
           onClick={onClose}
           aria-label="Close sidebar"
         >
-          <XCircle size={24} />
+          <XCircle size={22} />
         </button>
       </div>
 
-      {/* Primary Action */}
+      {/* ── Quick Action ── */}
       <div className="sidebar-action">
         <button className="btn-create">
           <span className="plus-icon">+</span>
@@ -53,60 +52,64 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
         </button>
       </div>
 
-      {/* Navigation Links */}
+      {/* ── Navigation ── */}
       <div className="sidebar-menu">
         <div className="pro-sidebar-wrap">
+
           <div className="sidebar-group">
-            <span className="group-title">Dashboard</span>
-            <SidebarItem id="dashboard" icon={BarChart3} label="Vue d'Ensemble" activeView={activeView} setActiveView={setActiveView} />
+            <span className="group-title">Tableau de bord</span>
+            <SidebarItem id="dashboard"   icon={BarChart3}     label="Vue d'Ensemble"         activeView={activeView} setActiveView={setActiveView} />
           </div>
 
           <div className="sidebar-group">
-            <span className="group-label group-title">OPÉRATIONS</span>
-            <SidebarItem id="frontdesk" icon={Monitor} label="Front Desk (Planning)" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="locks" icon={Key} label="Serrures Connectées" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="inventory" icon={Layers} label="Gestion Inventaire" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="services-hub" icon={UtensilsCrossed} label="Hub de Services (F&B)" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="housekeeping" icon={ClipboardCheck} label="Housekeeping" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="checkin-manager" icon={ClipboardList} label="Check-in Digital" color="#10B981" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="guests" icon={Users} label="Gestion Clients (CRM)" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="unified-inbox" icon={MessageSquare} label="Inbox Omnicanale" alertCount={2} color="#3B82F6" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="reputation" icon={Star} label="E-Réputation & Avis" color="#FCD34D" activeView={activeView} setActiveView={setActiveView} />
+            <span className="group-title">Opérations</span>
+            <SidebarItem id="frontdesk"        icon={Monitor}       label="Front Desk"             activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="inventory"        icon={Layers}        label="Gestion Inventaire"     activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="locks"            icon={Key}           label="Serrures Connectées"    activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="services-hub"     icon={UtensilsCrossed} label="Hub de Services"      activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="housekeeping"     icon={ClipboardCheck} label="Housekeeping"          activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="checkin-manager"  icon={ClipboardList} label="Check-in Digital"      activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="guests"           icon={Users}         label="CRM Clients"            activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="unified-inbox"    icon={MessageSquare} label="Inbox Omnicanale"       alertCount={2} activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="reputation"       icon={Star}          label="E-Réputation & Avis"   activeView={activeView} setActiveView={setActiveView} />
           </div>
 
           <div className="sidebar-group">
             <span className="group-title">Finance</span>
-            <SidebarItem id="billing-engine" icon={Receipt} label="Facturation & Taxes" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="revenue" icon={Zap} label="Revenue Management" color="#F59E0B" activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="billing-engine"  icon={Receipt}  label="Facturation & Taxes"  activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="revenue"         icon={Zap}      label="Revenue Management"   activeView={activeView} setActiveView={setActiveView} />
           </div>
 
           <div className="sidebar-group">
             <span className="group-title">Distribution</span>
-            <SidebarItem id="distribution" icon={Globe2} label="Channel Manager Sync" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="website-builder" icon={Sparkles} label="Booking Engine Site" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="automation-hub" icon={Workflow} label="Automation Engine" color="#6366F1" activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="distribution"    icon={Globe2}    label="Channel Manager"     activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="website-builder" icon={Sparkles}  label="Booking Engine Site" activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="automation-hub"  icon={Workflow}  label="Automation Engine"   activeView={activeView} setActiveView={setActiveView} />
           </div>
 
           <div className="sidebar-group">
             <span className="group-title">Expansion</span>
-            <SidebarItem id="api-about" icon={Zap} label="À propos de l'API" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="api-integration" icon={Code} label="API & Intégration" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="affiliate" icon={Users} label="Affiliation" activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="api-about"       icon={Zap}       label="À propos de l'API"   activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="api-integration" icon={Code}      label="API & Intégration"   activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="affiliate"       icon={Users}     label="Affiliation"         activeView={activeView} setActiveView={setActiveView} />
           </div>
 
           <div className="sidebar-group">
-            <span className="group-title">Système & Équipe</span>
-            <SidebarItem id="staff-hub" icon={Users} label="Équipe & RH (Staff)" activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="plans" icon={CreditCard} label="Abonnement" color="#f59e0b" isBold extraStyle={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 10, marginTop: 6 }} activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="super-admin" icon={ShieldCheck} label="Super Admin" color="#6366f1" isBold activeView={activeView} setActiveView={setActiveView} />
+            <span className="group-title">Système</span>
+            <SidebarItem id="staff-hub"   icon={Users}      label="Équipe & RH"    activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="plans"       icon={CreditCard} label="Abonnement"     activeView={activeView} setActiveView={setActiveView}
+              extraStyle={{ borderTop: '1px solid #F0F0F0', marginTop: 4, paddingTop: 12 }}
+            />
+            <SidebarItem id="super-admin" icon={ShieldCheck} label="Super Admin"  activeView={activeView} setActiveView={setActiveView} />
           </div>
+
         </div>
       </div>
 
-      {/* Projects / Properties section */}
+      {/* ── Properties ── */}
       <div className="sidebar-section">
         <div className="section-header">
-          <span>PROPRIÉTÉS</span>
+          <span>Propriétés</span>
           <button className="btn-add-small" aria-label="Add Property">+</button>
         </div>
         <div className="project-list">
@@ -122,22 +125,24 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
         </div>
       </div>
 
-      {/* Bottom Actions */}
+      {/* ── Footer ── */}
       <div className="sidebar-footer">
-        <button 
-          className={`menu-item ${activeView === 'settings' ? 'active' : ''}`} 
-          style={{ width: '100%' }} 
+        <button
+          className={`menu-item ${activeView === 'settings' ? 'active' : ''}`}
+          style={{ width: '100%' }}
           onClick={() => setActiveView('settings')}
+          title="Paramètres"
         >
-          <Settings size={20} />
+          <Settings size={17} />
           <span>Paramètres</span>
         </button>
         <div className="menu-item toggle-item" style={{ cursor: 'pointer' }}>
-          <Moon size={20} />
+          <Moon size={17} />
           <span>Mode sombre</span>
           <div className="toggle-switch"></div>
         </div>
       </div>
+
     </nav>
   );
 };

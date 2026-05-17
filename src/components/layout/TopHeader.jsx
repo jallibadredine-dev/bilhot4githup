@@ -1,34 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, RotateCcw, ChevronDown, Download, Save, Grid, List, Calendar, Filter, Shield, LogOut, Settings, User } from 'lucide-react';
+import { Search, ChevronDown, Shield, LogOut, Settings, User, Home, Bell } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import './TopHeader.css';
 
-const StatPill = ({ label, count, type = 'default' }) => (
-  <div className={`stat-pill-premium stat-${type}`} aria-label={`View ${label} details`}>
-    <span className="stat-label">{label}</span>
-    <span className="stat-count">{count}</span>
-  </div>
-);
-
-const UserAvatar = ({ name, email }) => {
+const UserAvatar = ({ name, email, size = 30 }) => {
   const initials = name
     ? name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : email?.[0]?.toUpperCase() ?? 'U';
 
-  const colors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
+  const colors = ['#FF385C', '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EC4899'];
   const colorIndex = (name || email || '').charCodeAt(0) % colors.length;
-  const bg = colors[colorIndex];
 
   return (
-    <div className="user-avatar" style={{ background: bg }}>
+    <div className="th-avatar" style={{ background: colors[colorIndex], width: size, height: size }}>
       {initials}
     </div>
   );
 };
 
 const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }) => {
-  const [loggingOut, setLoggingOut] = useState(false);
+  const [loggingOut, setLoggingOut]   = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -57,161 +49,120 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }
   };
 
   return (
-    <header className="topheader-premium">
-      {/* ─── MAIN TOOLBAR ─── */}
-      <div className="toolbar-main">
+    <div className="th-header">
 
-        {/* Left Section: Context & Filters */}
-        <div className="toolbar-left">
-          <div className="context-group">
-            <div className="selector-wrapper">
-              <span className="selector-hint">Interval</span>
-              <button className="premium-selector date-range">
-                <Calendar size={14} className="icon-left" />
-                <div className="selector-content">
-                  <span className="primary-txt">14.03.2026</span>
-                  <span className="secondary-txt">08:00 - 12:00</span>
-                </div>
-                <ChevronDown size={14} className="icon-right" />
-              </button>
-            </div>
+      {/* ── LEFT: Property context + live stats ── */}
+      <div className="th-left">
+        <button className="th-property-pill">
+          <span className="th-property-icon">
+            <Home size={13} />
+          </span>
+          <span className="th-property-name">Ocean View Apt</span>
+          <ChevronDown size={13} className="th-property-chevron" />
+        </button>
 
-            <div className="selector-wrapper">
-              <span className="selector-hint">Breakdown</span>
-              <button className="premium-selector property-breakdown">
-                <Filter size={14} className="icon-left" />
-                <span className="primary-txt">Property &gt; Room</span>
-                <ChevronDown size={14} className="icon-right" />
-              </button>
-            </div>
+        {/* Live stats */}
+        <div className="th-stats">
+          <div className="th-stat-pill th-stat-blue">
+            <span className="th-stat-num">12</span>
+            <span>Check-in</span>
+          </div>
+          <div className="th-stat-pill th-stat-amber">
+            <span className="th-stat-num">5</span>
+            <span>En attente</span>
+          </div>
+          <div className="th-stat-pill th-stat-red">
+            <span className="th-stat-num">2</span>
+            <span>Urgent</span>
           </div>
         </div>
+      </div>
 
-        {/* Center Section: Live Metrics */}
-        <div className="toolbar-center">
-          <div className="metrics-container">
-            <StatPill label="Checked in" count="12" type="blue" />
-            <StatPill label="Pending" count="5" type="warning" />
-            <StatPill label="Urgent" count="2" type="danger" />
-          </div>
+      {/* ── CENTER: Search ── */}
+      <div className="th-center">
+        <div className="th-search">
+          <Search size={16} className="th-search-icon" />
+          <input type="text" placeholder="Rechercher réservation, client, chambre…" />
+          <kbd className="th-search-kbd">⌘K</kbd>
         </div>
+      </div>
 
-        {/* Right Section: Global Modes & Actions */}
-        <div className="toolbar-right">
-          <div className="global-actions">
-            <button className="btn-premium secondary police-btn" onClick={() => setActiveView('police')}>
-              <Shield size={16} />
-              <span>Fiche Police</span>
-            </button>
-            <button className="btn-premium secondary load-btn">
-              <Download size={16} />
-              <span>Load Report</span>
-            </button>
-            <button className="btn-premium primary save-btn">
-              <Save size={16} />
-              <span>Save Changes</span>
+      {/* ── RIGHT: Actions + User ── */}
+      <div className="th-right">
+
+        <button
+          className="th-btn th-btn-ghost"
+          onClick={() => setActiveView('police')}
+          title="Fiche Police"
+        >
+          <Shield size={15} />
+          <span>Fiche Police</span>
+        </button>
+
+        <button className="th-icon-btn" title="Notifications">
+          <Bell size={17} />
+        </button>
+
+        {/* User Profile */}
+        {currentUser && (
+          <div className="th-user-wrapper" ref={dropdownRef}>
+            <button
+              className={`th-user-btn ${dropdownOpen ? 'open' : ''}`}
+              onClick={() => setDropdownOpen(v => !v)}
+              aria-label="User menu"
+            >
+              <UserAvatar name={displayName} email={email} size={30} />
+              <span className="th-user-name">{displayName}</span>
+              <ChevronDown size={14} className={`th-chevron ${dropdownOpen ? 'rotated' : ''}`} />
             </button>
 
-            {/* User Profile */}
-            {currentUser && (
-              <div className="user-profile-wrapper" ref={dropdownRef}>
-                <button
-                  className={`user-profile-btn ${dropdownOpen ? 'open' : ''}`}
-                  onClick={() => setDropdownOpen(v => !v)}
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div
+                  className="th-dropdown"
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
                 >
-                  <UserAvatar name={displayName} email={email} />
-                  <div className="user-profile-info">
-                    <span className="user-profile-name">{displayName}</span>
-                    <span className="user-profile-email">{email}</span>
+                  <div className="th-dropdown-header">
+                    <UserAvatar name={displayName} email={email} size={40} />
+                    <div>
+                      <p className="th-dd-name">{displayName}</p>
+                      <p className="th-dd-email">{email}</p>
+                    </div>
                   </div>
-                  <ChevronDown size={14} className={`profile-chevron ${dropdownOpen ? 'rotated' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                  {dropdownOpen && (
-                    <motion.div
-                      className="user-dropdown"
-                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                      transition={{ duration: 0.18, ease: 'easeOut' }}
-                    >
-                      <div className="user-dropdown-header">
-                        <UserAvatar name={displayName} email={email} />
-                        <div>
-                          <p className="dropdown-name">{displayName}</p>
-                          <p className="dropdown-email">{email}</p>
-                        </div>
-                      </div>
-                      <div className="user-dropdown-divider" />
-                      <button
-                        className="user-dropdown-item"
-                        onClick={() => { setActiveView('settings'); setDropdownOpen(false); }}
-                      >
-                        <Settings size={15} />
-                        <span>Paramètres</span>
-                      </button>
-                      <button
-                        className="user-dropdown-item"
-                        onClick={() => { setActiveView('system-admin'); setDropdownOpen(false); }}
-                      >
-                        <User size={15} />
-                        <span>Mon compte</span>
-                      </button>
-                      <div className="user-dropdown-divider" />
-                      <button
-                        className="user-dropdown-item logout-item"
-                        onClick={handleLogout}
-                        disabled={loggingOut}
-                      >
-                        <LogOut size={15} />
-                        <span>{loggingOut ? 'Déconnexion...' : 'Se déconnecter'}</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+                  <div className="th-dd-divider" />
+                  <button
+                    className="th-dd-item"
+                    onClick={() => { setActiveView('settings'); setDropdownOpen(false); }}
+                  >
+                    <Settings size={15} />
+                    <span>Paramètres</span>
+                  </button>
+                  <button
+                    className="th-dd-item"
+                    onClick={() => { setActiveView('system-admin'); setDropdownOpen(false); }}
+                  >
+                    <User size={15} />
+                    <span>Mon compte</span>
+                  </button>
+                  <div className="th-dd-divider" />
+                  <button
+                    className="th-dd-item danger"
+                    onClick={handleLogout}
+                    disabled={loggingOut}
+                  >
+                    <LogOut size={15} />
+                    <span>{loggingOut ? 'Déconnexion…' : 'Se déconnecter'}</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
+        )}
       </div>
-
-      {/* ─── SECONDARY BAR ─── */}
-      <div className="toolbar-secondary">
-        <div className="search-box-wrapper">
-          <Search size={16} className="search-icon" />
-          <input type="text" placeholder="Quick search..." className="premium-search-input" />
-          <kbd className="search-kbd">⌘K</kbd>
-        </div>
-
-        <div className="controls-group">
-          <div className="edit-mode-control">
-            <span className="control-label">Edit Mode</span>
-            <button className="premium-toggle active" role="switch" aria-checked="true"></button>
-          </div>
-
-          <div className="divider" />
-
-          <div className="metric-config">
-            <span className="control-label">Metric</span>
-            <button className="config-pill">
-              <span>Occupancy %</span>
-              <ChevronDown size={14} />
-            </button>
-          </div>
-
-          <button className="btn-ghost reset-btn">
-            <RotateCcw size={14} />
-            <span>Reset</span>
-          </button>
-
-          <div className="layout-group">
-            <button className="layout-option" aria-label="Grid"><Grid size={16} /></button>
-            <button className="layout-option active" aria-label="List"><List size={16} /></button>
-          </div>
-        </div>
-      </div>
-    </header>
+    </div>
   );
 };
 
