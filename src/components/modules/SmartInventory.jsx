@@ -110,6 +110,23 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
   const [filterStatus,   setFilterStatus]   = useState('all');
   const [generating,     setGenerating]     = useState(false);
 
+  /* ── Add Building wizard ── */
+  const [newBldFloorDefs, setNewBldFloorDefs] = useState([]);
+  const [addBldStep,      setAddBldStep]      = useState(1); // 1=info, 2=floors, 3=preview
+
+  /* ── Bulk Add Rooms modal ── */
+  const [bulkRoomModal, setBulkRoomModal] = useState(null); // { buildingId, floorId, floorLabel, floorNum }
+  const [bulkCount,     setBulkCount]     = useState(4);
+  const [bulkStartNum,  setBulkStartNum]  = useState('');
+  const [bulkRoomType,  setBulkRoomType]  = useState('standard');
+  const [bulkStatus,    setBulkStatus]    = useState('available');
+
+  /* ── Add Room (single) modal ── */
+  const [addRoomModal,  setAddRoomModal]  = useState(null); // { buildingId, floorId, floorNum }
+  const [newRoomNum,    setNewRoomNum]    = useState('');
+  const [newRoomType,   setNewRoomType]   = useState('standard');
+  const [newRoomStatus, setNewRoomStatus] = useState('available');
+
   /* ── Stats ── */
   const stats = useMemo(() => {
     let total = 0, available = 0, occupied = 0, maintenance = 0, connected = 0, noLock = 0;
@@ -189,6 +206,132 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
     }, 900);
   };
 
+  /* ── Build floor defs from count ── */
+  const buildFloorDefs = (count) => {
+    const labels = ['Rez-de-chaussée', '1er Étage', '2ème Étage', '3ème Étage', '4ème Étage', '5ème Étage', '6ème Étage', '7ème Étage', '8ème Étage', '9ème Étage'];
+    return Array.from({ length: count }, (_, i) => ({
+      label: labels[i] || `${i + 1}ème Étage`,
+      prefix: String(i + 1),
+      roomCount: 4,
+      roomType: 'standard',
+    }));
+  };
+
+  /* ── Open Add Building wizard ── */
+  const openAddBuilding = () => {
+    setNewBldName('');
+    setNewBldFloors(3);
+    setNewBldFloorDefs(buildFloorDefs(3));
+    setAddBldStep(1);
+    setAddBuildingOpen(true);
+  };
+
+  /* ── Sync floor defs when floor count changes ── */
+  const handleFloorCountChange = (n) => {
+    const count = Math.max(1, Math.min(10, Number(n)));
+    setNewBldFloors(count);
+    setNewBldFloorDefs(prev => {
+      const defs = buildFloorDefs(count);
+      return defs.map((d, i) => prev[i] ? { ...d, label: prev[i].label, prefix: prev[i].prefix, roomCount: prev[i].roomCount, roomType: prev[i].roomType } : d);
+    });
+  };
+
+  /* ── Confirm add building ── */
+  const handleAddBuilding = () => {
+    if (!newBldName.trim()) return;
+    const newBuilding = {
+      id: genId(),
+      name: newBldName.trim(),
+      floors: newBldFloorDefs.map((fd, i) => ({
+        id: genId(),
+        number: i + 1,
+        label: fd.label,
+        rooms: Array.from({ length: fd.roomCount }, (_, j) => ({
+          id: genId(),
+          number: `${fd.prefix}${String(j + 1).padStart(2, '0')}`,
+          type: fd.roomType,
+          status: 'available',
+          lock: null,
+        })),
+      })),
+    };
+    setBuildings(prev => [...prev, newBuilding]);
+    setAddBuildingOpen(false);
+  };
+
+  /* ── Open bulk add rooms modal ── */
+  const openBulkRoomModal = (buildingId, floor) => {
+    const existing = floor.rooms;
+    const lastNum  = existing.length > 0 ? parseInt(existing[existing.length - 1].number, 10) + 1 : floor.number * 100 + 1;
+    setBulkRoomModal({ buildingId, floorId: floor.id, floorLabel: floor.label, floorNum: floor.number });
+    setBulkCount(4);
+    setBulkStartNum(String(isNaN(lastNum) ? floor.number * 100 + 1 : lastNum));
+    setBulkRoomType('standard');
+    setBulkStatus('available');
+  };
+
+  /* ── Confirm bulk add rooms ── */
+  const handleBulkAddRooms = () => {
+    if (!bulkRoomModal) return;
+    const { buildingId, floorId } = bulkRoomModal;
+    const start = parseInt(bulkStartNum, 10) || 100;
+    const newRooms = Array.from({ length: bulkCount }, (_, i) => ({
+      id: genId(),
+      number: String(start + i),
+      type: bulkRoomType,
+      status: bulkStatus,
+      lock: null,
+    }));
+    setBuildings(prev => prev.map(b => b.id !== buildingId ? b : {
+      ...b,
+      floors: b.floors.map(f => f.id !== floorId ? f : {
+        ...f, rooms: [...f.rooms, ...newRooms],
+      }),
+    }));
+    setBulkRoomModal(null);
+  };
+
+  /* ── Open single add room modal ── */
+  const openAddRoomModal = (buildingId, floor) => {
+    const existing = floor.rooms;
+    const lastNum  = existing.length > 0 ? parseInt(existing[existing.length - 1].number, 10) + 1 : floor.number * 100 + 1;
+    setAddRoomModal({ buildingId, floorId: floor.id, floorLabel: floor.label, floorNum: floor.number });
+    setNewRoomNum(String(isNaN(lastNum) ? floor.number * 100 + 1 : lastNum));
+    setNewRoomType('standard');
+    setNewRoomStatus('available');
+  };
+
+  /* ── Confirm single add room ── */
+  const handleAddSingleRoom = () => {
+    if (!addRoomModal || !newRoomNum.trim()) return;
+    const { buildingId, floorId } = addRoomModal;
+    const room = { id: genId(), number: newRoomNum.trim(), type: newRoomType, status: newRoomStatus, lock: null };
+    setBuildings(prev => prev.map(b => b.id !== buildingId ? b : {
+      ...b,
+      floors: b.floors.map(f => f.id !== floorId ? f : {
+        ...f, rooms: [...f.rooms, room],
+      }),
+    }));
+    setAddRoomModal(null);
+  };
+
+  /* ── Delete room ── */
+  const handleDeleteRoom = (buildingId, floorId, roomId) => {
+    if (selectedRoom?.id === roomId) setSelectedRoom(null);
+    setBuildings(prev => prev.map(b => b.id !== buildingId ? b : {
+      ...b,
+      floors: b.floors.map(f => f.id !== floorId ? f : {
+        ...f, rooms: f.rooms.filter(r => r.id !== roomId),
+      }),
+    }));
+  };
+
+  /* ── Delete building ── */
+  const handleDeleteBuilding = (buildingId) => {
+    setBuildings(prev => prev.filter(b => b.id !== buildingId));
+    if (selectedRoom?.buildingId === buildingId) setSelectedRoom(null);
+  };
+
   /* ── Checkout ── */
   const handleCheckout = () => {
     if (!checkoutModal) return;
@@ -239,7 +382,7 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
             <option value="all">Tous les statuts</option>
             {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
-          <button className="si-btn-primary" onClick={() => setAddBuildingOpen(true)}>
+          <button className="si-btn-primary" onClick={openAddBuilding}>
             <Plus size={15}/> Ajouter bâtiment
           </button>
         </div>
@@ -291,10 +434,16 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                         <span className="si-floor-chip">{floor.rooms.length}</span>
                       </div>
                       <div className="si-floor-actions" onClick={e => e.stopPropagation()}>
-                        <button className="si-floor-add" onClick={() => {
-                          const num = String(floor.number * 100 + floor.rooms.length + 1);
-                          setBuildings(prev => prev.map(b => b.id === building.id ? { ...b, floors: b.floors.map(f => f.id === floor.id ? { ...f, rooms: [...f.rooms, { id: genId(), number: num, type: 'standard', status: 'available', lock: null }] } : f) } : b));
-                        }}><Plus size={13}/> Chambre</button>
+                        <button className="si-floor-add si-floor-add-bulk"
+                          onClick={() => openBulkRoomModal(building.id, floor)}
+                          title="Ajouter plusieurs chambres en masse">
+                          <Layers size={12}/> En masse
+                        </button>
+                        <button className="si-floor-add"
+                          onClick={() => openAddRoomModal(building.id, floor)}
+                          title="Ajouter une chambre">
+                          <Plus size={13}/> Chambre
+                        </button>
                       </div>
                     </div>
 
@@ -668,22 +817,287 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                 <button className="si-close-btn" onClick={() => setCheckoutModal(null)}><X size={17}/></button>
               </div>
               <div className="si-checkout-summary">
-                <div className="si-checkout-line">
-                  <span>Folio total</span>
-                  <strong>{folioTotal(checkoutModal.room.number).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong>
-                </div>
-                <div className="si-checkout-line">
-                  <span>Serrure</span>
-                  <strong>PIN révoqué au départ</strong>
-                </div>
-                <div className="si-checkout-line">
-                  <span>Nouveau statut</span>
-                  <strong>Maintenance (nettoyage)</strong>
-                </div>
+                <div className="si-checkout-line"><span>Folio total</span><strong>{folioTotal(checkoutModal.room.number).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong></div>
+                <div className="si-checkout-line"><span>Serrure</span><strong>PIN révoqué au départ</strong></div>
+                <div className="si-checkout-line"><span>Nouveau statut</span><strong>Maintenance (nettoyage)</strong></div>
               </div>
               <div className="si-modal-foot">
                 <button className="si-btn-ghost" onClick={() => setCheckoutModal(null)}>Annuler</button>
                 <button className="si-btn-danger" onClick={handleCheckout}><LogOut size={14}/> Confirmer Checkout</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ ADD BUILDING WIZARD ═══════════════════════════════ */}
+      <AnimatePresence>
+        {addBuildingOpen && (
+          <div className="si-modal-overlay" onClick={() => setAddBuildingOpen(false)}>
+            <motion.div className="si-modal si-modal-lg" initial={{opacity:0,scale:0.96}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.96}} onClick={e => e.stopPropagation()}>
+
+              <div className="si-modal-head">
+                <div>
+                  <h2><Building2 size={17} style={{display:'inline',verticalAlign:'middle',marginRight:6}}/>Nouveau Bâtiment</h2>
+                  <p>Étape {addBldStep}/3 — {addBldStep===1?'Informations générales':addBldStep===2?'Configuration des étages':'Aperçu avant création'}</p>
+                </div>
+                <button className="si-close-btn" onClick={() => setAddBuildingOpen(false)}><X size={17}/></button>
+              </div>
+
+              {/* Step indicator */}
+              <div className="si-wizard-steps">
+                {['Informations','Étages','Aperçu'].map((s, i) => (
+                  <div key={i} className={`si-wizard-step ${addBldStep > i ? 'done' : ''} ${addBldStep === i+1 ? 'active' : ''}`}>
+                    <div className="si-wizard-dot">{addBldStep > i+1 ? <CheckCircle size={12}/> : i+1}</div>
+                    <span>{s}</span>
+                    {i < 2 && <div className="si-wizard-line"/>}
+                  </div>
+                ))}
+              </div>
+
+              {/* STEP 1 — Nom + Nb étages */}
+              {addBldStep === 1 && (
+                <div className="si-wizard-body">
+                  <div className="si-form-group">
+                    <label>Nom du bâtiment <span className="si-req">*</span></label>
+                    <input
+                      className="si-input"
+                      placeholder="ex: Bâtiment A, Villa Sud, Résidence Les Pins…"
+                      value={newBldName}
+                      onChange={e => setNewBldName(e.target.value)}
+                      autoFocus
+                      onKeyDown={e => e.key === 'Enter' && newBldName.trim() && setAddBldStep(2)}
+                    />
+                  </div>
+                  <div className="si-form-group">
+                    <label>Nombre d'étages</label>
+                    <div className="si-number-picker">
+                      <button onClick={() => handleFloorCountChange(newBldFloors - 1)} disabled={newBldFloors <= 1}>−</button>
+                      <input
+                        type="number" min="1" max="10"
+                        value={newBldFloors}
+                        onChange={e => handleFloorCountChange(e.target.value)}
+                        className="si-input si-input-center"
+                      />
+                      <button onClick={() => handleFloorCountChange(newBldFloors + 1)} disabled={newBldFloors >= 10}>+</button>
+                    </div>
+                    <p className="si-hint">1 = RDC seulement · 3 = RDC + 2 étages · max 10 étages</p>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2 — Configuration par étage */}
+              {addBldStep === 2 && (
+                <div className="si-wizard-body">
+                  <p className="si-wizard-intro">Personnalisez chaque étage — libellé, préfixe des numéros et type de chambre par défaut.</p>
+                  <div className="si-floor-defs-list">
+                    {newBldFloorDefs.map((fd, i) => (
+                      <div key={i} className="si-floor-def-row">
+                        <div className="si-floor-def-num">{i === 0 ? 'RDC' : `É${i}`}</div>
+                        <div className="si-floor-def-fields">
+                          <div className="si-form-group si-form-group-sm">
+                            <label>Libellé étage</label>
+                            <input className="si-input si-input-sm" value={fd.label}
+                              onChange={e => setNewBldFloorDefs(prev => prev.map((d, j) => j===i ? {...d, label: e.target.value} : d))}/>
+                          </div>
+                          <div className="si-form-group si-form-group-sm">
+                            <label>Préfixe N°</label>
+                            <input className="si-input si-input-sm si-input-short" value={fd.prefix}
+                              placeholder="1, A, B…"
+                              onChange={e => setNewBldFloorDefs(prev => prev.map((d, j) => j===i ? {...d, prefix: e.target.value} : d))}/>
+                          </div>
+                          <div className="si-form-group si-form-group-sm">
+                            <label>Nb chambres</label>
+                            <div className="si-number-picker si-number-picker-sm">
+                              <button onClick={() => setNewBldFloorDefs(prev => prev.map((d,j) => j===i ? {...d, roomCount: Math.max(0, d.roomCount-1)} : d))}>−</button>
+                              <input type="number" min="0" max="30" value={fd.roomCount} className="si-input si-input-center si-input-sm"
+                                onChange={e => setNewBldFloorDefs(prev => prev.map((d,j) => j===i ? {...d, roomCount: Math.max(0,Math.min(30,parseInt(e.target.value)||0))} : d))}/>
+                              <button onClick={() => setNewBldFloorDefs(prev => prev.map((d,j) => j===i ? {...d, roomCount: Math.min(30, d.roomCount+1)} : d))}>+</button>
+                            </div>
+                          </div>
+                          <div className="si-form-group si-form-group-sm">
+                            <label>Type par défaut</label>
+                            <select className="si-select si-select-sm" value={fd.roomType}
+                              onChange={e => setNewBldFloorDefs(prev => prev.map((d,j) => j===i ? {...d, roomType: e.target.value} : d))}>
+                              {Object.entries(ROOM_TYPES).map(([k,v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="si-floor-def-preview">
+                          {Array.from({length: Math.min(fd.roomCount, 6)}, (_,j) => (
+                            <span key={j} className="si-room-preview-chip">{fd.prefix}{String(j+1).padStart(2,'0')}</span>
+                          ))}
+                          {fd.roomCount > 6 && <span className="si-room-preview-more">+{fd.roomCount-6}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3 — Aperçu */}
+              {addBldStep === 3 && (
+                <div className="si-wizard-body">
+                  <div className="si-preview-building">
+                    <div className="si-preview-bld-head">
+                      <Building2 size={16}/>
+                      <strong>{newBldName || 'Nouveau Bâtiment'}</strong>
+                      <span className="si-floor-chip">{newBldFloorDefs.reduce((s,f)=>s+f.roomCount,0)} ch. · {newBldFloors} étage{newBldFloors>1?'s':''}</span>
+                    </div>
+                    {newBldFloorDefs.map((fd, i) => (
+                      <div key={i} className="si-preview-floor">
+                        <div className="si-preview-floor-label">
+                          <span>{fd.label}</span>
+                          <span className="si-floor-chip">{fd.roomCount}</span>
+                        </div>
+                        <div className="si-preview-rooms">
+                          {Array.from({length: fd.roomCount}, (_,j) => (
+                            <div key={j} className="si-preview-room-card">
+                              <span className="si-preview-room-num">{fd.prefix}{String(j+1).padStart(2,'0')}</span>
+                              <span className="si-preview-room-type">{ROOM_TYPES[fd.roomType]?.icon}</span>
+                            </div>
+                          ))}
+                          {fd.roomCount === 0 && <span className="si-hint" style={{padding:'6px'}}>Aucune chambre — vous pourrez en ajouter plus tard</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="si-modal-foot">
+                {addBldStep > 1
+                  ? <button className="si-btn-ghost" onClick={() => setAddBldStep(s => s-1)}>← Retour</button>
+                  : <button className="si-btn-ghost" onClick={() => setAddBuildingOpen(false)}>Annuler</button>
+                }
+                {addBldStep < 3
+                  ? <button className="si-btn-primary" onClick={() => setAddBldStep(s => s+1)} disabled={addBldStep===1 && !newBldName.trim()}>
+                      Suivant →
+                    </button>
+                  : <button className="si-btn-primary" onClick={handleAddBuilding}>
+                      <CheckCircle size={14}/> Créer le bâtiment
+                    </button>
+                }
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ BULK ADD ROOMS MODAL ══════════════════════════════ */}
+      <AnimatePresence>
+        {bulkRoomModal && (
+          <div className="si-modal-overlay" onClick={() => setBulkRoomModal(null)}>
+            <motion.div className="si-modal si-modal-sm" initial={{opacity:0,scale:0.96}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.96}} onClick={e => e.stopPropagation()}>
+              <div className="si-modal-head">
+                <div>
+                  <h2><Layers size={16} style={{display:'inline',verticalAlign:'middle',marginRight:6}}/>Ajout en masse</h2>
+                  <p>{bulkRoomModal.floorLabel}</p>
+                </div>
+                <button className="si-close-btn" onClick={() => setBulkRoomModal(null)}><X size={17}/></button>
+              </div>
+
+              <div className="si-wizard-body">
+                <div className="si-form-row">
+                  <div className="si-form-group">
+                    <label>Nombre de chambres à créer</label>
+                    <div className="si-number-picker">
+                      <button onClick={() => setBulkCount(c => Math.max(1, c-1))}>−</button>
+                      <input type="number" min="1" max="50" value={bulkCount} className="si-input si-input-center"
+                        onChange={e => setBulkCount(Math.max(1, Math.min(50, parseInt(e.target.value)||1)))}/>
+                      <button onClick={() => setBulkCount(c => Math.min(50, c+1))}>+</button>
+                    </div>
+                  </div>
+                  <div className="si-form-group">
+                    <label>N° de chambre de départ</label>
+                    <input className="si-input" value={bulkStartNum}
+                      onChange={e => setBulkStartNum(e.target.value)}
+                      placeholder="ex: 201"/>
+                  </div>
+                </div>
+
+                <div className="si-form-row">
+                  <div className="si-form-group">
+                    <label>Type de chambre</label>
+                    <select className="si-select" value={bulkRoomType} onChange={e => setBulkRoomType(e.target.value)}>
+                      {Object.entries(ROOM_TYPES).map(([k,v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="si-form-group">
+                    <label>Statut initial</label>
+                    <select className="si-select" value={bulkStatus} onChange={e => setBulkStatus(e.target.value)}>
+                      {Object.entries(STATUS_CFG).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="si-bulk-preview">
+                  <span className="si-bulk-preview-label">Aperçu des numéros créés :</span>
+                  <div className="si-bulk-preview-chips">
+                    {Array.from({length: Math.min(bulkCount, 10)}, (_,i) => {
+                      const n = parseInt(bulkStartNum, 10);
+                      return <span key={i} className="si-room-preview-chip">{isNaN(n) ? '?' : n+i}</span>;
+                    })}
+                    {bulkCount > 10 && <span className="si-room-preview-more">+{bulkCount-10} chambres</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="si-modal-foot">
+                <button className="si-btn-ghost" onClick={() => setBulkRoomModal(null)}>Annuler</button>
+                <button className="si-btn-primary" onClick={handleBulkAddRooms}>
+                  <Plus size={14}/> Créer {bulkCount} chambre{bulkCount>1?'s':''}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ ADD SINGLE ROOM MODAL ════════════════════════════ */}
+      <AnimatePresence>
+        {addRoomModal && (
+          <div className="si-modal-overlay" onClick={() => setAddRoomModal(null)}>
+            <motion.div className="si-modal si-modal-sm" initial={{opacity:0,scale:0.96}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.96}} onClick={e => e.stopPropagation()}>
+              <div className="si-modal-head">
+                <div>
+                  <h2><Plus size={16} style={{display:'inline',verticalAlign:'middle',marginRight:6}}/>Nouvelle chambre</h2>
+                  <p>{addRoomModal.floorLabel}</p>
+                </div>
+                <button className="si-close-btn" onClick={() => setAddRoomModal(null)}><X size={17}/></button>
+              </div>
+
+              <div className="si-wizard-body">
+                <div className="si-form-group">
+                  <label>Numéro de chambre <span className="si-req">*</span></label>
+                  <input className="si-input" value={newRoomNum}
+                    onChange={e => setNewRoomNum(e.target.value)}
+                    placeholder="ex: 201, A01, Studio-1…"
+                    autoFocus
+                    onKeyDown={e => e.key === 'Enter' && newRoomNum.trim() && handleAddSingleRoom()}/>
+                </div>
+                <div className="si-form-row">
+                  <div className="si-form-group">
+                    <label>Type de chambre</label>
+                    <select className="si-select" value={newRoomType} onChange={e => setNewRoomType(e.target.value)}>
+                      {Object.entries(ROOM_TYPES).map(([k,v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="si-form-group">
+                    <label>Statut initial</label>
+                    <select className="si-select" value={newRoomStatus} onChange={e => setNewRoomStatus(e.target.value)}>
+                      {Object.entries(STATUS_CFG).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="si-modal-foot">
+                <button className="si-btn-ghost" onClick={() => setAddRoomModal(null)}>Annuler</button>
+                <button className="si-btn-primary" onClick={handleAddSingleRoom} disabled={!newRoomNum.trim()}>
+                  <Plus size={14}/> Ajouter la chambre
+                </button>
               </div>
             </motion.div>
           </div>

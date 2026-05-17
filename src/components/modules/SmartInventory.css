@@ -656,6 +656,210 @@
 .si-checkout-line span   { font-size: 0.75rem; color: #64748B; font-weight: 600; }
 .si-checkout-line strong { font-size: 0.8rem;  color: #0F172A; font-weight: 800; }
 
+/* ═══ FLOOR HEADER — bulk button ═══════════════════════════ */
+.si-floor-add-bulk {
+  background: #EEF2FF !important;
+  color: #4F46E5 !important;
+  border-color: #C7D2FE !important;
+}
+.si-floor-add-bulk:hover { background: #E0E7FF !important; }
+
+/* ═══ MODAL SIZES ═══════════════════════════════════════════ */
+.si-modal-lg {
+  max-width: 680px;
+  width: 95vw;
+}
+
+/* ═══ WIZARD STEPS ═══════════════════════════════════════════ */
+.si-wizard-steps {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0;
+  padding: 14px 20px;
+  border-bottom: 1px solid #F1F5F9;
+}
+.si-wizard-step {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.72rem; font-weight: 600; color: #CBD5E1;
+}
+.si-wizard-step.active { color: #2563EB; }
+.si-wizard-step.done   { color: #16A34A; }
+.si-wizard-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #F1F5F9; color: #94A3B8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 800;
+  border: 2px solid #E2E8F0;
+  flex-shrink: 0;
+}
+.si-wizard-step.active .si-wizard-dot { background: #2563EB; color: white; border-color: #2563EB; }
+.si-wizard-step.done   .si-wizard-dot { background: #DCFCE7; color: #16A34A; border-color: #86EFAC; }
+.si-wizard-line {
+  width: 40px; height: 2px;
+  background: #E2E8F0;
+  margin: 0 8px;
+}
+
+/* ═══ WIZARD BODY ═══════════════════════════════════════════ */
+.si-wizard-body {
+  padding: 18px 22px;
+  display: flex; flex-direction: column; gap: 14px;
+  max-height: 55vh; overflow-y: auto;
+}
+.si-wizard-intro {
+  font-size: 0.77rem; color: #64748B; margin: 0;
+  background: #F8FAFC; padding: 10px 12px;
+  border-radius: 9px; border: 1px solid #E2E8F0;
+}
+
+/* ═══ FORM HELPERS ═══════════════════════════════════════════ */
+.si-form-group {
+  display: flex; flex-direction: column; gap: 5px;
+  flex: 1;
+}
+.si-form-group-sm { flex: unset; min-width: 0; }
+.si-form-group label {
+  font-size: 0.68rem; font-weight: 800; color: #475569; white-space: nowrap;
+}
+.si-form-row {
+  display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap;
+}
+.si-req { color: #EF4444; }
+.si-hint { font-size: 0.65rem; color: #94A3B8; margin: 0; }
+
+.si-input {
+  height: 36px; padding: 0 10px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9px;
+  font-size: 0.78rem; color: #0F172A; outline: none;
+  transition: border-color 0.15s;
+  width: 100%; box-sizing: border-box;
+}
+.si-input:focus { border-color: #2563EB; background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+.si-input-center { text-align: center; width: 54px; min-width: 0; }
+.si-input-short  { width: 60px; }
+.si-input-sm     { height: 31px; font-size: 0.72rem; }
+
+.si-select {
+  height: 36px; padding: 0 8px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9px;
+  font-size: 0.77rem; color: #0F172A; outline: none;
+  cursor: pointer; width: 100%;
+}
+.si-select:focus { border-color: #2563EB; }
+.si-select-sm { height: 31px; font-size: 0.72rem; }
+
+/* ═══ NUMBER PICKER ═══════════════════════════════════════════ */
+.si-number-picker {
+  display: flex; align-items: center; gap: 0;
+  height: 36px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 9px; overflow: hidden;
+  width: fit-content;
+}
+.si-number-picker button {
+  width: 32px; height: 100%;
+  background: #EFF2F8; color: #475569;
+  border: none; border-radius: 0;
+  font-size: 1rem; font-weight: 700;
+  cursor: pointer; min-height: unset;
+  transition: background 0.1s; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.si-number-picker button:hover:not(:disabled) { background: #E2E8F0; }
+.si-number-picker button:disabled { opacity: 0.35; cursor: not-allowed; }
+.si-number-picker input { border: none; background: transparent; outline: none; font-size: 0.83rem; font-weight: 700; color: #0F172A; text-align: center; width: 54px; }
+.si-number-picker-sm { height: 31px; }
+.si-number-picker-sm button { width: 26px; font-size: 0.9rem; }
+.si-number-picker-sm input { width: 40px; font-size: 0.75rem; }
+
+/* ═══ FLOOR DEFS LIST ═══════════════════════════════════════ */
+.si-floor-defs-list { display: flex; flex-direction: column; gap: 10px; }
+.si-floor-def-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 11px;
+}
+.si-floor-def-num {
+  width: 32px; height: 32px; flex-shrink: 0;
+  background: #2563EB; color: white;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.64rem; font-weight: 800;
+  margin-top: 18px;
+}
+.si-floor-def-fields { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; align-items: flex-start; }
+.si-floor-def-preview {
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+  padding-top: 20px;
+  max-width: 120px;
+}
+
+/* ═══ ROOM PREVIEW CHIPS ═══════════════════════════════════ */
+.si-room-preview-chip {
+  padding: 2px 7px;
+  background: #DBEAFE; color: #1E40AF;
+  border-radius: 6px;
+  font-size: 0.62rem; font-weight: 800;
+  border: 1px solid #BFDBFE;
+  white-space: nowrap;
+}
+.si-room-preview-more {
+  font-size: 0.62rem; color: #94A3B8; font-weight: 600;
+}
+
+/* ═══ PREVIEW BUILDING (step 3) ═════════════════════════════ */
+.si-preview-building {
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.si-preview-bld-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 15px;
+  background: #EFF6FF;
+  border-bottom: 1px solid #DBEAFE;
+  font-size: 0.82rem; color: #1E40AF; font-weight: 800;
+}
+.si-preview-floor { border-bottom: 1px solid #F1F5F9; }
+.si-preview-floor:last-child { border-bottom: none; }
+.si-preview-floor-label {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  background: #F8FAFC;
+  font-size: 0.73rem; color: #64748B; font-weight: 700;
+}
+.si-preview-rooms {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  padding: 8px 14px;
+}
+.si-preview-room-card {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 6px 10px;
+  background: white;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 8px; gap: 2px;
+}
+.si-preview-room-num  { font-size: 0.7rem;  font-weight: 800; color: #0F172A; }
+.si-preview-room-type { font-size: 0.85rem; }
+
+/* ═══ BULK PREVIEW ═══════════════════════════════════════════ */
+.si-bulk-preview {
+  background: #F0FDF4;
+  border: 1.5px solid #BBF7D0;
+  border-radius: 10px;
+  padding: 10px 13px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.si-bulk-preview-label { font-size: 0.7rem; font-weight: 700; color: #15803D; }
+.si-bulk-preview-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
 /* ═══ RESPONSIVE ═══════════════════════════════════════════ */
 @media (max-width: 1100px) {
   .si-stats-row { grid-template-columns: repeat(3, 1fr); }
