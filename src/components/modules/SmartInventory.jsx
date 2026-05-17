@@ -467,7 +467,6 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 onClick={() => openRoom(room, building.id, floor.id, building.name, floor.label)}
-                                style={{ borderTopColor: sCfg.border }}
                               >
                                 {/* Card top: number + type + status */}
                                 <div className="si-card-top">

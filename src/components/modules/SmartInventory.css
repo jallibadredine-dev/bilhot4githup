@@ -195,10 +195,10 @@
 .si-room-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
 .si-room-card.active { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
 
-.si-room-card.status-available   { border-top-color: #86EFAC; }
-.si-room-card.status-occupied    { border-top-color: #93C5FD; }
-.si-room-card.status-maintenance { border-top-color: #FCD34D; }
-.si-room-card.status-blocked     { border-top-color: #FCA5A5; }
+.si-room-card.status-available   { background: #F0FDF4; border-color: #86EFAC; border-top-width: 1.5px; }
+.si-room-card.status-occupied    { background: #EFF6FF; border-color: #93C5FD; border-top-width: 1.5px; }
+.si-room-card.status-maintenance { background: #FFFBEB; border-color: #FCD34D; border-top-width: 1.5px; }
+.si-room-card.status-blocked     { background: #FFF5F5; border-color: #FCA5A5; border-top-width: 1.5px; }
 
 .si-card-top {
   display: flex; align-items: flex-start;
