@@ -96,6 +96,19 @@ const BattIcon = ({ level, size = 14 }) => {
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════════ */
 const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
+  const [cleaningStatus, setCleaningStatus] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sh_cleaning_status') || '{}'); } catch { return {}; }
+  });
+
+  useEffect(() => {
+    const sync = () => {
+      try { setCleaningStatus(JSON.parse(localStorage.getItem('sh_cleaning_status') || '{}')); } catch {}
+    };
+    window.addEventListener('storage', sync);
+    const t = setInterval(sync, 4000);
+    return () => { window.removeEventListener('storage', sync); clearInterval(t); };
+  }, []);
+
   const [buildings,      setBuildings]      = useState(createInitialData);
   const [expandedFloors, setExpandedFloors] = useState({});
   const [selectedRoom,   setSelectedRoom]   = useState(null);
@@ -517,6 +530,23 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                                 {room.lock?.pin && (
                                   <div className="si-card-pin"><Key size={10}/> {room.lock.pin}</div>
                                 )}
+
+                                {/* Cleaning status badge (from StaffHub) */}
+                                {(() => {
+                                  const cs = cleaningStatus[room.number];
+                                  if (!cs || cs.status === 'inspected') return null;
+                                  const cfg = {
+                                    dirty:       { label: '🧹 À nettoyer', bg: '#FEE2E2', color: '#DC2626' },
+                                    in_progress: { label: '⏳ Ménage en cours', bg: '#FEF3C7', color: '#D97706' },
+                                    clean:       { label: '✓ Propre', bg: '#ECFDF5', color: '#059669' },
+                                  }[cs.status];
+                                  if (!cfg) return null;
+                                  return (
+                                    <div className="si-card-cleaning" style={{ background: cfg.bg, color: cfg.color }}>
+                                      {cfg.label}
+                                    </div>
+                                  );
+                                })()}
                               </motion.div>
                             );
                           })}
