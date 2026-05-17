@@ -55,7 +55,8 @@ body {
   background-color: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow: hidden; 
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

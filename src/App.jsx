@@ -39,7 +39,12 @@ const PropertiesManager = lazy(() => import('./components/modules/PropertiesMana
 const SuperAdmin = lazy(() => import('./components/modules/SuperAdmin'));
 const ClientPlans = lazy(() => import('./components/modules/ClientPlans'));
 const ReputationManager = lazy(() => import('./components/modules/ReputationManager'));
+const SettingsDashboard = lazy(() => import('./components/modules/SettingsDashboard'));
 const AffiliateSystem = lazy(() => import('./components/modules/AffiliateSystem'));
+const MoroccanPoliceForm = lazy(() => import('./components/modules/MoroccanPoliceForm'));
+const APIDocumentation = lazy(() => import('./components/modules/APIDocumentation'));
+const APIIntegration = lazy(() => import('./components/modules/APIIntegration'));
+const APIDescription = lazy(() => import('./components/modules/APIDescription'));
 
 // Fallback Loader UI
 const LoadingFallback = () => (
@@ -52,7 +57,7 @@ function App() {
   const [isLanding, setIsLanding] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
-  const [pmsMode, setPmsMode] = useState('hot'); // Default to HOT for demo
+  const [pmsMode, setPmsMode] = useState('pro'); // Default to PRO
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Folio State: shared between ServicesHub and SmartInventory
@@ -84,7 +89,7 @@ function App() {
   const renderModule = () => {
     switch (activeView) {
       case 'dashboard':
-        return pmsMode === 'pro' ? <ModularDashboard pmsMode={pmsMode} onModuleSelect={setActiveView} /> : <AperçuGlobal pmsMode={pmsMode} />;
+        return <ModularDashboard pmsMode="pro" onModuleSelect={setActiveView} />;
       case 'timeline':
         return (
           <>
@@ -94,18 +99,15 @@ function App() {
             <section className="app-timeline app-panel glass-panel">
                <TimelineView />
             </section>
-            <section className="app-activity-panel app-panel glass-panel">
-               <ActivitySidePanel />
-            </section>
           </>
         );
       case 'properties':
       case 'lodgings':
-        return <PropertiesManager pmsMode={pmsMode} />;
+        return <PropertiesManager pmsMode="pro" />;
       case 'smart-access':
         return <SmartAccess />;
       case 'distribution':
-        return <ChannelManager pmsMode={pmsMode} setActiveView={setActiveView} />;
+        return <ChannelManager pmsMode="pro" setActiveView={setActiveView} />;
       case 'guest-workflow':
         return <GuestJourneyDiagram />;
       case 'reports':
@@ -116,15 +118,15 @@ function App() {
         return <WorkflowBuilder />;
       case 'frontdesk':
       case 'front-desk':
-        return pmsMode === 'pro' ? <SmartDesk /> : <AperçuGlobal pmsMode={pmsMode} />;
+        return <SmartDesk />;
       case 'property-builder':
         return <PropertyBuilder />;
       case 'revenue':
-        return pmsMode === 'pro' ? <RevenueAI /> : <AperçuGlobal pmsMode={pmsMode} />;
+        return <RevenueAI />;
       case 'housekeeping':
-        return pmsMode === 'pro' ? <PredictiveMaintenance /> : <AperçuGlobal pmsMode={pmsMode} />;
+        return <PredictiveMaintenance />;
       case 'guests':
-        return pmsMode === 'pro' ? <GuestCRM /> : <AperçuGlobal pmsMode={pmsMode} />;
+        return <GuestCRM />;
       case 'unified-inbox':
         return <UnifiedInbox pmsMode={pmsMode} setActiveView={setActiveView} />;
       case 'services-hub':
@@ -149,28 +151,28 @@ function App() {
       case 'affiliate':
       case 'affiliation':
         return <AffiliateSystem pmsMode={pmsMode} />;
+      case 'settings':
+        return <SettingsDashboard />;
+      case 'police':
+        return <MoroccanPoliceForm />;
+      case 'api-docs':
+        return <APIDocumentation />;
+      case 'api-integration':
+        return <APIIntegration />;
+      case 'api-about':
+        return <APIDescription onModuleSelect={setActiveView} />;
       default:
-        return <AperçuGlobal pmsMode={pmsMode} />;
+        return <ModularDashboard pmsMode="pro" onModuleSelect={setActiveView} />;
     }
   };
-
-  if (isLanding) {
-    return (
-      <Suspense fallback={<LoadingFallback />}>
-        <LandingPage onGoToAuth={() => setIsLanding(false)} />
-      </Suspense>
-    );
-  }
 
   if (!isAuthenticated) {
     return (
       <Suspense fallback={<LoadingFallback />}>
-        <AuthPage 
-          onLogin={(mode) => {
+        <LandingPage onLogin={(mode) => {
             setPmsMode(mode);
             setIsAuthenticated(true);
-          }} 
-        />
+        }} />
       </Suspense>
     );
   }
@@ -210,7 +212,7 @@ function App() {
              <div className="bar" />
              <div className="bar" />
           </button>
-          <TopHeader pmsMode={pmsMode} setPmsMode={setPmsMode} />
+          <TopHeader pmsMode={pmsMode} setPmsMode={setPmsMode} setActiveView={setActiveView} />
         </header>
 
         {/* Dynamic Content Wrapped in Suspense */}
@@ -219,7 +221,7 @@ function App() {
             {activeView === 'timeline' ? (
               renderModule()
             ) : (
-              <section className="app-full-module hide-scrollbar" style={{ flex: 1, overflowY: 'auto' }}>
+              <section className="app-full-module" style={{ flex: 1, overflowY: 'auto' }}>
                 {renderModule()}
               </section>
             )}

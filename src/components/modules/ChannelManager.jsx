@@ -1,20 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Database, Globe, Link as LinkIcon, Settings, Server, CheckCircle2, 
   ArrowRight, RefreshCcw, Home, Plus, Calendar, Activity,
   MessageSquare, Star, LayoutDashboard, Share2, ShieldCheck, 
-  AlertCircle, ChevronRight, DownloadCloud, XCircle
+  AlertCircle, ChevronRight, DownloadCloud, XCircle, Tag,
+  Zap, Key, Shield, UserPlus, FileText, Bell, Lock, Unlock, Eye,
+  CreditCard, Search, Filter, Monitor, Smartphone, Tablet
 } from 'lucide-react';
+import './ChannelManager.css';
 
 const OTAS = [
-  { id: 'airbnb', name: 'Airbnb', color: 'bg-rose-500', icon: 'A', desc: 'Locations Courte Durée', sync: ['Dispos', 'Tarifs', 'Messages', 'Avis'] },
-  { id: 'booking', name: 'Booking.com', color: 'bg-blue-900', icon: 'B', desc: 'Standard Hôtelier Mondial', sync: ['Dispos', 'Tarifs', 'Messages'] },
-  { id: 'expedia', name: 'Expedia', color: 'bg-yellow-500', icon: 'E', desc: 'Vols & Hébergements', sync: ['Dispos', 'Tarifs'] },
-  { id: 'tripadvisor', name: 'TripAdvisor', color: 'bg-green-600', icon: 'T', desc: 'Avis & Réservations', sync: ['Dispos', 'Avis'] },
-  { id: 'vrbo', name: 'Vrbo / Abritel', color: 'bg-indigo-900', icon: 'V', desc: 'Villas & Grandes Familles', sync: ['Dispos', 'Tarifs', 'Messages'] },
-  { id: 'agoda', name: 'Agoda', color: 'bg-pink-600', icon: 'Ag', desc: 'Marché Asiatique & Hôtels', sync: ['Dispos', 'Tarifs'] },
-  { id: 'google', name: 'Google Hotels', color: 'bg-red-500', icon: 'G', desc: 'Moteur de Recherche', sync: ['Tarifs'] },
-  { id: 'hostelworld', name: 'Hostelworld', color: 'bg-orange-600', icon: 'H', desc: 'Auberges & Lits', sync: ['Dispos', 'Tarifs'] },
+  { id: 'airbnb', name: 'Airbnb', color: 'bg-rose-500', icon: 'A', desc: 'Short-Term Rentals', sync: ['Availability', 'Rates', 'Messages', 'Reviews'] },
+  { id: 'booking', name: 'Booking.com', color: 'bg-blue-900', icon: 'B', desc: 'Global Hotel Standard', sync: ['Availability', 'Rates', 'Messages'] },
+  { id: 'expedia', name: 'Expedia', color: 'bg-yellow-500', icon: 'E', desc: 'Flights & Stays', sync: ['Availability', 'Rates'] },
+  { id: 'tripadvisor', name: 'TripAdvisor', color: 'bg-green-600', icon: 'T', desc: 'Reviews & Bookings', sync: ['Availability', 'Reviews'] },
+  { id: 'vrbo', name: 'Vrbo / Abritel', color: 'bg-indigo-900', icon: 'V', desc: 'Villas & Large Stays', sync: ['Availability', 'Rates', 'Messages'] },
+  { id: 'agoda', name: 'Agoda', color: 'bg-pink-600', icon: 'Ag', desc: 'Asian Market & Hotels', sync: ['Availability', 'Rates'] },
+  { id: 'google', name: 'Google Hotels', color: 'bg-red-500', icon: 'G', desc: 'Search Engine', sync: ['Rates'] },
 ];
 
 const MOCK_PROPERTIES_HOT = [
@@ -24,638 +26,695 @@ const MOCK_PROPERTIES_HOT = [
   { id: 'l4', name: 'Premium Loft Guéliz', otas: ['airbnb'], type: 'Appartement', status: 'Sync', price: '110€' }
 ];
 
-const MOCK_HOTELS_PRO = [
-  {
-    id: 'h1', name: 'Atlas Suites Resort & Spa', location: 'Marrakech',
-    rooms: [
-      { id: 'r1', name: 'Chambre Standard (Double)', qty: 24, otas: ['booking', 'expedia'], price: '80€' },
-      { id: 'r2', name: 'Chambre Supérieure (Twin)', qty: 15, otas: ['booking', 'expedia', 'airbnb'], price: '110€' },
-      { id: 'r3', name: 'Suite Deluxe Vue Jardin', qty: 8, otas: ['booking', 'tripadvisor'], price: '180€' },
-      { id: 'r4', name: 'Suite Familiale (4 pers.)', qty: 4, otas: ['airbnb', 'vrbo'], price: '250€' },
-      { id: 'r5', name: 'Suite Exécutive Balcon', qty: 3, otas: ['booking', 'expedia'], price: '320€' },
-      { id: 'r6', name: 'Chambre PMR Access', qty: 2, otas: ['booking'], price: '90€' },
-      { id: 'r7', name: 'Penthouse Royal Top Floor', qty: 1, otas: ['airbnb', 'tripadvisor', 'booking'], price: '850€' }
-    ]
-  },
-  {
-    id: 'h2', name: 'Le Pearl Business Casablanca', location: 'Casablanca',
-    rooms: [
-      { id: 'r8', name: 'Chambre Classique Affaires', qty: 50, otas: ['booking', 'expedia'], price: '95€' },
-      { id: 'r9', name: 'Suite Junior Affaires', qty: 12, otas: ['booking', 'expedia'], price: '160€' }
-    ]
-  }
-];
-
-const ChannelManager = ({ pmsMode = 'pro', setActiveView }) => {
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'channels', 'messenger', 'reviews'
-  const [hubConnected, setHubConnected] = useState(true);
-  const [sandboxMode, setSandboxMode] = useState(false);
-  const [showConfig, setShowConfig] = useState(null); // ID of OTA being configured
-  
-  // OTA Flow State
-  const [loadingOTA, setLoadingOTA] = useState(null);
-  const [connectedOTAs, setConnectedOTAs] = useState(['airbnb', 'booking', 'expedia', 'google']);
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [messageText, setMessageText] = useState('');
+const ChannelManager = ({ pmsMode = 'pro' }) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [channexToken, setChannexToken] = useState(localStorage.getItem('channex_token') || '');
+  const [channexGroupId, setChannexGroupId] = useState(localStorage.getItem('channex_group_id') || '');
+  const [channexProperties, setChannexProperties] = useState([]);
+  const [channexBookings, setChannexBookings] = useState([]);
+  const [channexLoading, setChannexLoading] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('Disconnected');
   const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [selectedConversation, setSelectedConversation] = useState(null);
   const [automationActive, setAutomationActive] = useState(true);
+  const [activeChannelConfig, setActiveChannelConfig] = useState(null);
+  const [tempChannelId, setTempChannelId] = useState('');
 
-  const handleAiAssist = () => {
-    if (!selectedConversation) return;
-    setIsAiGenerating(true);
-    setTimeout(() => {
-      const responses = {
-        'airbnb': "Bonjour ! Merci pour votre message. Oui, l'appartement est prêt pour votre arrivée. Les instructions de self-check-in vous seront envoyées 24h avant.",
-        'booking': "Hello! Thank you for your inquiry. Late check-in is indeed possible for a small fee of 20€. Would you like me to book this for you?",
-        'expedia': "Bonjour, nous fournissons effectivement des serviettes fraîches et des articles de toilette de luxe pour chaque séjour. À bientôt !"
-      };
-      setMessageText(responses[selectedConversation.platform] || "Bonjour ! Comment puis-je vous aider aujourd'hui ?");
-      setIsAiGenerating(false);
-    }, 1200);
-  };
+  useEffect(() => {
+    if (channexToken) fetchChannexData();
+  }, []);
 
-  const handleTranslateMessage = () => {
-    setIsTranslating(true);
-    setTimeout(() => setIsTranslating(false), 800);
-  };
-
-  const handleOTAConnect = (otaId) => {
-    setLoadingOTA(otaId);
-    // Simulate OAuth/Login Flow
-    setTimeout(() => {
-      if (!connectedOTAs.includes(otaId)) {
-        setConnectedOTAs([...connectedOTAs, otaId]);
+  const fetchChannexData = async () => {
+    if (!channexToken) return;
+    setChannexLoading(true);
+    setSyncStatus('Connecting API...');
+    try {
+      const headers = { 'user-api-key': channexToken };
+      const [propRes, bookRes] = await Promise.all([
+        fetch('https://staging.channex.io/api/v1/properties', { headers }).catch(() => null),
+        fetch('https://staging.channex.io/api/v1/bookings', { headers }).catch(() => null)
+      ]);
+      
+      if (propRes) {
+        const data = await propRes.json();
+        if (data?.data) {
+          setChannexProperties(data.data);
+          setSyncStatus(`Connected (${data.data.length} properties)`);
+        }
       }
-      setLoadingOTA(null);
-    }, 1500);
+      if (bookRes) {
+        const bData = await bookRes.json();
+        if (bData?.data) setChannexBookings(bData.data);
+      }
+    } catch (e) {
+      setSyncStatus('Network Error');
+    }
+    setChannexLoading(false);
   };
 
-  const renderTabNav = () => (
-    <div className="flex space-x-8 mb-8 border-b border-slate-200 overflow-x-auto hide-scrollbar">
-      <button 
-        onClick={() => setActiveTab('overview')}
-        className={`pb-4 text-sm font-bold tracking-wide transition-all whitespace-nowrap ${activeTab === 'overview' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-      >
-        <div className="flex items-center gap-2"><LayoutDashboard size={16}/> Vue d'ensemble</div>
-      </button>
-      <button 
-        onClick={() => setActiveTab('channels')}
-        className={`pb-4 text-sm font-bold tracking-wide transition-all whitespace-nowrap ${activeTab === 'channels' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-      >
-        <div className="flex items-center gap-2"><Share2 size={16}/> Connecter mes Plateformes</div>
-      </button>
-      <button 
-        onClick={() => setActiveTab('messenger')}
-        className={`pb-4 text-sm font-bold tracking-wide transition-all whitespace-nowrap ${activeTab === 'messenger' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-      >
-        <div className="flex items-center gap-2"><MessageSquare size={16}/> Messenger Omnicanal</div>
-      </button>
-      <button 
-        onClick={() => setActiveTab('reviews')}
-        className={`pb-4 text-sm font-bold tracking-wide transition-all whitespace-nowrap ${activeTab === 'reviews' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
-      >
-        <div className="flex items-center gap-2"><Star size={16}/> Avis & E-Réputation</div>
-      </button>
+  const saveChannexCredentials = () => {
+    localStorage.setItem('channex_token', channexToken);
+    localStorage.setItem('channex_group_id', channexGroupId);
+    fetchChannexData();
+  };
+
+  const MetricCard = ({ title, value, sub, icon: Icon, color }) => (
+    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition duration-500 group">
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors ${color}`}>
+        <Icon size={20} />
+      </div>
+      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</div>
+      <div className="text-3xl font-black text-slate-900 mb-1">{value}</div>
+      <div className="text-xs font-bold text-slate-400">{sub}</div>
     </div>
   );
 
   return (
-    <div className="p-8 md:p-12 max-w-7xl mx-auto font-sans bg-[#F8FAFC] min-h-[calc(100vh-80px)]">
+    <div className="p-8 md:p-12 max-w-screen-2xl mx-auto font-sans bg-[#F8FAFC] min-h-screen text-slate-900">
       
-      {/* Page Header */}
-      <div className="mb-8 flex items-center justify-between">
+      {/* Premium Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
         <div>
-           <h1 className="text-4xl font-black text-slate-800 tracking-tight">Channel Manager Sync</h1>
-           <p className="text-lg font-medium text-slate-500 mt-2">Centralisez vos réservations, messages et avis depuis une plateforme unique.</p>
+           <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                 <Share2 size={24} />
+              </div>
+              <h1 className="text-4xl font-black tracking-tight text-slate-900">Channel Manager</h1>
+              <span className="bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-tighter">v2.5 PRO</span>
+           </div>
+           <p className="text-slate-500 font-medium max-w-xl">Centralize your global distribution. Sync rates, availability, and messages across all OTAs in real-time via Channex.io.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setSandboxMode(!sandboxMode)}
-            className={`px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center gap-2 border ${sandboxMode ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
-          >
-            <Activity size={16} /> 
-            {sandboxMode ? 'Mode Sandbox (Test API)' : 'Mode Production'}
-          </button>
+        <div className="flex items-center gap-4 bg-white p-2 rounded-[1.5rem] border border-slate-100 shadow-sm">
+           <button onClick={() => fetchChannexData()} className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition">
+              <RefreshCcw size={20} className={channexLoading ? 'animate-spin' : ''} />
+           </button>
+           <div className="h-8 w-px bg-slate-100"></div>
+           <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl shadow-indigo-100 transition flex items-center gap-2">
+              <Plus size={18}/> New Channel
+           </button>
         </div>
       </div>
 
-      {renderTabNav()}
+      {/* Tabs Navigation - Expanded with all options */}
+      <div className="flex items-center gap-2 mb-8 bg-slate-100/50 p-1.5 rounded-2xl w-full overflow-x-auto hide-scrollbar">
+        {[
+          { id: 'overview', label: 'Dashboard', icon: Activity },
+          { id: 'channels', label: 'OTAs & Hub', icon: Globe },
+          { id: 'reservations', label: 'Bookings', icon: Calendar },
+          { id: 'messenger', label: 'Inbox', icon: MessageSquare },
+          { id: 'reviews', label: 'Reviews', icon: Star },
+          { id: 'listing', label: 'Listings', icon: Home },
+          { id: 'pricing', label: 'Pricing Rules', icon: Tag },
+          { id: 'automation', label: 'Automation', icon: Zap },
+          { id: 'reports', label: 'Analytics', icon: FileText },
+          { id: 'config', label: 'API Setup', icon: Settings }
+        ].map(tab => (
+          <button 
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            <tab.icon size={16} /> {tab.label}
+          </button>
+        ))}
+      </div>
 
-      {/* --- TAB: OVERVIEW --- */}
-      {activeTab === 'overview' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-          
-          {/* Quick Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-6">
-              <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center"><Share2 size={24}/></div>
-              <div>
-                <div className="text-3xl font-black text-slate-800">{connectedOTAs.length}</div>
-                <div className="text-sm font-bold text-slate-400 uppercase tracking-wide mt-1">Canaux Actifs</div>
-              </div>
+      <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        
+        {/* --- TAB: OVERVIEW --- */}
+        {activeTab === 'overview' && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+               <MetricCard title="Active Channels" value="4" sub="of 12 connected" icon={Share2} color="bg-indigo-50 text-indigo-600" />
+               <MetricCard title="Properties Sync" value={channexProperties.length} sub="Protected by Guard" icon={ShieldCheck} color="bg-emerald-50 text-emerald-600" />
+               <MetricCard title="Bookings (24h)" value={channexBookings.length} sub="+12% from last week" icon={Calendar} color="bg-amber-50 text-amber-600" />
+               <MetricCard title="API Health" value="100%" sub="Last sync 2m ago" icon={Activity} color="bg-blue-50 text-blue-600" />
             </div>
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-6">
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><Home size={24}/></div>
-              <div>
-                <div className="text-3xl font-black text-slate-800">
-                  {pmsMode === 'hot' ? MOCK_PROPERTIES_HOT.length : MOCK_HOTELS_PRO.reduce((acc, h) => acc + h.rooms.length, 0)}
-                </div>
-                <div className="text-sm font-bold text-slate-400 uppercase tracking-wide mt-1">
-                  {pmsMode === 'hot' ? 'Logements Sync.' : 'Types Chambres'}
-                </div>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-6">
-              <div className="w-14 h-14 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center"><RefreshCcw size={24}/></div>
-              <div>
-                <div className="text-3xl font-black text-slate-800">100%</div>
-                <div className="text-sm font-bold text-slate-400 uppercase tracking-wide mt-1">Santé API</div>
-              </div>
-            </div>
-          </div>
 
-          {/* Connected Listings */}
-          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-               <div>
-                 <h2 className="text-xl font-black text-slate-800">{pmsMode === 'hot' ? 'Unités Indépendantes (Listings)' : 'Cartographie des Chambres'}</h2>
-                 <p className="text-sm font-medium text-slate-500">{pmsMode === 'hot' ? 'Logements complets mappés de 1-à-1 vers vos OTAs.' : 'Groupes d\'inventaire mappés vers les Room Types des OTA.'}</p>
-               </div>
-               <button className="bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200 px-4 py-2 flex items-center gap-2 rounded-xl font-bold text-sm transition-all shadow-sm">
-                 <DownloadCloud size={16}/> {pmsMode === 'hot' ? 'Importer Annonce' : 'Lier Room Type'}
-               </button>
-            </div>
-            <table className="w-full text-left">
-              <thead className="bg-slate-50 border-b border-slate-100">
-                <tr>
-                  <th className="p-5 text-xs font-black uppercase text-slate-400 tracking-wider ">{pmsMode === 'hot' ? 'Logement' : 'Type de Chambre'}</th>
-                  <th className="p-5 text-xs font-black uppercase text-slate-400 tracking-wider">Distribution</th>
-                  <th className="p-5 text-xs font-black uppercase text-slate-400 tracking-wider">Prix Base</th>
-                  <th className="p-5 text-xs font-black uppercase text-slate-400 tracking-wider text-right">Statut Sync</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {pmsMode === 'hot' ? (
-                  MOCK_PROPERTIES_HOT.map(item => (
-                    <tr key={item.id} className="hover:bg-slate-50 transition cursor-pointer group">
-                      <td className="p-5">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600"><Home size={16}/></div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                   <h3 className="font-black text-slate-800 flex items-center gap-3"><RefreshCcw size={20} className="text-indigo-600"/> Live Channel Status</h3>
+                   <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Real-time bi-directional sync</span>
+                </div>
+                <div className="divide-y divide-slate-50">
+                  {OTAS.slice(0, 4).map(ota => (
+                    <div key={ota.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition">
+                       <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl ${ota.color} text-white flex items-center justify-center font-black text-xl shadow-md`}>{ota.icon}</div>
                           <div>
-                            <div className="font-bold text-slate-800">{item.name}</div>
-                            <div className="text-xs font-bold text-slate-400">{item.type}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-5">
-                        <div className="flex -space-x-2">
-                           {item.otas.map(ota => {
-                             const otaInfo = OTAS.find(o => o.id === ota);
-                             return otaInfo ? (
-                               <div key={ota} className={`w-8 h-8 rounded-full ${otaInfo.color} text-white flex items-center justify-center text-xs font-black border-2 border-white`} title={otaInfo.name}>
-                                 {otaInfo.icon}
-                               </div>
-                             ) : null;
-                           })}
-                        </div>
-                      </td>
-                      <td className="p-5 font-black text-slate-800">{item.price} <span className="text-xs font-medium text-slate-400">/ nuit</span></td>
-                      <td className="p-5 text-right">
-                        <div className="inline-flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                          <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Connecté</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  MOCK_HOTELS_PRO.map(hotel => (
-                    <React.Fragment key={hotel.id}>
-                      <tr className="bg-slate-100/50">
-                        <td colSpan="4" className="p-4 border-b border-slate-200">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-white"><Activity size={14}/></div>
-                              <div>
-                                <div className="font-black text-slate-800 tracking-tight text-sm uppercase">{hotel.name}</div>
-                                <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">{hotel.location} • Configuré pour l'API Hub</div>
-                              </div>
-                            </div>
-                            <div className="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 text-xs font-bold uppercase rounded-md flex items-center gap-1">
-                               <CheckCircle2 size={12}/> Actif {hotel.rooms.length}/7 mapping complet
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      {hotel.rooms.map(room => (
-                         <tr key={room.id} className="hover:bg-slate-50 transition cursor-pointer group">
-                           <td className="p-4 pl-14 border-b border-slate-50">
-                             <div className="flex flex-col">
-                               <div className="font-bold text-slate-700">{room.name}</div>
-                               <div className="text-[11px] font-bold text-indigo-500 mt-1 flex items-center gap-1">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-                                 Lot de {room.qty} ch. physiques (Inventaire unifié)
-                               </div>
+                             <h4 className="font-black text-slate-800">{ota.name}</h4>
+                             <div className="flex gap-2 mt-1">
+                                {ota.sync.map(s => <span key={s} className="text-[9px] font-bold text-slate-400 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-tighter">{s}</span>)}
                              </div>
-                           </td>
-                           <td className="p-4 border-b border-slate-50">
-                             <div className="flex -space-x-2">
-                               {room.otas.map(ota => {
-                                  const otaInfo = OTAS.find(o => o.id === ota);
-                                  return otaInfo ? (
-                                    <div key={ota} className={`w-8 h-8 rounded-full ${otaInfo.color} text-white flex items-center justify-center text-xs font-black border-2 border-white`} title={otaInfo.name}>
-                                      {otaInfo.icon}
-                                    </div>
-                                  ) : null;
-                               })}
-                             </div>
-                           </td>
-                           <td className="p-4 font-black text-slate-800 border-b border-slate-50">{room.price} <span className="text-[11px] font-medium text-slate-400 uppercase tracking-widest">/ Base Rate</span></td>
-                           <td className="p-4 text-right border-b border-slate-50">
-                              <span className="text-xs font-bold text-emerald-600 bg-emerald-50/50 px-2.5 py-1 rounded-md border border-emerald-100/50">Flux Synchro.</span>
-                           </td>
-                         </tr>
-                      ))}
-                    </React.Fragment>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* --- TAB: CHANNELS & OTAs --- */}
-      {activeTab === 'channels' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-             <div>
-               <h2 className="text-2xl font-black text-slate-800">Catalogue des Canaux</h2>
-               <p className="text-slate-500 font-medium mt-1">Connectez les OTAs pour contrôler tarifs, dispos, messages et avis depuis HosFlow.</p>
-             </div>
-           </div>
-
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-             {OTAS.map(ota => {
-                const isConnected = connectedOTAs.includes(ota.id);
-                const isLoading = loadingOTA === ota.id;
-                
-                return (
-                  <div key={ota.id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition relative flex flex-col md:flex-row items-start md:items-center gap-6 group">
-                    
-                    <div className={`shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center font-black text-4xl text-white shadow-lg ${ota.color}`}>
-                      {ota.icon}
+                          </div>
+                       </div>
+                       <div className="flex items-center gap-6">
+                          <div className="flex flex-col items-end">
+                             <span className="text-[10px] font-black text-emerald-500 uppercase flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Active</span>
+                             <span className="text-[10px] font-bold text-slate-300">Syncing 4m ago</span>
+                          </div>
+                          <button className="p-2 text-slate-300 hover:text-slate-600 transition"><Settings size={18}/></button>
+                       </div>
                     </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-extrabold text-slate-800 text-xl">{ota.name}</h4>
-                        {isConnected && (
-                          <span className="bg-emerald-100 text-emerald-700 text-[10px] uppercase font-black px-2 py-1 rounded border border-emerald-200 flex items-center gap-1">
-                            <CheckCircle2 size={12}/> Actif
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-medium text-slate-500 mb-3">{ota.desc}</p>
-                      
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {ota.sync.map(s => (
-                          <span key={s} className="bg-slate-50 text-slate-500 text-xs font-bold px-2 py-1 rounded-md border border-slate-100">{s}</span>
-                        ))}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-slate-50">
-                        {!isConnected ? (
-                           <button 
-                             disabled={isLoading}
-                             onClick={() => handleOTAConnect(ota.id)} 
-                             className={`px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 bg-[#1E293B] text-white hover:bg-black shadow-md`}
-                           >
-                              {isLoading ? <RefreshCcw size={16} className="animate-spin"/> : <LinkIcon size={16}/>}
-                              {isLoading ? 'Liaison...' : `Connexion via ${ota.name}`}
-                           </button>
-                        ) : (
-                           <>
-                             <button 
-                                onClick={() => setShowConfig(ota.id)}
-                                className="bg-white border border-slate-200 hover:border-indigo-500 text-slate-700 hover:text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-sm"
-                             >
-                               <Settings size={16}/> Configurer
-                             </button>
-                             {/* Seamless integrations with SaaS tools */}
-                             {ota.sync.includes('Messages') && (
-                               <button 
-                                 onClick={() => setActiveView('unified-inbox')}
-                                 className="bg-blue-50 text-blue-700 hover:bg-blue-100 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 border border-blue-100"
-                               >
-                                 <MessageSquare size={16}/> Inbox
-                               </button>
-                             )}
-                             {ota.sync.includes('Avis') && (
-                               <button 
-                                 onClick={() => setActiveView('reputation')}
-                                 className="bg-amber-50 text-amber-700 hover:bg-amber-100 px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 border border-amber-100"
-                               >
-                                 <Star size={16}/> Avis
-                               </button>
-                             )}
-                           </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-             })}
-           </div>
-        </div>
-      )}
-
-      {/* --- TAB: MESSENGER OMNICANAL --- */}
-      {activeTab === 'messenger' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
-          <div className="bg-gradient-to-r from-indigo-600 to-violet-700 p-4 rounded-3xl text-white flex items-center justify-between shadow-lg">
-             <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md"><Activity size={20}/></div>
-                <div>
-                   <h3 className="font-black tracking-tight text-sm uppercase">Pilote Automatique IA</h3>
-                   <p className="text-[10px] font-bold text-indigo-100 opacity-80">Répond automatiquement aux questions fréquentes (Check-in, Wi-Fi, etc.)</p>
+                  ))}
                 </div>
-             </div>
-             <button 
-                onClick={() => setAutomationActive(!automationActive)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all ${automationActive ? 'bg-emerald-400 text-emerald-950' : 'bg-white/20 text-white'}`}
-             >
-                {automationActive ? <CheckCircle2 size={14}/> : <ArrowRight size={14}/>}
-                {automationActive ? 'AUTOPILOT ACTIF' : 'ACTIVER PILOTE'}
-             </button>
-          </div>
-
-          <div className="flex h-[600px] bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden">
-            {/* Conversation List */}
-            <div className="w-80 border-r border-slate-100 flex flex-col">
-              <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-                <input type="text" placeholder="Rechercher..." className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500" />
-                <button className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-indigo-600 transition"><Plus size={18}/></button>
               </div>
-              <div className="flex-1 overflow-y-auto hide-scrollbar">
-                {[
-                  { id: 1, name: 'Alice Smith', platform: 'booking', lastMsg: 'Is late check-in possible?', time: '10:30', unread: true },
-                  { id: 2, name: 'Bob Johnson', platform: 'airbnb', lastMsg: 'Thanks for the instructions!', time: '09:15', unread: false },
-                  { id: 3, name: 'Claire Dubois', platform: 'expedia', lastMsg: 'Are towels provided?', time: 'Yesterday', unread: false },
-                  { id: 4, name: 'David Wilson', platform: 'booking', lastMsg: 'Looking forward to our stay.', time: 'Yesterday', unread: false }
-                ].map(conv => (
-                  <div 
-                    key={conv.id} 
-                    onClick={() => setSelectedConversation(conv)}
-                    className={`p-4 border-b border-slate-50 cursor-pointer transition relative hover:bg-slate-50 ${selectedConversation?.id === conv.id ? 'bg-indigo-50/50' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500">{conv.name.charAt(0)}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800 text-sm truncate">{conv.name}</span>
-                          <span className="text-[10px] text-slate-400 font-medium">{conv.time}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${OTAS.find(o => o.id === conv.platform)?.color} flex items-center justify-center text-[6px] text-white font-black`}>
-                             {OTAS.find(o => o.id === conv.platform)?.icon}
-                          </div>
-                          <p className="text-xs text-slate-500 truncate">{conv.lastMsg}</p>
-                        </div>
-                      </div>
+
+              <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden flex flex-col justify-between">
+                 <div className="relative z-10">
+                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6"><Zap size={24} className="text-amber-400" /></div>
+                    <h3 className="text-2xl font-black mb-2">Omnichannel AI Autopilot</h3>
+                    <p className="text-slate-400 text-sm font-medium leading-relaxed">AI is currently handling guest inquiries and optimizing rates across your connected channels.</p>
+                 </div>
+                 <div className="relative z-10 mt-12 space-y-4">
+                    <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
+                       <span className="text-xs font-bold text-slate-300">AI Response Rate</span>
+                       <span className="text-lg font-black text-emerald-400">92%</span>
                     </div>
-                    {conv.unread && <div className="absolute right-4 bottom-4 w-2 h-2 bg-indigo-600 rounded-full"></div>}
-                  </div>
-                ))}
+                    <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
+                       <span className="text-xs font-bold text-slate-300">Rate Optimizations</span>
+                       <span className="text-lg font-black text-amber-400">142</span>
+                    </div>
+                    <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition shadow-2xl shadow-indigo-900/50">Configure Autopilot</button>
+                 </div>
+                 <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl"></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: REVIEWS --- */}
+        {activeTab === 'reviews' && (
+          <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <h2 className="text-3xl font-black text-slate-900">Guest Reputation</h2>
+                <p className="text-slate-500 font-medium mt-2">Monitor and respond to guest feedback across all connected channels.</p>
+              </div>
+              <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full border border-slate-100 shadow-sm">
+                <Star size={16} className="text-amber-500 fill-amber-500" />
+                <span className="text-sm font-black text-slate-800">Global Score: 4.8/5.0</span>
               </div>
             </div>
 
-            {/* Chat Area */}
-            <div className="flex-1 flex flex-col bg-slate-50/30 relative">
-              {selectedConversation ? (
-                <>
-                  <div className="p-4 border-b border-slate-100 bg-white flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-500">{selectedConversation.name.charAt(0)}</div>
-                      <div>
-                        <h4 className="font-bold text-slate-800 text-sm">{selectedConversation.name}</h4>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Client {selectedConversation.platform.toUpperCase()}</span>
-                          <div className="w-1 h-1 bg-emerald-500 rounded-full"></div>
-                          <span className="text-[10px] text-emerald-600 font-bold uppercase">En ligne</span>
+            <div className="grid grid-cols-1 gap-6">
+              {[
+                { guest: 'Jean Dupont', ota: 'airbnb', score: '5.0', comment: "Incroyable séjour ! L'appartement est parfaitement situé et l'hôte est très réactif.", date: '2h ago', status: 'Pending' },
+                { guest: 'Sarah Miller', ota: 'booking', score: '4.8', comment: "Very clean and modern. The self check-in was seamless. Will definitely come back.", date: 'Yesterday', status: 'Replied' },
+                { guest: 'Marc Laroche', ota: 'expedia', score: '4.5', comment: "Great value for money. A bit noisy in the morning but overall excellent experience.", date: '2 days ago', status: 'Pending' }
+              ].map((review, i) => (
+                <div key={i} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition duration-500 group">
+                  <div className="flex flex-col md:flex-row gap-8">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-slate-400 text-xl border border-slate-100 shadow-inner">
+                            {review.guest[0]}
+                          </div>
+                          <div>
+                            <h4 className="font-black text-slate-800 text-lg">{review.guest}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className={`w-5 h-5 rounded-full ${OTAS.find(o => o.id === review.ota)?.color} text-white flex items-center justify-center text-[8px] font-black`}>
+                                {OTAS.find(o => o.id === review.ota)?.icon}
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{review.ota} • {review.date}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 bg-amber-50 px-4 py-2 rounded-xl text-amber-600 font-black">
+                           <Star size={16} className="fill-amber-500" /> {review.score}
                         </div>
                       </div>
+                      <p className="text-slate-600 font-medium leading-relaxed italic text-lg mb-8">"{review.comment}"</p>
+                      <div className="flex items-center gap-4">
+                         <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${review.status === 'Replied' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                            {review.status}
+                         </span>
+                         <div className="h-4 w-px bg-slate-100"></div>
+                         <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition">Translate Review</button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={handleTranslateMessage}
-                        className={`p-2 rounded-lg transition text-slate-400 flex items-center gap-2 text-xs font-bold ${isTranslating ? 'animate-pulse text-indigo-600 bg-indigo-50' : 'hover:bg-slate-100'}`}
-                      >
-                         <Globe size={18}/> Traduire
-                      </button>
-                      <button className="p-2 hover:bg-slate-100 rounded-lg transition text-slate-400"><Calendar size={18}/></button>
-                    </div>
-                  </div>
 
-                  <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                     <div className="flex justify-start">
-                       <div className="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm max-w-[80%]">
-                         <p className="text-sm text-slate-700">{selectedConversation.lastMsg}</p>
-                         <span className="text-[10px] text-slate-400 mt-1 block tracking-tight uppercase font-bold">{selectedConversation.time} • Reçu via Channex.co</span>
-                       </div>
-                     </div>
-                     <div className="flex justify-end">
-                       <div className="bg-indigo-600 p-3 rounded-2xl rounded-tr-none text-white shadow-lg max-w-[80%]">
-                         <p className="text-sm">Bonjour {selectedConversation.name.split(' ')[0]}, bien sûr ! Nous pouvons organiser cela pour vous.</p>
-                         <span className="text-[10px] text-indigo-100 mt-1 block font-bold uppercase tracking-widest">10:45 • Lu</span>
-                       </div>
-                     </div>
-                  </div>
-
-                  <div className="p-4 bg-white border-t border-slate-100">
-                    <div className="flex flex-col gap-3">
-                       {/* AI Tooltip for quick reply */}
-                       <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden">
+                    <div className="w-full md:w-96 bg-slate-50/50 rounded-[2.5rem] p-8 flex flex-col justify-between border border-slate-100">
+                       <div className="space-y-4">
                           <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-2 text-indigo-700 text-xs font-black uppercase tracking-wider">
-                                <Activity size={14} className={isAiGenerating ? 'animate-spin' : ''}/> 
-                                {isAiGenerating ? 'L\'IA prépare une réponse...' : 'Assistant Intelligent IA'}
-                             </div>
-                             {!isAiGenerating && (
-                                <button onClick={handleAiAssist} className="text-indigo-600 hover:text-indigo-800 text-[10px] font-black uppercase tracking-widest underline decoration-2 underline-offset-4 decoration-indigo-200">
-                                   Rédiger brouillon IA
-                                </button>
-                             )}
+                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Zap size={14} className="text-amber-500"/> AI Draft</span>
+                             <button onClick={() => setIsAiGenerating(true)} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Regenerate</button>
                           </div>
-                          {messageText && (
-                            <div className="text-[13px] text-slate-600 font-medium leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
-                               {messageText}
-                            </div>
-                          )}
+                          <div className="bg-white p-4 rounded-2xl text-xs font-medium text-slate-500 border border-slate-100 leading-relaxed">
+                             {review.status === 'Replied' ? "Thank you Sarah! We're thrilled you enjoyed the seamless check-in. Looking forward to your next visit!" : "Drafting professional response based on guest sentiment..."}
+                          </div>
                        </div>
+                       <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest mt-6 hover:bg-black transition">
+                          {review.status === 'Replied' ? 'Edit Response' : 'Post AI Reply'}
+                       </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-                       <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-2 px-4 focus-within:border-indigo-500 focus-within:bg-white transition-all">
-                        <input 
-                          type="text" 
-                          placeholder="Écrire votre réponse..." 
-                          className="flex-1 bg-transparent border-none outline-none text-sm py-2 text-slate-800"
-                          value={messageText}
-                          onChange={(e) => setMessageText(e.target.value)}
-                        />
-                        <button 
-                          className="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700 transition shadow-md flex items-center justify-center disabled:opacity-50"
-                          onClick={() => setMessageText('')}
-                          disabled={!messageText}
-                        >
-                          <ArrowRight size={18}/>
-                        </button>
+        {/* --- TAB: LISTING --- */}
+        {activeTab === 'listing' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                 <h2 className="text-3xl font-black text-slate-900">Listing Manager</h2>
+                 <p className="text-slate-500 font-medium mt-1">Push content updates (photos, descriptions) to all OTAs simultaneously.</p>
+              </div>
+              <button className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-slate-200 transition flex items-center gap-2">
+                 <Plus size={18}/> New Listing
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {MOCK_PROPERTIES_HOT.map(item => (
+                 <div key={item.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center justify-between hover:border-indigo-200 transition group">
+                    <div className="flex items-center gap-6">
+                       <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition shadow-inner">
+                          <Home size={28}/>
+                       </div>
+                       <div>
+                          <div className="flex items-center gap-3">
+                             <h4 className="font-black text-slate-800 text-xl">{item.name}</h4>
+                             <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase px-2 py-1 rounded-lg">SYNCED</span>
+                          </div>
+                          <div className="flex items-center gap-4 mt-2">
+                             <div className="flex -space-x-2">
+                               {item.otas.map(ota => (
+                                 <div key={ota} className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-black ${OTAS.find(o => o.id === ota)?.color}`}>
+                                    {OTAS.find(o => o.id === ota)?.icon}
+                                 </div>
+                               ))}
+                             </div>
+                             <span className="text-slate-400 text-xs font-bold">{item.type} • {item.price}/night</span>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                       <button className="p-4 bg-slate-50 text-slate-400 rounded-2xl hover:text-indigo-600 transition"><Eye size={20}/></button>
+                       <button className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100"><Settings size={20}/></button>
+                    </div>
+                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: PRICING --- */}
+        {activeTab === 'pricing' && (
+          <div className="space-y-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                 <h2 className="text-3xl font-black text-slate-900">Pricing & Rate Rules</h2>
+                 <p className="text-slate-500 font-medium mt-2">Set dynamic adjustments and map rate plans to Channex identifiers.</p>
+              </div>
+              <button className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-indigo-100 transition flex items-center gap-2">
+                 <Tag size={18}/> New Pricing Rule
+              </button>
+            </div>
+
+            <div className="bg-white rounded-[3rem] p-12 border-2 border-dashed border-slate-100 text-center">
+               <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><CreditCard size={40}/></div>
+               <h3 className="text-2xl font-black text-slate-800 mb-2">No Active Pricing Rules</h3>
+               <p className="text-slate-400 font-medium max-w-sm mx-auto mb-8">Establish dynamic pricing logic that automatically pushes to Channex based on occupancy or seasonal demand.</p>
+               <div className="flex justify-center gap-4">
+                  <button className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl">Setup Base Rates</button>
+                  <button className="bg-white border border-slate-200 text-slate-600 px-8 py-4 rounded-2xl font-black text-sm shadow-sm">Sync from PMS</button>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: AUTOMATION --- */}
+        {activeTab === 'automation' && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
+               <h2 className="text-3xl font-black text-slate-900">Automated Workflows</h2>
+               <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-xs transition-all ${automationActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                  <div className={`w-2 h-2 rounded-full ${automationActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                  {automationActive ? 'SYSTEM OPERATIONAL' : 'SYSTEM PAUSED'}
+               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { title: 'Smart Check-In', desc: 'Send codes 24h before arrival', icon: Key, color: 'bg-indigo-50 text-indigo-600' },
+                { title: 'Review Collector', desc: 'Request review 2h after checkout', icon: Star, color: 'bg-amber-50 text-amber-600' },
+                { title: 'Rate Optimizer', desc: 'Boost prices for high demand', icon: Activity, color: 'bg-rose-50 text-rose-600' }
+              ].map((auto, i) => (
+                <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl transition duration-500">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 ${auto.color}`}><auto.icon size={28}/></div>
+                  <h4 className="text-xl font-black text-slate-800 mb-2">{auto.title}</h4>
+                  <p className="text-slate-500 font-medium mb-8">{auto.desc}</p>
+                  <div className="flex justify-between items-center">
+                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Status</span>
+                     <div className="w-12 h-6 bg-emerald-500 rounded-full relative p-1 cursor-pointer">
+                        <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
+                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: ANALYTICS --- */}
+        {activeTab === 'reports' && (
+          <div className="space-y-8">
+            <div className="flex items-center justify-between mb-8">
+               <h2 className="text-3xl font-black text-slate-900">Market Intelligence</h2>
+               <div className="flex items-center gap-4">
+                  <div className="bg-white border border-slate-100 rounded-xl px-4 py-2 text-sm font-bold text-slate-500">April 2026</div>
+                  <button className="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest">Download PDF</button>
+               </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+                  <h4 className="font-black text-slate-800 text-lg mb-8 flex items-center gap-2"><Smartphone size={20} className="text-indigo-600"/> Booking Sources</h4>
+                  <div className="space-y-6">
+                     {OTAS.slice(0,4).map(ota => (
+                       <div key={ota.id} className="space-y-2">
+                          <div className="flex justify-between text-xs font-black uppercase tracking-widest text-slate-400">
+                             <span>{ota.name}</span>
+                             <span className="text-slate-800">25%</span>
+                          </div>
+                          <div className="w-full bg-slate-50 h-3 rounded-full overflow-hidden">
+                             <div className={`h-full ${ota.color}`} style={{width: '25%'}}></div>
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
+               <div className="bg-indigo-600 p-10 rounded-[3rem] text-white relative overflow-hidden flex flex-col justify-between">
+                  <h4 className="font-black text-xl mb-4 relative z-10">Revenue Insights</h4>
+                  <div className="text-6xl font-black mb-4 relative z-10">$12,490.00</div>
+                  <p className="text-indigo-100 font-medium relative z-10">+18.5% compared to previous period</p>
+                  <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: API CONFIG --- */}
+        {activeTab === 'config' && (
+          <div className="max-w-3xl mx-auto w-full space-y-8 py-12">
+             <div className="text-center mb-12">
+                <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
+                   <Server size={40} />
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 mb-2">Channex.io Integration Hub</h2>
+                <p className="text-slate-500 font-medium">Configure your enterprise API credentials to enable global distribution.</p>
+             </div>
+
+             <div className="bg-white rounded-[3rem] border border-slate-100 p-12 shadow-2xl space-y-10">
+                <div className="space-y-4">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Channex API Token</label>
+                   <div className="relative group">
+                      <div className="absolute inset-y-0 left-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition">
+                         <Key size={20} />
+                      </div>
+                      <input 
+                        type="password" 
+                        value={channexToken}
+                        onChange={e => setChannexToken(e.target.value)}
+                        placeholder="sk_live_..." 
+                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] px-16 py-5 text-slate-800 font-mono text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
+                      />
+                      {channexToken && (
+                        <div className="absolute inset-y-0 right-6 flex items-center text-emerald-500">
+                           <CheckCircle2 size={20} />
+                        </div>
+                      )}
+                   </div>
+                </div>
+
+                <div className="space-y-4">
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Property Group ID</label>
+                   <div className="relative group">
+                      <div className="absolute inset-y-0 left-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition">
+                         <Database size={20} />
+                      </div>
+                      <input 
+                        type="text" 
+                        value={channexGroupId}
+                        onChange={e => setChannexGroupId(e.target.value)}
+                        placeholder="88f28c11-..." 
+                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] px-16 py-5 text-slate-800 font-mono text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
+                      />
+                   </div>
+                </div>
+
+                <div className="bg-emerald-50 rounded-[2rem] p-6 border border-emerald-100 flex items-center justify-between">
+                   <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm">
+                         <ShieldCheck size={24} />
+                      </div>
+                      <div>
+                         <div className="font-black text-emerald-800 text-sm">Real-time Sync Active</div>
+                         <div className="text-emerald-600 text-xs font-medium">Latency: 142ms • Status: Operational</div>
+                      </div>
+                   </div>
+                   <button className="text-emerald-700 font-black text-[10px] uppercase tracking-widest hover:underline">Test Latency</button>
+                </div>
+
+                <button 
+                  onClick={saveChannexCredentials}
+                  className="w-full bg-slate-900 hover:bg-black text-white py-6 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-2xl shadow-slate-200 transition active:scale-[0.98]"
+                >
+                   {channexLoading ? 'Establishing Connection...' : 'Save & Sync API Credentials'}
+                </button>
+             </div>
+          </div>
+        )}
+
+        {/* --- TAB: RESERVATIONS --- */}
+        {activeTab === 'reservations' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-slate-900">Synchronized Bookings</h2>
+              <div className="flex gap-2">
+                 <button className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-indigo-600 shadow-sm transition"><DownloadCloud size={20}/></button>
+                 <button className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-indigo-600 shadow-sm transition"><Filter size={20}/></button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {channexBookings.length > 0 ? channexBookings.map(booking => (
+                <div key={booking.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-100 transition duration-300 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-4 w-full md:w-auto">
+                    <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-indigo-600 border border-slate-100 text-xl">
+                      {booking.attributes?.customer?.name?.[0] || 'G'}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-slate-800 text-lg">{booking.attributes?.customer?.name || 'Guest'}</h4>
+                        <span className="text-[10px] font-black text-slate-300 uppercase">#{booking.id}</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-tighter"><Calendar size={12}/> {booking.attributes?.arrival_date} - {booking.attributes?.departure_date}</div>
+                        <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
+                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{booking.attributes?.channel_name || 'Channel'}</div>
                       </div>
                     </div>
                   </div>
-                </>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-slate-300">
-                   <div className="p-8 bg-slate-100 rounded-full mb-6">
-                    <MessageSquare size={80} strokeWidth={1} />
+                  
+                  <div className="flex items-center justify-between md:justify-end gap-12 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-slate-50">
+                    <div className="text-right">
+                       <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount</div>
+                       <div className="text-2xl font-black text-slate-900">{booking.attributes?.amount} <span className="text-sm font-bold text-slate-400">{booking.attributes?.currency}</span></div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                       <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${booking.attributes?.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                          {booking.attributes?.status || 'Confirmed'}
+                       </span>
+                       <button className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-xl transition"><ChevronRight size={20}/></button>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-black text-slate-400">Centre de Communication</h3>
-                  <p className="text-sm font-bold text-slate-400 mt-2">Sélectionnez un invité pour commencer la conversation.</p>
+                </div>
+              )) : (
+                <div className="bg-white rounded-[3rem] p-24 text-center border-2 border-dashed border-slate-100">
+                   <div className="w-24 h-24 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><Calendar size={48}/></div>
+                   <h3 className="text-2xl font-black text-slate-800 mb-2">No Bookings Found</h3>
+                   <p className="text-slate-400 font-medium max-w-xs mx-auto mb-8">Connect your Channex API to start receiving real-time reservations from all OTAs.</p>
+                   <button onClick={() => setActiveTab('config')} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm transition shadow-xl shadow-indigo-100 hover:bg-indigo-700">Configure API</button>
                 </div>
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* --- TAB: REVIEWS & FEEDBACK --- */}
-      {activeTab === 'reviews' && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
-           <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40">
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                   <h2 className="text-2xl font-black text-slate-800">Réputation & Avis Clients</h2>
-                   <p className="text-slate-500 font-medium mt-1">Gérez tous les feedbacks de vos listings synchronisés via Channex.</p>
-                </div>
-                <div className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl border border-indigo-100 font-bold text-sm">
-                   <ShieldCheck size={16}/> Protection de Marque Active
-                </div>
+        {/* --- TAB: MESSENGER (MODERN INBOX) --- */}
+        {activeTab === 'messenger' && (
+           <div className="h-[750px] bg-white rounded-[3rem] border border-slate-100 shadow-2xl flex overflow-hidden">
+              {/* Sidebar List */}
+              <div className="w-96 border-r border-slate-50 flex flex-col bg-slate-50/20">
+                 <div className="p-8 pb-4">
+                    <h3 className="text-2xl font-black text-slate-900 mb-6">Unified Inbox</h3>
+                    <div className="relative">
+                       <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
+                       <input type="text" placeholder="Search guests..." className="w-full bg-white border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium outline-none focus:border-indigo-500 transition" />
+                    </div>
+                 </div>
+                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {[
+                      { id: 1, name: 'Alice Smith', platform: 'booking', lastMsg: 'Is late check-in possible?', time: '10:30', unread: true },
+                      { id: 2, name: 'Bob Johnson', platform: 'airbnb', lastMsg: 'Thanks for the instructions!', time: '09:15', unread: false },
+                      { id: 3, name: 'Claire Dubois', platform: 'expedia', lastMsg: 'Are towels provided?', time: 'Yesterday', unread: false }
+                    ].map(conv => (
+                       <div key={conv.id} onClick={() => setSelectedConversation(conv)} className={`p-5 rounded-[2rem] cursor-pointer transition-all duration-300 flex items-center gap-4 group ${selectedConversation?.id === conv.id ? 'bg-white shadow-xl ring-1 ring-slate-100 scale-[1.02]' : 'hover:bg-white hover:shadow-lg'}`}>
+                          <div className="relative">
+                             <div className="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-500 text-lg group-hover:bg-indigo-50 group-hover:text-indigo-600 transition">
+                                {conv.name[0]}
+                             </div>
+                             <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-black ${OTAS.find(o => o.id === conv.platform)?.color}`}>
+                                {OTAS.find(o => o.id === conv.platform)?.icon}
+                             </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                             <div className="flex justify-between items-center mb-1">
+                                <span className="font-black text-slate-800 text-sm truncate">{conv.name}</span>
+                                <span className="text-[10px] font-bold text-slate-400">{conv.time}</span>
+                             </div>
+                             <p className="text-xs text-slate-400 font-medium truncate">{conv.lastMsg}</p>
+                          </div>
+                          {conv.unread && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200"></div>}
+                       </div>
+                    ))}
+                 </div>
               </div>
 
-              <div className="space-y-6">
-                {[
-                  { guest: 'Jean Dupont', ota: 'airbnb', score: '5.0', comment: 'Séjour incroyable, l\'appartement est parfaitement situé et la vue est à couper le souffle.', date: 'Hier' },
-                  { guest: 'Sarah Miller', ota: 'booking', score: '4.8', comment: 'Very clean and professionnal staff. Highly recommended for business trips.', date: 'Il y a 2 jours' },
-                  { guest: 'Marc Laroche', ota: 'expedia', score: '4.5', comment: 'Bon rapport qualité prix. Un peu de bruit le matin mais globalement très bien.', date: 'La semaine dernière' },
-                ].map((review, i) => (
-                  <div key={i} className="p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition-all group">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center font-black text-slate-400 border border-slate-200">{review.guest.charAt(0)}</div>
-                        <div>
-                          <div className="flex items-center gap-3">
-                            <span className="font-extrabold text-slate-800">{review.guest}</span>
-                            <div className="flex items-center gap-1 text-amber-500 font-black text-sm">
-                               <Star size={14} fill="currentColor"/> {review.score}
+              {/* Chat View */}
+              <div className="flex-1 flex flex-col bg-white">
+                 {selectedConversation ? (
+                   <>
+                      <div className="p-8 border-b border-slate-50 flex items-center justify-between">
+                         <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-slate-400 border border-slate-100">
+                               {selectedConversation.name[0]}
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                             <div className={`w-5 h-5 rounded-full ${OTAS.find(o => o.id === review.ota)?.color} text-white flex items-center justify-center text-[8px] font-black`}>
-                               {OTAS.find(o => o.id === review.ota)?.icon}
-                             </div>
-                             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{OTAS.find(o => o.id === review.ota)?.name}</span>
-                          </div>
-                        </div>
+                            <div>
+                               <h4 className="font-black text-slate-800">{selectedConversation.name}</h4>
+                               <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                                  {selectedConversation.platform} Reservation <div className="w-1 h-1 bg-emerald-500 rounded-full"></div> <span className="text-emerald-500">Online</span>
+                               </div>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <button className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition"><Star size={20}/></button>
+                            <button className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition"><XCircle size={20}/></button>
+                         </div>
                       </div>
-                      <span className="text-xs font-bold text-slate-400">{review.date}</span>
-                    </div>
-                    <p className="mt-4 text-slate-600 font-medium leading-relaxed italic">"{review.comment}"</p>
-                    <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-                       <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                          <button className="hover:text-indigo-600">Répondre avec l'IA</button>
-                          <button className="hover:text-indigo-600">Traduire</button>
-                          <button className="hover:text-indigo-600">Partager</button>
-                       </div>
-                       <button className="text-indigo-600 text-xs font-black uppercase tracking-widest flex items-center gap-1">
-                          Source: {OTAS.find(o => o.id === review.ota)?.name} <ArrowRight size={12}/>
-                       </button>
-                    </div>
-                  </div>
-                ))}
+
+                      <div className="flex-1 p-12 overflow-y-auto space-y-8 bg-slate-50/10">
+                         <div className="flex justify-start">
+                            <div className="bg-white p-6 rounded-[2.5rem] rounded-tl-none border border-slate-100 shadow-sm max-w-[70%]">
+                               <p className="text-sm font-medium text-slate-700 leading-relaxed">{selectedConversation.lastMsg}</p>
+                               <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-4 block">{selectedConversation.time} • Received via Channel Hub</span>
+                            </div>
+                         </div>
+                         <div className="flex justify-end">
+                            <div className="bg-indigo-600 p-6 rounded-[2.5rem] rounded-tr-none text-white shadow-2xl shadow-indigo-100 max-w-[70%]">
+                               <p className="text-sm font-bold leading-relaxed">Bonjour {selectedConversation.name.split(' ')[0]}, yes absolutely! We can arrange a late check-in for you. Are you arriving by plane?</p>
+                               <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mt-4 block">10:45 • Read</span>
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="p-8">
+                         <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2.5rem] p-6 mb-4 flex flex-col gap-4 relative overflow-hidden group">
+                            <div className="flex items-center justify-between relative z-10">
+                               <div className="flex items-center gap-2 text-indigo-700 text-xs font-black uppercase tracking-widest">
+                                  <Zap size={14} className={isAiGenerating ? 'animate-spin' : ''}/> AI Smart Reply
+                               </div>
+                               <button onClick={() => setIsAiGenerating(true)} className="text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:underline">Draft with IA</button>
+                            </div>
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200/20 rounded-full blur-3xl group-hover:scale-150 transition duration-700"></div>
+                         </div>
+
+                         <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-[2.5rem] p-3 pl-8 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-50 transition-all duration-300">
+                            <input type="text" placeholder="Type your message..." className="flex-1 bg-transparent border-none outline-none text-sm font-medium py-3 text-slate-800" />
+                            <button className="bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-90">
+                               <ArrowRight size={24} />
+                            </button>
+                         </div>
+                      </div>
+                   </>
+                 ) : (
+                   <div className="flex-1 flex flex-col items-center justify-center text-slate-200 p-12">
+                      <div className="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-8 shadow-inner"><MessageSquare size={64}/></div>
+                      <h3 className="text-3xl font-black text-slate-300">Omnichannel Messenger</h3>
+                      <p className="text-slate-400 font-bold mt-4 max-w-sm text-center">Select a conversation from your connected channels to start chatting with your guests.</p>
+                   </div>
+                 )}
               </div>
            </div>
-        </div>
-      )}
+        )}
 
-      {/* --- CONFIG MODAL --- */}
-      {showConfig && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className={`p-6 ${OTAS.find(o => o.id === showConfig)?.color} text-white flex justify-between items-center`}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center font-black text-2xl">
-                  {OTAS.find(o => o.id === showConfig)?.icon}
-                </div>
+        {/* --- TAB: CHANNELS (HUB) --- */}
+        {activeTab === 'channels' && (
+          <div className="space-y-12">
+             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                  <h3 className="font-black text-xl">Configuration {OTAS.find(o => o.id === showConfig)?.name}</h3>
-                  <p className="text-white/80 text-xs font-bold uppercase tracking-wider">Paramètres de synchronisation avancés</p>
+                   <h2 className="text-3xl font-black text-slate-900">Distribution Network</h2>
+                   <p className="text-slate-500 font-medium mt-2">Manage your active OTA connections and discover new opportunities.</p>
                 </div>
-              </div>
-              <button onClick={() => setShowConfig(null)} className="p-2 hover:bg-white/20 rounded-full transition">
-                <XCircle size={24} />
-              </button>
-            </div>
-            
-            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto hide-scrollbar">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Identifiant Connexion</label>
-                  <input type="text" readOnly value={`${showConfig}_user_882`} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none" />
+                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white px-6 py-3 rounded-full border border-slate-100">
+                   Active Connections: <span className="text-indigo-600 ml-2">4 / 24</span>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Statut API</label>
-                  <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-sm font-bold">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                    Opérationnel
-                  </div>
-                </div>
-              </div>
+             </div>
 
-              <div className="space-y-4">
-                <h4 className="font-black text-slate-800 text-sm border-b border-slate-100 pb-2">Options de Synchronisation</h4>
-                {[
-                  { label: 'Disponibilités en temps réel', desc: 'Mise à jour instantanée des calendriers.', checked: true },
-                  { label: 'Prix & Promotions', desc: 'Synchronisation des tarifs de base et offres.', checked: true },
-                  { label: 'Messages Invités', desc: 'Importation auto dans Messenger Omnicanal.', checked: true },
-                  { label: 'Avis & Commentaires', desc: 'Récupération des avis pour IA Reputation.', checked: false },
-                ].map((opt, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
-                    <div>
-                      <div className="font-bold text-slate-800 text-sm">{opt.label}</div>
-                      <p className="text-xs text-slate-500 font-medium">{opt.desc}</p>
-                    </div>
-                    <div className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${opt.checked ? 'bg-indigo-600' : 'bg-slate-300'}`}>
-                      <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${opt.checked ? 'left-6' : 'left-1'}`}></div>
-                    </div>
-                  </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {OTAS.map(ota => (
+                   <div key={ota.id} className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm hover:shadow-2xl transition duration-500 group flex flex-col justify-between">
+                      <div>
+                         <div className="flex items-start justify-between mb-8">
+                            <div className={`w-16 h-16 rounded-[1.5rem] ${ota.color} text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-${ota.color.split('-')[1]}-200/50`}>{ota.icon}</div>
+                            <div className="flex flex-col items-end">
+                               <span className="bg-slate-50 text-slate-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter mb-2">Available</span>
+                               <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100 group-hover:bg-indigo-100 transition"></div>)}
+                               </div>
+                            </div>
+                         </div>
+                         <h3 className="text-2xl font-black text-slate-900 mb-2">{ota.name}</h3>
+                         <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">{ota.desc}</p>
+                         <div className="flex flex-wrap gap-2 mb-10">
+                            {ota.sync.map(s => <span key={s} className="bg-slate-50 text-slate-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">{s}</span>)}
+                         </div>
+                      </div>
+                      
+                      {activeChannelConfig === ota.id ? (
+                        <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
+                           <input 
+                             type="text" 
+                             placeholder="Channel Property ID" 
+                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition"
+                             value={tempChannelId}
+                             onChange={e => setTempChannelId(e.target.value)}
+                           />
+                           <div className="flex gap-2">
+                              <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg" onClick={() => { alert('Channel Linked'); setActiveChannelConfig(null); setTempChannelId(''); }}>Connect</button>
+                              <button className="flex-1 bg-slate-100 text-slate-400 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest" onClick={() => setActiveChannelConfig(null)}>Cancel</button>
+                           </div>
+                        </div>
+                      ) : (
+                        <button className="w-full bg-slate-900 hover:bg-black text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition shadow-xl group-hover:shadow-indigo-100" onClick={() => setActiveChannelConfig(ota.id)}>
+                           Connect {ota.name}
+                        </button>
+                      )}
+                   </div>
                 ))}
-              </div>
-
-              <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex gap-4">
-                <AlertCircle className="text-amber-500 shrink-0" size={20} />
-                <p className="text-xs text-amber-800 font-medium leading-relaxed">
-                  <strong>Note importante :</strong> Toute modification des tarifs sur {OTAS.find(o => o.id === showConfig)?.name} sera écrasée par HosFlow lors de la prochaine synchronisation automatique (toutes les 5 minutes).
-                </p>
-              </div>
-            </div>
-
-            <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-              <button onClick={() => setShowConfig(null)} className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition">Annuler</button>
-              <button onClick={() => setShowConfig(null)} className="px-6 py-2.5 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition">Enregistrer les réglages</button>
-            </div>
+             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
     </div>
   );
 };

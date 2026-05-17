@@ -3,9 +3,14 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #FAFAFA;
-  position: relative;
-  overflow: hidden;
+  background-color: rgba(250, 250, 250, 0.95);
+  backdrop-filter: blur(10px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: var(--font-family);
 }
 
@@ -52,8 +57,12 @@
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
   padding: 2rem 3rem;
   z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .logo-group {
@@ -80,6 +89,24 @@
   font-weight: 900;
   color: #1E293B;
   letter-spacing: -0.5px;
+}
+
+.auth-close-btn {
+  background: none;
+  border: none;
+  color: #64748B;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.auth-close-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: #0F172A;
 }
 
 /* Main Content */

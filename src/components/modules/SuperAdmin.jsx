@@ -669,22 +669,36 @@ export default function SuperAdmin() {
                 </div>
              </div>
              <div className="sa-card">
-                <h3>Gestion de l'IA & Chat Live (Oracle AI)</h3>
+                <div className="sa-card-header">
+                   <h3>Gestion de l'IA & Distribution (Oracle AI + Channex)</h3>
+                   <div className="flex gap-2">
+                      <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-[10px] font-black uppercase flex items-center gap-1">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Channex API: Operational
+                      </span>
+                   </div>
+                </div>
                 <div className="oracle-ai-config mt-4">
                    <div className="config-grid">
                       <div className="config-item">
-                         <div className="config-label">OpenAI API Key</div>
-                         <div className="config-input-fake text-slate-400">sk-•••••••••••••••••••••••••••••</div>
+                         <div className="config-label">Oracle AI Engine (GPT-4o)</div>
+                         <div className="config-input-fake text-slate-400 flex items-center justify-between">
+                            <span>sk-••••••••••••••••••••</span>
+                            <Zap size={14} className="text-amber-500" />
+                         </div>
                       </div>
                       <div className="config-item">
-                         <div className="config-label">Modèle Actif</div>
-                         <div className="config-input-fake">GPT-4o (Oracle Optimized)</div>
+                         <div className="config-label">Channex API Global Token</div>
+                         <div className="config-input-fake flex items-center justify-between">
+                            <span>{localStorage.getItem('channex_token') ? '••••••••••••••••••••' : 'Non configuré'}</span>
+                            <Globe size={14} className="text-indigo-600" />
+                         </div>
                       </div>
                    </div>
                    <div className="doc-grid mt-6">
-                      <div className="doc-item sa-clickable"><FileText size={18}/> Logs Oracle AI</div>
-                      <div className="doc-item sa-clickable"><FileText size={18}/> Training Dataset</div>
-                      <div className="doc-item sa-clickable"><FileText size={18}/> Live Chat Routing</div>
+                      <div className="doc-item sa-clickable"><Activity size={18} className="text-indigo-600"/> Dashboard Channex</div>
+                      <div className="doc-item sa-clickable"><MessageSquare size={18} className="text-violet-600"/> Logs Oracle AI</div>
+                      <div className="doc-item sa-clickable"><Database size={18} className="text-emerald-600"/> Mappings Globaux</div>
+                      <div className="doc-item sa-clickable" onClick={() => setEditingApi(APIS.find(a => a.id === 'channex'))}><Settings size={18} className="text-slate-600"/> Configurer API</div>
                    </div>
                 </div>
              </div>

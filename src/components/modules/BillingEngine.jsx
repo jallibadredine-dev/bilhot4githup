@@ -114,7 +114,7 @@ const BillingEngine = ({ pmsMode }) => {
         <div className="title-group">
           <div className="breadcrumb-mini">Finance / Ledger / Bills</div>
           <h1>Billing Engine <span className="pro-badge">{pmsMode === 'hot' ? 'HOT' : 'PRO'}</span></h1>
-          <p>{pmsMode === 'hot' ? 'Gestion des revenus villas & taxes de séjour' : 'Global Financial Center & Tax Compliance Management'}</p>
+          <p>{pmsMode === 'hot' ? 'Gestion des revenus & taxes de séjour' : 'Global Financial Center & Tax Compliance Management'}</p>
         </div>
         <div className="header-actions">
            <div className="currency-pill">
@@ -227,7 +227,7 @@ const BillingEngine = ({ pmsMode }) => {
                   <tr>
                     <th>Ref ID</th>
                     <th>Client / Entité</th>
-                    <th>{pmsMode === 'hot' ? 'Villas / Unités' : 'Ref Chambre'}</th>
+                    <th>{pmsMode === 'hot' ? 'Propriétés / Unités' : 'Ref Chambre'}</th>
                     <th>Date d'émission</th>
                     <th>Total T.T.C.</th>
                     <th>Statut</th>

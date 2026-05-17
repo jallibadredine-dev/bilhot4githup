@@ -4,18 +4,151 @@ import {
   Settings, Layers, Type, ArrowLeft, ArrowRight, Image as ImageIcon,
   MousePointer2, Upload, Box, Undo, Redo, Play, CheckCircle, CheckCircle2, GripHorizontal,
   Menu, Sparkles, Heart, Globe, RefreshCcw, X, Calendar, ChevronRight, Layout,
-  CreditCard, ShieldCheck, Zap, History, ExternalLink, ArrowDownLeft
+  CreditCard, ShieldCheck, Zap, History, ExternalLink, ArrowDownLeft,
+  CalendarDays, Users, Star, MapPin
 } from 'lucide-react';
 import './WebsiteBuilder.css'; // Minimal CSS for specific things if needed
 
+/* ─── PROFESSIONAL BLOCK COMPONENTS ─── */
+
+const BookingEngineBlock = ({ block, isSelected, onSelect, globalFont }) => {
+  return (
+    <div 
+      onClick={onSelect}
+      className={`p-12 md:p-24 m-2 rounded-[2.5rem] border-2 transition-all cursor-pointer relative overflow-hidden flex flex-col items-center bg-white ${isSelected ? 'border-indigo-500 ring-8 ring-indigo-50 shadow-2xl' : 'border-transparent hover:border-slate-100 shadow-xl'}`}
+    >
+       <div className="max-w-5xl w-full text-center">
+          <h2 className={`text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight ${globalFont}`}>{block.title || 'Reserver votre séjour'}</h2>
+          <p className="text-slate-500 text-lg mb-16 max-w-2xl mx-auto">{block.subtitle || 'Vérifiez la disponibilité en temps réel et obtenez la confirmation instantanée.'}</p>
+          
+          <div className="bg-white border border-slate-100 shadow-2xl rounded-[3rem] p-4 flex flex-col md:flex-row gap-4 items-center relative z-20">
+             <div className="flex-1 w-full bg-slate-50 hover:bg-slate-100 transition p-6 rounded-[2rem] border border-slate-100 text-left group">
+                <div className="flex items-center gap-3 text-slate-400 mb-2 font-black text-[10px] uppercase tracking-widest group-hover:text-indigo-600 transition">
+                   <CalendarDays size={14} /> Dates de séjour
+                </div>
+                <div className="text-slate-800 font-bold text-lg">24 Oct - 26 Oct</div>
+             </div>
+             <div className="flex-1 w-full bg-slate-50 hover:bg-slate-100 transition p-6 rounded-[2rem] border border-slate-100 text-left group">
+                <div className="flex items-center gap-3 text-slate-400 mb-2 font-black text-[10px] uppercase tracking-widest group-hover:text-indigo-600 transition">
+                   <Users size={14} /> Occupants
+                </div>
+                <div className="text-slate-800 font-bold text-lg">2 Adultes, 1 Enfant</div>
+             </div>
+             <button className="bg-indigo-600 hover:bg-indigo-700 text-white h-full px-12 py-6 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-indigo-200 transition active:scale-95 flex items-center gap-3 w-full md:w-auto justify-center">
+                Réserver <ArrowRight size={18}/>
+             </button>
+          </div>
+          
+          <div className="mt-16 flex items-center justify-center gap-8 text-slate-400 opacity-60">
+             <div className="flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest"><ShieldCheck size={14}/> Paiement Sécurisé</div>
+             <div className="flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest"><Star size={14}/> Meilleur prix</div>
+             <div className="flex items-center gap-2 font-bold text-[10px] uppercase tracking-widest"><CreditCard size={14}/> Instantané</div>
+          </div>
+       </div>
+       
+       <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none"></div>
+       <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-50/50 rounded-full blur-3xl -ml-48 -mb-48 pointer-events-none"></div>
+    </div>
+  );
+};
+
+const RoomListingBlock = ({ block, isSelected, onSelect, globalFont }) => {
+  return (
+    <div 
+      onClick={onSelect}
+      className={`p-12 md:p-24 m-2 rounded-[2.5rem] border-2 transition-all cursor-pointer bg-slate-50 ${isSelected ? 'border-indigo-500 ring-8 ring-indigo-50 shadow-2xl' : 'border-transparent hover:border-slate-200 shadow-inner'}`}
+    >
+       <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+             <div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600 mb-4">Our Residences</h3>
+                <h2 className={`text-4xl md:text-6xl font-black text-slate-900 tracking-tight ${globalFont}`}>{block.title || 'Exclusive Room Collection'}</h2>
+             </div>
+             <p className="text-slate-500 max-w-md md:text-right font-medium">Découvrez une sélection de suites haut de gamme alliant confort moderne et design intemporel.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+             {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-lg hover:shadow-2xl transition duration-500 group flex flex-col">
+                   <div className="aspect-[4/5] relative overflow-hidden">
+                      <img 
+                        src={block.image || "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80"} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition duration-700" 
+                        alt="Room"
+                      />
+                      <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                         <Star size={14} className="text-amber-500 fill-amber-500" />
+                         <span className="font-bold text-xs">4.9/5</span>
+                      </div>
+                      <div className="absolute inset-x-0 bottom-0 p-8 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end translate-y-4 group-hover:translate-y-0 transition duration-500">
+                         <div className="text-white font-black text-2xl mb-1">Deluxe Suite {i}</div>
+                         <div className="flex items-center gap-2 text-white/80 text-xs font-bold uppercase tracking-widest"><MapPin size={12}/> Garden View</div>
+                      </div>
+                   </div>
+                   <div className="p-8 flex flex-col flex-1">
+                      <div className="flex justify-between items-center mb-6">
+                         <div className="flex gap-2">
+                            <span className="w-6 h-6 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400" title="Wifi"><Globe size={12}/></span>
+                            <span className="w-6 h-6 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400" title="Breakfast"><Heart size={12}/></span>
+                         </div>
+                         <div className="text-right">
+                            <div className="text-[10px] font-black uppercase text-slate-400 leading-none">Starting from</div>
+                            <div className="text-2xl font-black text-indigo-600">{block.price || '250€'}<span className="text-xs font-bold text-slate-400">/night</span></div>
+                         </div>
+                      </div>
+                      <button className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] hover:bg-black transition active:scale-95 mt-auto">Book This Room</button>
+                   </div>
+                </div>
+             ))}
+          </div>
+       </div>
+    </div>
+  );
+};
+
+const GalleryGridBlock = ({ block, isSelected, onSelect, globalFont }) => {
+   const images = block.images || [
+      "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1498503182468-3b51cbb6cb24?auto=format&fit=crop&w=600&q=80",
+      "https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=600&q=80"
+   ];
+   
+   return (
+      <div 
+        onClick={onSelect}
+        className={`p-12 md:p-24 m-2 rounded-[2.5rem] border-2 transition-all cursor-pointer bg-white ${isSelected ? 'border-indigo-500 ring-8 ring-indigo-50 shadow-2xl' : 'border-transparent hover:border-slate-100'}`}
+      >
+         <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+               <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-4">Gallery Showcase</h3>
+               <h2 className={`text-4xl md:text-6xl font-black text-slate-900 tracking-tight ${globalFont}`}>{block.title || 'Capturing the Essence'}</h2>
+            </div>
+            
+            <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8">
+               {images.map((img, idx) => (
+                  <div key={idx} className="break-inside-avoid rounded-[2rem] overflow-hidden shadow-lg hover:shadow-2xl hover:scale-[1.02] transition duration-500 border border-slate-100 group relative">
+                     <img src={img} className="w-full h-auto object-cover" alt="Gallery" />
+                     <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-900 shadow-xl scale-90 group-hover:scale-100 transition duration-500"><ImageIcon size={20}/></div>
+                     </div>
+                  </div>
+               ))}
+            </div>
+         </div>
+      </div>
+   );
+};
+
 /* ─── DUMMY DATA ─── */
 const CONTENT_BLOCKS = [
-  { id: 'heading', name: 'Heading', icon: <Type size={16} /> },
-  { id: 'paragraph', name: 'Paragraph', icon: <Menu size={16} /> },
-  { id: 'button', name: 'Button', icon: <MousePointer2 size={16} /> },
-  { id: 'image', name: 'Image', icon: <ImageIcon size={16} /> },
-  { id: 'form', name: 'Form', icon: <LayoutTemplate size={16} /> },
-  { id: 'product', name: 'Product List', icon: <Box size={16} />, pro: true },
+  { id: 'hero', name: 'Premium Hero', icon: <Sparkles size={16} /> },
+  { id: 'booking_engine', name: 'Booking Engine', icon: <CalendarDays size={16} />, pro: true },
+  { id: 'room_list', name: 'Room Gallery', icon: <Box size={16} />, pro: true },
+  { id: 'features', name: 'Icon Features', icon: <ShieldCheck size={16} /> },
+  { id: 'gallery', name: 'Masonry Gallery', icon: <ImageIcon size={16} /> },
+  { id: 'contact', name: 'Contact Form', icon: <LayoutTemplate size={16} /> },
 ];
 
 /* ─── 1. AI PROMPT HERO SCREEN (PRO & MODERN) ─── */
@@ -180,219 +313,89 @@ const DomainPublishModal = ({ onClose, onProceed }) => {
 
 /* ─── 3. BUILDER PHASE ─── */
 const DEFAULT_BLOCKS = [
-  {
-    id: 'hero',
-    type: 'hero',
-    title: 'Providing you with exclusive collections',
-    subtitle: 'Explore Collections',
-    image: 'https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=1200&q=80',
-    titleColor: 'text-slate-900',
-    bgColor: 'bg-slate-50'
-  },
-  {
-     id: 'booking_bar',
-     type: 'booking_bar',
-     buttonText: 'Check Availability',
-     bgColor: 'bg-slate-900',
-     textColor: 'text-white'
-  },
-  {
-    id: 'siteminder_features',
-    type: 'siteminder_features',
-    title: 'Transform your guest experience with HosFlow',
-    ctaPrimary: 'Start Free Trial',
-    ctaSecondary: 'Watch Demo',
-    features: [
-      { id: 1, text: 'PCI-DSS certified security', icon: 'shield' },
-      { id: 2, text: 'Instant channel synchronization', icon: 'zap' },
-      { id: 3, text: '24/7 multilingual support', icon: 'menu' }
-    ]
-  },
-  {
-     id: 'siteminder_testimonials',
-     type: 'siteminder_testimonials',
-     title: 'Join 40,000+ happy hoteliers',
-     items: [
-        { id: 1, text: "HosFlow has doubled our direct bookings in just 3 months. The interface is stunning and so easy to use.", author: "DIRECTOR, CHÂTEAU RETREAT" },
-        { id: 2, text: "The most awarded platform for a reason. Integrated, fast, and reliable.", author: "MANAGER, ALPINE LODGE" }
-     ]
-  },
-  {
-    id: 'products',
-    type: 'products',
-    title: 'Featured Listings',
-    itemsCount: 4,
-    image: 'https://images.unsplash.com/photo-1531315630201-bb152f598835?auto=format&fit=crop&w=600&q=80',
-    price: '$120'
-  },
-  {
-     id: 'gallery',
-     type: 'gallery',
-     title: 'Property Tour',
-     variant: 'carousel',
-     images: [
-        'https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80'
-     ],
-     captions: ['Panoramic Views', 'Luxury Interior', 'Zen Garden']
-  },
-  {
-     id: 'footer',
-     type: 'footer',
-     bgColor: 'bg-slate-900',
-     brandInfo: 'Antigravity Collections',
-     contactInfo: '+1 (555) 123-4567 | hello@antigravity.io'
-  }
+  { id: 'hero', type: 'hero', title: 'Experience the Art of Modern Travel', subtitle: 'Book Your Stay', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-white' },
+  { id: 'booking_engine', type: 'booking_engine', title: 'Find Your Perfect Sanctuary', subtitle: 'Real-time availability for exclusive residences.' },
+  { id: 'room_list', type: 'room_list', title: 'Exquisite Living Spaces', image: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80', price: '250€' },
+  { id: 'features', type: 'features', title: 'World-Class Hospitality', items: ['Concierge Service', 'Infinity Pool', 'Gastronomic Restaurant', 'Holistic Spa'] },
+  { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'HosFlow Collections', contactInfo: '+1 (555) 123-4567 | hospitality@hosflow.com' }
 ];
 
 const TEMPLATES = [
   {
-     id: 'hotel',
-     name: 'Boutique Hotel & Riad',
-     category: 'Hôtellerie',
-     thumbnail: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=400&q=80',
+     id: 'luxury_hotel',
+     name: 'Ultra-Luxury Hotel & Spa',
+     category: 'Luxe',
+     thumbnail: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80',
      blocks: [
-       { id: 'hero', type: 'hero', title: 'Authenticity & Elegance in the Medina', subtitle: 'Book a Suite', image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-orange-950', bgColor: 'bg-orange-50' },
-       { id: 'booking_bar', type: 'booking_bar', buttonText: 'Find Your Suite', bgColor: 'bg-orange-600', textColor: 'text-white' },
-       { id: 'features', type: 'features', title: 'Riad Amenities', items: ['Authentic Hammam', 'Rooftop Lounge', 'Organic Breakfast', 'Local Guides'] },
-       { id: 'products', type: 'products', title: 'Our Luxury Suites', itemsCount: 3, image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=600&q=80', price: '150€' },
-       { id: 'gallery', type: 'gallery', title: 'Experiences', images: ['https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1498503182468-3b51cbb6cb24?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=600&q=80'] },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'La Medina Luxury Riad', contactInfo: '+212 5 24 38 12 34 | booking@riad.local' }
+       { id: 'hero', type: 'hero', title: 'Where Luxury Meets Limitless Serenity', subtitle: 'Experience the Divine', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-white' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Book Your Master Suite', subtitle: 'Direct booking for the most exclusive experiences.' },
+       { id: 'features', type: 'features', title: 'Unparalleled Services', items: ['Private Butler', 'Michelin-star Dining', 'Full-service Wellness Spa', 'Helicopter Transfers'] },
+       { id: 'room_list', type: 'room_list', title: 'Prestigious Room Collection' },
+       { id: 'gallery', type: 'gallery', title: 'Glimpse into Paradise' },
+       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'The Grand HosFlow Hotel', contactInfo: 'reservations@grandhosflow.com' }
      ]
   },
   {
-     id: 'villa',
-     name: 'Modern Luxury Villa',
-     category: 'Location Indépendante',
-     thumbnail: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=400&q=80',
-     blocks: [
-       { id: 'hero', type: 'hero', title: 'Modern Luxury Villa with Infinity Pool', subtitle: 'Check Availability', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-sky-50' },
-       { id: 'booking_bar', type: 'booking_bar', buttonText: 'Reserve Dates', bgColor: 'bg-slate-900', textColor: 'text-white' },
-       { id: 'features', type: 'features', title: 'Villa Highlights', items: ['Private Infinity Pool', 'Chef on Demand', 'Home Cinema', 'Ocean View'] },
-       { id: 'products', type: 'products', title: 'Rooms & Spaces', itemsCount: 2, image: 'https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=600&q=80', price: 'Included in Stay' },
-       { id: 'gallery', type: 'gallery', title: 'The Property', images: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80'] },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Oceanview Villa Collection', contactInfo: '+1 (310) 555-0199 | vip@villacollection.com' }
-     ]
-  },
-  {
-     id: 'siteminder_inspired',
-     name: 'Professional Channel Hub',
-     category: 'Corporate / SaaS',
-     thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80',
-     blocks: [
-       { 
-         id: 'sm_features', 
-         type: 'siteminder_features', 
-         title: 'Why choose HosFlow?', 
-         tagline: '20 years of proven performance',
-         features: [
-           { id: 1, text: 'Trusted by over 53,000 hotels', icon: 'shield' },
-           { id: 2, text: 'Fast, simple, technology', icon: 'zap' },
-           { id: 3, text: '24/7 multilingual support', icon: 'message' }
-         ],
-         ctaPrimary: 'Get started',
-         ctaSecondary: 'Watch demo'
-       },
-       {
-         id: 'sm_testimonials',
-         type: 'siteminder_testimonials',
-         title: 'Hear from real hoteliers.',
-         items: [
-           { id: 1, text: '"HosFlow links all of the distribution options - OTAs, GDS, Direct Booking etc. It\'s dynamic, helps you manage pricing and keeps you up-to-date."', author: 'Southern Cross Motel, Australia' },
-           { id: 2, text: '"HosFlow products are always so easy to use and navigate. The data and insights are excellent."', author: 'La Vie Hotels & Resorts, Australia' }
-         ]
-       }
-     ]
-  },
-  {
-     id: 'lodge',
-     name: 'Eco-Lodge Nature',
-     category: 'Eco-Tourism',
-     thumbnail: 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&w=400&q=80',
-     blocks: [
-       { id: 'hero', type: 'hero', title: 'Connect with Nature in the Heart of the Forest', subtitle: 'Explore Trails', image: 'https://images.unsplash.com/photo-1542718610-a1d656d1884c?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-emerald-950', bgColor: 'bg-emerald-50' },
-       { id: 'features', type: 'features', title: 'Wild Life Experience', items: ['Solar Powered', 'Guided Hikes', 'Organic Farm', 'Bird Watching'] },
-       { id: 'gallery', type: 'gallery', title: 'The Surrounding Wild', images: ['https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=600&q=80'] },
-       { id: 'contact', type: 'contact', title: 'Join our Community', bgColor: 'bg-emerald-900' },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Green Canopy Lodge', contactInfo: 'forest@lodge.eco' }
-     ]
-  },
-  {
-     id: 'city',
-     name: 'Urban Boutique Hotel',
-     category: 'City Center',
-     thumbnail: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=400&q=80',
-     blocks: [
-       { id: 'hero', type: 'hero', title: 'Sophisticated Living in the City Pulse', subtitle: 'View Rooms', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-slate-50' },
-       { id: 'products', type: 'products', title: 'Executive Suites', itemsCount: 4, image: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80', price: '220€' },
-       { id: 'map', type: 'map', title: 'Location', address: '128 Park Avenue, New York' },
-       { id: 'footer', type: 'footer', bgColor: 'bg-black', brandInfo: 'Empire Suites NYC', contactInfo: 'empire@suites.com' }
-     ]
-  },
-  {
-     id: 'resort',
-     name: 'Island Paradise Resort',
-     category: 'Luxury Resort',
-     thumbnail: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=400&q=80',
-     blocks: [
-       { id: 'hero', type: 'hero', title: 'Endless Summer on the Crystal Coast', subtitle: 'Start Relaxing', image: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-cyan-900', bgColor: 'bg-cyan-50' },
-       { id: 'booking_bar', type: 'booking_bar', buttonText: 'Find Your Beach', bgColor: 'bg-cyan-600', textColor: 'text-white' },
-       { id: 'products', type: 'products', title: 'Overwater Bungalows', itemsCount: 3, image: 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=600&q=80', price: '450€' },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Coral Reef Resort', contactInfo: 'paradise@reef.island' }
-     ]
-  },
-  {
-     id: 'ecommerce',
-     name: 'Generic Store & Booking',
-     category: 'Multi-usages',
-     thumbnail: 'https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=400&q=80',
-     blocks: DEFAULT_BLOCKS
-  },
-  {
-     id: 'glamping',
-     name: 'Eco Glamping Safari',
-     category: 'Outdoor / Luxe',
-     thumbnail: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=400&q=80',
-     blocks: [
-       { id: 'hero', type: 'hero', title: 'Luxury Under the Stars', subtitle: 'Book the Tent', image: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-orange-950', bgColor: 'bg-orange-50' },
-       { id: 'features', type: 'features', title: 'Safari Comforts', items: ['King Size Bed', 'Private Deck', 'Solar Lighting', 'Outdoor Shower'] },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Starlight Glamping', contactInfo: 'camp@starlight.com' }
-     ]
-  },
-  {
-     id: 'wellness',
-     name: 'Zen Wellness Retreat',
-     category: 'Well-being',
-     thumbnail: 'https://images.unsplash.com/photo-1544161515-4af6b1d462c2?auto=format&fit=crop&w=400&q=80',
-     blocks: [
-       { id: 'hero', type: 'hero', title: 'Renew Your Spirit, Heal Your Body', subtitle: 'Explore Programs', image: 'https://images.unsplash.com/photo-1544161515-4af6b1d462c2?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-rose-900', bgColor: 'bg-rose-50' },
-       { id: 'features', type: 'features', title: 'Healing Arts', items: ['Daily Yoga', 'Ayurvedic Spa', 'Meditation Garden', 'Detox Nutrition'] },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Ananda Wellness', contactInfo: 'zen@ananda.retreat' }
-     ]
-  },
-  {
-     id: 'chalet',
-     name: 'Alpine Mountain Chalet',
-     category: 'Ski / Mountain',
+     id: 'modern_villa',
+     name: 'Boutique Mountain Chalet',
+     category: 'Nature',
      thumbnail: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?auto=format&fit=crop&w=400&q=80',
      blocks: [
-       { id: 'hero', type: 'hero', title: 'Your Cozy Basecamp in the Alps', subtitle: 'Check Winter Availability', image: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-blue-900', bgColor: 'bg-blue-50' },
-       { id: 'features', type: 'features', title: 'Chalet Perks', items: ['Ski-in / Ski-out', 'Grand Fireplace', 'Hot Tub on Terrace', 'Private Ski Room'] },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Mont Blanc Lodge', contactInfo: 'ski@montblanc.com' }
+       { id: 'hero', type: 'hero', title: 'Chic Living in the Heart of the Alps', subtitle: 'Winter Season Open', image: 'https://images.unsplash.com/photo-1502781252888-9143ba7f074e?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-slate-50' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Find Your Basecamp', subtitle: 'Exclusive mountain retreats for the modern adventurer.' },
+       { id: 'features', type: 'features', title: 'Mountain Highlights', items: ['Ski-in / Ski-out Access', 'Grand Fireplace Lounge', 'Outdoor Hot Tub', 'Private Ski Valet'] },
+       { id: 'gallery', type: 'gallery', title: 'The Alpine Experience' },
+       { id: 'footer', type: 'footer', bgColor: 'bg-black', brandInfo: 'Peak Point Chalets', contactInfo: 'ski@peakpoint.com' }
      ]
   },
   {
-     id: 'business',
-     name: 'Executive Business Suites',
-     category: 'Business Travel',
-     thumbnail: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80',
+     id: 'riad_boutique',
+     name: 'Authentic Moroccan Riad',
+     category: 'Culture',
+     thumbnail: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=400&q=80',
      blocks: [
-       { id: 'hero', type: 'hero', title: 'Work & Stay in the Financial Heart', subtitle: 'Corporate Booking', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-slate-900', bgColor: 'bg-slate-100' },
-       { id: 'booking_bar', type: 'booking_bar', buttonText: 'Reserve Workstation', bgColor: 'bg-indigo-600', textColor: 'text-white' },
-       { id: 'features', type: 'features', title: 'Business Ready', items: ['Fiber Internet', 'Meeting Rooms', 'Work Desks', '24h Fitness Center'] },
-       { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'TechCity Suites', contactInfo: 'business@techcity.com' }
+       { id: 'hero', type: 'hero', title: 'Ancient Soul, Modern Comfort', subtitle: 'Discover the Medina', image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80', titleColor: 'text-orange-950', bgColor: 'bg-orange-50' },
+       { id: 'booking_engine', type: 'booking_engine', title: 'Reserve Your Sanctuary', subtitle: 'Immerse yourself in the tranquility of our traditional courtyard.' },
+       { id: 'room_list', type: 'room_list', title: 'Artisan Suites', image: 'https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80', price: '180€' },
+       { id: 'gallery', type: 'gallery', title: 'Moroccan Textures', images: ['https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1548835154-8e100dcac04b?auto=format&fit=crop&w=600&q=80'] },
+       { id: 'footer', type: 'footer', bgColor: 'bg-stone-900', brandInfo: 'Riad Al Nour', contactInfo: 'contact@riadalnour.com' }
      ]
+  }
+];
+
+const REAL_DEMOS = [
+  {
+    id: 'demo-hotel',
+    name: 'The Azure Grand Hotel',
+    type: 'Hotel',
+    image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=600&q=80',
+    status: 'Published',
+    domain: 'azure-grand.hosflow.site',
+    visits: '1.2k',
+    conversion: '4.8%',
+    blocks: [
+      { id: 'hero', type: 'hero', title: 'Sophistication Meets Serenity', subtitle: 'Experience Grandeur', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80', bgColor: 'bg-slate-50' },
+      { id: 'booking_engine', type: 'booking_engine', title: 'Find Your Suite', subtitle: 'Check live availability for the upcoming season.' },
+      { id: 'features', type: 'features', title: 'World-Class Amenities', items: ['Michelin Star Dining', 'Infinity Rooftop Pool', 'Luxury Spa & Wellness', '24/7 Concierge'] },
+      { id: 'room_list', type: 'room_list', title: 'Our Prestigious Suites', price: '450€' },
+      { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Azure Grand Hotel Group', contactInfo: 'reservations@azuregrand.com' }
+    ]
+  },
+  {
+    id: 'demo-villa',
+    name: 'Villa Serena Santorini',
+    type: 'Villa',
+    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80',
+    status: 'Published',
+    domain: 'serena-santorini.hosflow.site',
+    visits: '850',
+    conversion: '6.2%',
+    blocks: [
+      { id: 'hero', type: 'hero', title: 'Your Private Island Escape', subtitle: 'Reserve Villa', image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80', bgColor: 'bg-sky-50' },
+      { id: 'booking_engine', type: 'booking_engine', title: 'Secure Your Stay', subtitle: 'Exclusive direct booking for our private collection.' },
+      { id: 'gallery', type: 'gallery', title: 'The Property', images: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80', 'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=600&q=80'] },
+      { id: 'footer', type: 'footer', bgColor: 'bg-slate-900', brandInfo: 'Serena Villa Collection', contactInfo: 'vip@serenavilla.com' }
+    ]
   }
 ];
 
@@ -431,15 +434,29 @@ const TemplateLibraryModal = ({ onSelect, onClose }) => {
   )
 }
 
-const BuilderPhase = ({ siteContext, onPublish }) => {
+const BuilderPhase = ({ siteContext, onPublish, initialBlocks, initialTheme }) => {
   const [device, setDevice] = useState('desktop'); // 'desktop' | 'tablet' | 'mobile'
   const [isPublishing, setIsPublishing] = useState(false);
   
   // Real Dynamic State
   const [blocks, setBlocks] = useState(() => {
+    if (initialBlocks) return initialBlocks;
     if (!siteContext) return DEFAULT_BLOCKS;
-    // Basic AI mapping: update hero title based on context
-    return DEFAULT_BLOCKS.map(block => {
+    
+    // Improved AI mapping logic
+    const context = siteContext.toLowerCase();
+    let template = [...DEFAULT_BLOCKS];
+
+    // Basic heuristic to pick a template based on prompt
+    if (context.includes('riad')) {
+      template = TEMPLATES.find(t => t.id === 'riad_boutique')?.blocks || template;
+    } else if (context.includes('villa') || context.includes('beach')) {
+      template = TEMPLATES.find(t => t.id === 'luxury_hotel')?.blocks || template;
+    } else if (context.includes('mountain') || context.includes('chalet') || context.includes('ski')) {
+      template = TEMPLATES.find(t => t.id === 'mountain_chalet')?.blocks || template;
+    }
+
+    return template.map(block => {
       if (block.id === 'hero') {
         return { 
           ...block, 
@@ -447,24 +464,19 @@ const BuilderPhase = ({ siteContext, onPublish }) => {
           subtitle: `Explore ${siteContext.split(' ')[0]}`
         };
       }
-      if (block.type === 'siteminder_features') {
-        return { ...block, title: `Why Choose ${siteContext.split(' ')[0]}?` };
-      }
-      if (block.type === 'siteminder_testimonials') {
-        return { ...block, title: `What Guests Say About ${siteContext.split(' ')[0]}` };
-      }
       if (block.id === 'footer') {
         return { ...block, brandInfo: `${siteContext.split(' ')[0]} Collections` };
       }
       return block;
     });
   });
+
   const [selectedBlockId, setSelectedBlockId] = useState('hero');
   const [showTemplates, setShowTemplates] = useState(false);
   const [globalFont, setGlobalFont] = useState(siteContext?.toLowerCase().includes('villa') ? 'font-serif' : 'font-sans');
-  const [activeTab, setActiveTab] = useState('design'); // 'design' | 'seo' | 'theme'
+  const [activeTab, setActiveTab] = useState('design'); 
   const [showLivePreview, setShowLivePreview] = useState(false);
-  const [themeOptions, setThemeOptions] = useState({
+  const [themeOptions, setThemeOptions] = useState(initialTheme || {
      primaryColor: 'indigo-600',
      borderRadius: 'xl',
      glassmorphism: true
@@ -568,6 +580,17 @@ const BuilderPhase = ({ siteContext, onPublish }) => {
                {/* Dynamic Blocks Mapper */}
                {blocks.map(block => {
                  const isSelected = selectedBlockId === block.id;
+
+                 // Professional Blocks Integration
+                 if (block.type === 'booking_engine') {
+                   return <BookingEngineBlock key={block.id} block={block} isSelected={isSelected} onSelect={() => setSelectedBlockId(block.id)} globalFont={globalFont} />;
+                 }
+                 if (block.type === 'room_list') {
+                   return <RoomListingBlock key={block.id} block={block} isSelected={isSelected} onSelect={() => setSelectedBlockId(block.id)} globalFont={globalFont} />;
+                 }
+                 if (block.type === 'gallery' || block.type === 'gallery_grid') {
+                   return <GalleryGridBlock key={block.id} block={block} isSelected={isSelected} onSelect={() => setSelectedBlockId(block.id)} globalFont={globalFont} />;
+                 }
 
                  if (block.type === 'hero') {
                     const [currentSlide, setCurrentSlide] = useState(0);
@@ -956,16 +979,53 @@ const BuilderPhase = ({ siteContext, onPublish }) => {
                       </div>
                       
                       {selectedBlock.type === 'hero' && (
-                        <div>
-                           <label className="text-xs font-bold text-slate-500 mb-1.5 block">Button Action Text</label>
-                           <input 
-                             type="text" 
-                             value={selectedBlock.subtitle || ''} 
-                             onChange={e => updateBlock(selectedBlock.id, 'subtitle', e.target.value)} 
-                             className="w-full border border-slate-200 rounded-lg p-2 text-sm text-slate-800 font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition shadow-sm"
-                           />
-                        </div>
-                      )}
+                         <div>
+                            <label className="text-xs font-bold text-slate-500 mb-1.5 block">Button Action Text</label>
+                            <input 
+                              type="text" 
+                              value={selectedBlock.subtitle || ''} 
+                              onChange={e => updateBlock(selectedBlock.id, 'subtitle', e.target.value)} 
+                              className="w-full border border-slate-200 rounded-lg p-2 text-sm text-slate-800 font-medium focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition shadow-sm"
+                            />
+                         </div>
+                       )}
+
+                       {selectedBlock.type === 'booking_engine' && (
+                         <div className="space-y-4">
+                            <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center gap-3">
+                               <CalendarDays size={18} className="text-amber-600"/>
+                               <span className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">Channex API Integration Active</span>
+                            </div>
+                            <div>
+                               <label className="text-xs font-bold text-slate-500 mb-1.5 block">Engine Subtitle</label>
+                               <input 
+                                 type="text" 
+                                 value={selectedBlock.subtitle || ''} 
+                                 onChange={e => updateBlock(selectedBlock.id, 'subtitle', e.target.value)} 
+                                 className="w-full border border-slate-200 rounded-lg p-2 text-sm text-slate-800 font-medium focus:border-indigo-500 transition shadow-sm outline-none"
+                               />
+                            </div>
+                         </div>
+                       )}
+
+                       {selectedBlock.type === 'room_list' && (
+                         <div className="space-y-4">
+                            <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-xl flex items-center gap-3">
+                               <Layout size={18} className="text-indigo-600"/>
+                               <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-widest">Auto-Syncing with PMS Inventory</span>
+                            </div>
+                            <div>
+                               <label className="text-xs font-bold text-slate-500 mb-1.5 block">Price Display</label>
+                               <input 
+                                 type="text" 
+                                 value={selectedBlock.price || 'From 150€'} 
+                                 onChange={e => updateBlock(selectedBlock.id, 'price', e.target.value)} 
+                                 className="w-full border border-slate-200 rounded-lg p-2 text-sm text-slate-800 font-medium focus:border-indigo-500 transition shadow-sm outline-none"
+                               />
+                            </div>
+                         </div>
+                       )}
+
 
                       {selectedBlock.type === 'booking_bar' && (
                         <div>
@@ -1211,7 +1271,7 @@ const BuilderPhase = ({ siteContext, onPublish }) => {
       </div>
 
       {showTemplates && <TemplateLibraryModal onSelect={handleTemplateSelect} onClose={() => setShowTemplates(false)} />}
-      {isPublishing && <DomainPublishModal onClose={() => setIsPublishing(false)} onProceed={onPublish} />}
+      {isPublishing && <DomainPublishModal onClose={() => setIsPublishing(false)} onProceed={(domainStr) => onPublish(domainStr, blocks, themeOptions)} />}
       {showLivePreview && (
          <div className="fixed inset-0 bg-white z-[100] flex flex-col font-sans animate-in fade-in duration-300">
             <div className="h-16 border-b border-slate-100 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-50">
@@ -1241,6 +1301,10 @@ const BuilderPhase = ({ siteContext, onPublish }) => {
                   </div>
                   {blocks.map(block => (
                      <div key={block.id} className="relative">
+                        {block.type === 'booking_engine' && <BookingEngineBlock block={block} globalFont={globalFont} />}
+                        {block.type === 'room_list' && <RoomListingBlock block={block} globalFont={globalFont} />}
+                        {block.type === 'gallery' && <GalleryGridBlock block={block} globalFont={globalFont} />}
+                        
                         {block.type === 'hero' && (
                            <div className={`${block.bgColor || 'bg-slate-50'} py-20 px-12 flex flex-col md:flex-row items-center gap-12`}>
                               <div className="flex-1 text-center md:text-left">
@@ -1645,7 +1709,7 @@ const WebsiteBuilder = () => {
     setPhase('builder');
   };
 
-  const handlePublish = (domainStr) => {
+  const handlePublish = (domainStr, currentBlocks, currentTheme) => {
     setActiveDomain(domainStr);
     
     // Add or update site in dashboard
@@ -1654,7 +1718,9 @@ const WebsiteBuilder = () => {
        name: siteContext || 'Mon Site Web',
        domain: domainStr,
        publishDate: new Date().toLocaleDateString(),
-       status: 'live'
+       status: 'live',
+       blocks: currentBlocks,
+       themeOptions: currentTheme
     };
 
     if (editingSiteId) {
@@ -1748,8 +1814,8 @@ const WebsiteBuilder = () => {
                     {sites.map(site => (
                        <div key={site.id} className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition duration-300 group">
                           <div className="aspect-video bg-slate-100 rounded-2xl mb-6 relative overflow-hidden group-hover:ring-2 group-hover:ring-indigo-500/50 transition">
-                             {/* Mock Thumbnail */}
-                             <img src="https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=400&q=80" className="w-full h-full object-cover opacity-80" />
+                             {/* Mock Thumbnail using the site's hero image if available */}
+                             <img src={site.blocks?.find(b => b.type === 'hero')?.image || "https://images.unsplash.com/photo-1541123437800-1bb1317badc2?auto=format&fit=crop&w=400&q=80"} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition duration-500" />
                              <div className="absolute top-3 left-3 bg-green-500 text-white text-[10px] uppercase font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
                                 <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span> {site.status}
                              </div>
@@ -1759,8 +1825,12 @@ const WebsiteBuilder = () => {
                           
                           <div className="flex items-center gap-3">
                              <button 
-                               onClick={() => { setEditingSiteId(site.id); setSiteContext(site.name); setPhase('builder'); }}
-                               className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm transition border border-slate-200"
+                               onClick={() => { 
+                                 setEditingSiteId(site.id); 
+                                 setSiteContext(site.name); 
+                                 setPhase('builder'); 
+                               }}
+                               className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 py-3 rounded-xl font-bold text-sm transition border border-slate-200 shadow-sm active:scale-[0.98]"
                              >
                                Éditer le site
                              </button>
@@ -1828,7 +1898,15 @@ const WebsiteBuilder = () => {
   }
 
   // 4. Editor Phase
-  return <BuilderPhase siteContext={siteContext} onPublish={handlePublish} />;
+  const editingSite = sites.find(s => s.id === editingSiteId);
+  return (
+    <BuilderPhase 
+      siteContext={siteContext} 
+      onPublish={(domain, blocks, theme) => handlePublish(domain, blocks, theme)} 
+      initialBlocks={editingSite?.blocks}
+      initialTheme={editingSite?.themeOptions}
+    />
+  );
 };
 
 export default WebsiteBuilder;

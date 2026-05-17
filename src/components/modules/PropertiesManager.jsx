@@ -333,8 +333,8 @@ const PropertiesManager = ({ pmsMode }) => {
       {/* ─── Header ─── */}
       <div className="module-header">
         <div className="header-text">
-          <h1>Gestion des Logements</h1>
-          <p>Supervisez vos Riads, Villas et Appartements sur un dashboard centralisé.</p>
+          <h1>Gestion de Propriété</h1>
+          <p>Supervisez l'ensemble de vos propriétés sur un dashboard centralisé.</p>
         </div>
         <button className="btn-add-property" onClick={() => { setIsModalOpen(true); setModalTab('auto'); }}>
           <Sparkles size={18} />

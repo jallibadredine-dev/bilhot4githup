@@ -27,6 +27,7 @@ import './ModularDashboard.css';
 
 const WIDGETS_CONFIG = [
   { id: 'stats', title: 'Indicateurs Clés de Performance (KPIs)' },
+  { id: 'cal_stats', title: 'Statistiques Calendrier' },
   { id: 'timeline', title: 'Calendrier des Réservations (Live)' },
   { id: 'activities', title: 'Opérations & Tâches à faire' },
   { id: 'modules', title: 'Fonctionnalités PMS Pro' }
@@ -37,6 +38,13 @@ const kpis = [
   { title: "RevPAR (Aujourd'hui)", value: "145", unit: "€", trend: "+12% vs last week", trendType: "positive", icon: <TrendingUp size={20} color="#16A34A" />, bg: "#F0FDF4" },
   { title: "Arrivées / Départs", value: "14 / 8", unit: "", trend: "2 Check-ins en retard", trendType: "negative", icon: <Users size={20} color="#D97706" />, bg: "#FFFBEB" },
   { title: "Chambres Libres", value: "6", unit: "/ 34", trend: "Toutes nettoyées", trendType: "positive", icon: <BedDouble size={20} color="#7C3AED" />, bg: "#F5F3FF" }
+];
+
+const calStats = [
+  { label: "Check-ins (7 jours)", value: "48", icon: <Users size={16} />, color: "#2563EB" },
+  { label: "Taux Occ. (7 jours)", value: "76%", icon: <Activity size={16} />, color: "#16A34A" },
+  { label: "Revenu prévisionnel", value: "12,450€", icon: <TrendingUp size={16} />, color: "#7C3AED" },
+  { label: "Annulations", value: "3", icon: <X size={16} />, color: "#DC2626" }
 ];
 
 const operations = [
@@ -53,7 +61,7 @@ const features = [
 ];
 
 const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
-  const [items, setItems] = useState(['stats', 'timeline', 'activities', 'modules']);
+  const [items, setItems] = useState(['stats', 'cal_stats', 'timeline', 'activities', 'modules']);
   const [isEditing, setIsEditing] = useState(false);
 
   return (
@@ -117,6 +125,21 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
                  </div>
                )}
 
+               {/* 1b. WIDGET: CALENDAR STATS */}
+               {item === 'cal_stats' && (
+                 <div className="cal-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', padding: '1rem' }}>
+                   {calStats.map((stat, i) => (
+                     <div key={i} className="cal-stat-card" style={{ background: 'white', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: stat.color }}>
+                          {stat.icon}
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748B' }}>{stat.label}</span>
+                        </div>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0F172A' }}>{stat.value}</span>
+                     </div>
+                   ))}
+                 </div>
+               )}
+
                {/* 2. WIDGET: TIMELINE / CALENDAR */}
                {item === 'timeline' && (
                  <div>
@@ -162,8 +185,8 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
                          <div className="feature-card" key={i} onClick={() => onModuleSelect && onModuleSelect(feat.route)}>
                             <div className="feat-icon-box">{feat.icon}</div>
                             <div className="feat-info">
-                              <h3>{feat.title}</h3>
-                              <p>{feat.desc}</p>
+                               <h3>{feat.title}</h3>
+                               <p>{feat.desc}</p>
                             </div>
                             <ArrowRight size={20} className="feat-arrow" />
                          </div>
