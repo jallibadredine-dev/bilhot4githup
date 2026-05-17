@@ -69,6 +69,17 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    // ── Accès Super Admin direct via ?admin dans l'URL ──
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('admin')) {
+      setPmsMode('pro');
+      setCurrentUser({ id: 'sa-local', email: 'admin@hova.app', user_metadata: { full_name: 'Super Admin' } });
+      setIsAuthenticated(true);
+      setActiveView('super-admin');
+      setSessionChecked(true);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);

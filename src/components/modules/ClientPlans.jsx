@@ -10,9 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './ClientPlans.css';
 
 /* ─── Constants ─────────────────────────────────────────── */
-/* ── Pricing formulas (per room) ── */
-const calcStarter  = (rooms, annual) => Math.round(rooms * 3 * (annual ? 0.80 : 1));
-const calcPro      = (rooms, annual) => Math.round(Math.ceil(rooms / 15) * 20 * (annual ? 0.80 : 1));
+/* ── Tarification par chambre (MAD — Dirhams) ── */
+const calcStarter  = (rooms, annual) => Math.round(rooms * 25 * (annual ? 0.80 : 1));
+const calcPro      = (rooms, annual) => Math.round(rooms * 30 * (annual ? 0.80 : 1));
 
 const PLANS = [
   {
@@ -20,7 +20,7 @@ const PLANS = [
     tier: 'ESSENTIEL',
     name: 'Starter',
     price: null,
-    unitLabel: '3€/chambre',
+    unitLabel: '25 MAD/chambre',
     formula: calcStarter,
     period: '/mois',
     color: '#3B82F6',
@@ -40,7 +40,7 @@ const PLANS = [
     tier: 'PRO',
     name: 'Intelligence',
     price: null,
-    unitLabel: '20€ / pack 15ch',
+    unitLabel: '30 MAD/chambre',
     formula: calcPro,
     period: '/mois',
     color: '#FF385C',
@@ -265,6 +265,10 @@ const ClientPlans = ({ pmsMode }) => {
       </div>
 
       {/* ── Room counter ── */}
+      <div className="cp-calc-title">
+        <span className="cp-calc-title-icon">🧮</span>
+        Calculez votre tarif en direct
+      </div>
       <div className="cp-room-counter">
         <div className="cp-rc-left">
           <Building2 size={15} color="#FF385C"/>
@@ -321,25 +325,22 @@ const ClientPlans = ({ pmsMode }) => {
                   <div className="cp-plan-price">
                     <span className="amount">
                       {plan.formula(rooms, annual)}
-                      <span className="currency">€</span>
+                      <span className="currency"> MAD</span>
                     </span>
                     <span className="period">{plan.period}</span>
                   </div>
                   <div className="cp-price-formula">
-                    <span>{plan.unitLabel}</span>
-                    {plan.id === 'pro' && rooms > 15 && (
-                      <span className="cp-packs-detail">{Math.ceil(rooms / 15)} packs × 20€</span>
-                    )}
+                    <span>{plan.unitLabel} × {rooms} ch</span>
                   </div>
                   {annual && (
-                    <div className="cp-annual-save">Économie : {Math.round(plan.formula(rooms, false) * 0.2 * 12)}€/an</div>
+                    <div className="cp-annual-save">Économie : {Math.round(plan.formula(rooms, false) * 0.2 * 12)} MAD/an</div>
                   )}
                 </>
               ) : (
                 <div className="cp-plan-price">
                   <span className="amount">
                     {plan.price}
-                    <span className="currency">€</span>
+                    <span className="currency"> MAD</span>
                   </span>
                   <span className="period">{plan.period}</span>
                 </div>

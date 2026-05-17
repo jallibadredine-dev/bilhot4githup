@@ -3,28 +3,25 @@ import { Check, Minus, Plus, Zap, Globe, ChevronRight, Info } from 'lucide-react
 import { motion, AnimatePresence } from 'framer-motion';
 import './PricingSimulator.css';
 
-/* ── Tarification ─────────────────────────────────────── */
+/* ── Tarification (MAD — Dirhams marocains) ──────────── */
 const PLANS = [
   {
     id: 'starter',
     name: 'PMS Standard',
     subtitle: 'Gestion interne & réception',
     badge: null,
-    pricePerRoom: 3,
-    unitLabel: '3€/ch',
-    formula: (rooms) => rooms * 3,
+    unitLabel: '25 MAD/ch',
+    formula: (rooms) => rooms * 25,
     color: '#3B82F6',
-    features: ['PMS Cloud', 'Calendrier', 'Facturation', 'Email support'],
+    features: ['PMS Cloud', 'Calendrier', 'Facturation', 'Support email'],
   },
   {
     id: 'pro',
     name: 'PMS Intégral',
     subtitle: 'Channel Manager + IA inclus',
     badge: 'Populaire',
-    packSize: 15,
-    packPrice: 20,
-    unitLabel: '20€ / pack 15ch',
-    formula: (rooms) => Math.ceil(rooms / 15) * 20,
+    unitLabel: '30 MAD/ch',
+    formula: (rooms) => rooms * 30,
     color: '#FF385C',
     features: ['Tout Standard', 'Channel Manager', 'Revenue AI', 'Serrures IoT'],
     integrations: true,
@@ -38,7 +35,7 @@ const ENGAGEMENTS = [
   { id: 'triennial', label: '3 Ans',    months: 36, discount: 0.20, discLabel: '-20%' },
 ];
 
-const fmt = (n) => n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n) => n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 const PricingSimulator = ({ onStart }) => {
   const [planId, setPlanId] = useState('pro');
@@ -78,8 +75,8 @@ const PricingSimulator = ({ onStart }) => {
         <div className="ps-formula-note">
           <Info size={13}/>
           <span>
-            <strong>Formule Standard :</strong> 3€ × nombre de chambres<br/>
-            <strong>Formule Intégral :</strong> 20€ par tranche de 15 chambres
+            <strong>PMS Standard :</strong> 25 MAD × nombre de chambres<br/>
+            <strong>PMS Intégral :</strong> 30 MAD × nombre de chambres (Channel Manager inclus)
           </span>
         </div>
       </div>
@@ -179,17 +176,17 @@ const PricingSimulator = ({ onStart }) => {
           >
             <div className="ps-result-top">
               <span className="ps-result-label">Coût mensuel estimé</span>
-              <span className="ps-result-monthly">{fmt(discountedMonthly)}€/m</span>
+              <span className="ps-result-monthly">{fmt(discountedMonthly)} MAD/m</span>
             </div>
             <div className="ps-result-total-row">
               <span>
                 Total {eng.months === 1 ? 'pour 1 mois' : `sur ${eng.months / 12 === 1 ? '1 an' : `${eng.months / 12} ans`}`}
               </span>
-              <span className="ps-result-total">{fmt(total)}€</span>
+              <span className="ps-result-total">{fmt(total)} MAD</span>
             </div>
             {savings > 0 && (
               <div className="ps-result-savings">
-                <Check size={11}/> Économie de {fmt(savings)}€ vs mensuel
+                <Check size={11}/> Économie de {fmt(savings)} MAD vs mensuel
               </div>
             )}
           </motion.div>
