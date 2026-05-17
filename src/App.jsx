@@ -3,6 +3,7 @@ import './App.css';
 import { supabase } from './lib/supabase';
 import { LayoutDashboard, Monitor, MessageSquare, UserCheck, Menu } from 'lucide-react';
 import { getCheckinTokenFromURL } from './lib/checkin';
+import { clearSensitiveLocalState } from './lib/secureStorage';
 
 // Core Layout & Common Components (Eager Load)
 import Sidebar from './components/layout/Sidebar';
@@ -60,7 +61,6 @@ const LoadingFallback = () => (
 );
 
 function App() {
-  const [isLanding, setIsLanding] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -84,6 +84,7 @@ function App() {
       } else {
         setIsAuthenticated(false);
         setCurrentUser(null);
+        clearSensitiveLocalState();
       }
     });
 
@@ -230,16 +231,6 @@ function App() {
     );
   }
 
-  // ── Demo mode — ?demo in URL bypasses auth ────────────────────────────
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.has('demo') && !isAuthenticated) {
-    return (
-      <Suspense fallback={<LoadingFallback />}>
-        <AuthPage onLogin={(mode) => { setPmsMode(mode); setIsAuthenticated(true); }} />
-      </Suspense>
-    );
-  }
-
   if (!sessionChecked) {
     return <LoadingFallback />;
   }
@@ -249,7 +240,6 @@ function App() {
       <Suspense fallback={<LoadingFallback />}>
         <LandingPage onLogin={(mode) => {
             setPmsMode(mode);
-            setIsAuthenticated(true);
         }} />
       </Suspense>
     );

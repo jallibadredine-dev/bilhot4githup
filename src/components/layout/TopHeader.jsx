@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, ChevronDown, Shield, LogOut, Settings, User, Home, Bell } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { clearSensitiveLocalState } from '../../lib/secureStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 import './TopHeader.css';
 
@@ -45,6 +46,7 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }
     setLoggingOut(true);
     setDropdownOpen(false);
     await supabase.auth.signOut();
+    clearSensitiveLocalState();
     if (onLogout) onLogout();
   };
 
