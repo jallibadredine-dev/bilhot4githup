@@ -42,6 +42,7 @@ const ClientPlans = lazy(() => import('./components/modules/ClientPlans'));
 const ReputationManager = lazy(() => import('./components/modules/ReputationManager'));
 const SettingsDashboard = lazy(() => import('./components/modules/SettingsDashboard'));
 const AffiliateSystem = lazy(() => import('./components/modules/AffiliateSystem'));
+const AutomationHub = lazy(() => import('./components/modules/AutomationHub'));
 const MoroccanPoliceForm = lazy(() => import('./components/modules/MoroccanPoliceForm'));
 const APIDocumentation = lazy(() => import('./components/modules/APIDocumentation'));
 const APIIntegration = lazy(() => import('./components/modules/APIIntegration'));
@@ -139,6 +140,8 @@ function App() {
         return <ReportsDashboard />;
       case 'website-builder':
         return <WebsiteBuilder />;
+      case 'automation-hub':
+        return <AutomationHub />;
       case 'automation-workflow':
         return <WorkflowBuilder />;
       case 'frontdesk':

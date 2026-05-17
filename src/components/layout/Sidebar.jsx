@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, ClipboardCheck, Activity, Settings, Moon, Key, Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database, ShieldCheck, CreditCard, Bot, Building2, Star, XCircle, UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code } from 'lucide-react';
+import { LayoutDashboard, Calendar, ClipboardCheck, Activity, Settings, Moon, Key, Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database, ShieldCheck, CreditCard, Bot, Building2, Star, XCircle, UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code, Workflow } from 'lucide-react';
 import './Sidebar.css';
 
 const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCount, color, isBold, extraStyle }) => {
@@ -82,6 +82,7 @@ const Sidebar = ({ activeView, setActiveView, pmsMode }) => {
             <span className="group-title">Distribution</span>
             <SidebarItem id="distribution" icon={Globe2} label="Channel Manager Sync" activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="website-builder" icon={Sparkles} label="Booking Engine Site" activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="automation-hub" icon={Workflow} label="Automation Engine" color="#6366F1" activeView={activeView} setActiveView={setActiveView} />
           </div>
 
           <div className="sidebar-group">
