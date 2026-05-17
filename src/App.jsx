@@ -198,7 +198,7 @@ function App() {
       case 'reputation':
         return <ReputationManager pmsMode={pmsMode} setActiveView={setActiveView} />;
       case 'staff-hub':
-        return <StaffHub />;
+        return <StaffHub onNavigate={setActiveView} />;
       case 'locks':
         return <SmartLockHub />;
       case 'inventory':

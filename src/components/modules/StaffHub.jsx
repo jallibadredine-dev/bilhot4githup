@@ -65,6 +65,25 @@ const MODULE_LABELS = {
   maintenance:  { label: 'Maintenance Technique',      icon: '🔧' },
 };
 
+const MODULE_ROUTES = {
+  dashboard:    'dashboard',
+  frontdesk:    'frontdesk',
+  checkin:      'checkin-manager',
+  distribution: 'distribution',
+  inbox:        'unified-inbox',
+  inventory:    'inventory',
+  locks:        'locks',
+  revenue:      'revenue',
+  reputation:   'reputation',
+  guests:       'guests',
+  staff:        'staff-hub',
+  billing:      'billing-engine',
+  settings:     'settings',
+  services:     'services-hub',
+  housekeeping: 'housekeeping',
+  maintenance:  'housekeeping',
+};
+
 /* ─── CLEANING STATUSES ────────────────────────────────────── */
 const CLEAN_CFG = {
   dirty:       { label: 'À nettoyer',   color: '#DC2626', bg: '#FEE2E2', dot: '#EF4444', next: 'in_progress', nextLabel: 'Démarrer le ménage' },
@@ -99,7 +118,7 @@ const newStaffDefault = () => ({
 /* ════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════ */
-const StaffHub = () => {
+const StaffHub = ({ onNavigate }) => {
   const [activeTab,      setActiveTab]      = useState('team');
   const [staffList,      setStaffList]      = useState(() => { try { return JSON.parse(localStorage.getItem('sh_staff')) || DEFAULT_STAFF; } catch { return DEFAULT_STAFF; } });
   const [cleaningTasks,  setCleaningTasks]  = useState(() => { try { return JSON.parse(localStorage.getItem('sh_cleaning_status')) || DEFAULT_CLEANING; } catch { return DEFAULT_CLEANING; } });
@@ -119,6 +138,7 @@ const StaffHub = () => {
   const [testSending,    setTestSending]    = useState({ email: false, sms: false });
   const [modalPassword,  setModalPassword]  = useState(() => generateTempPassword());
   const [pwdCopied,      setPwdCopied]      = useState(false);
+  const [viewingAs,      setViewingAs]      = useState(null);
 
   /* ── Persist to localStorage ── */
   useEffect(() => { localStorage.setItem('sh_staff', JSON.stringify(staffList)); }, [staffList]);
@@ -310,6 +330,13 @@ const StaffHub = () => {
                   )}
                   <div className="sh-metric"><Calendar size={11} color="#AAAAAA"/><span>{member.joined}</span></div>
                 </div>
+                <button
+                  className="sh-card-access-btn"
+                  style={{ borderColor: role.color, color: role.color }}
+                  onClick={e => { e.stopPropagation(); setViewingAs(member); }}
+                >
+                  <ExternalLink size={11}/> Accéder à l'interface
+                </button>
               </motion.div>
             );
           })}
@@ -682,6 +709,12 @@ const StaffHub = () => {
                     <div className="sh-detail-head">
                       <button className="sh-btn-back" onClick={() => setSelectedStaff(null)}><ChevronLeft size={18}/> Retour</button>
                       <div style={{display:'flex', gap:8}}>
+                        <button
+                          className="sh-detail-access-btn"
+                          onClick={() => setViewingAs(selectedStaff)}
+                        >
+                          <ExternalLink size={13}/> Interface membre
+                        </button>
                         <button className="sh-btn-icon"><Mail size={15}/></button>
                         <button className="sh-btn-icon"><MessageSquare size={15}/></button>
                       </div>
@@ -840,6 +873,85 @@ const StaffHub = () => {
                           ))
                         }
                       </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ════════════ STAFF WORKSPACE VIEW ════════════ */}
+      <AnimatePresence>
+        {viewingAs && (
+          <motion.div
+            className="sh-workspace-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setViewingAs(null)}
+          >
+            <motion.div
+              className="sh-workspace-panel"
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 200 }}
+              onClick={e => e.stopPropagation()}
+            >
+              {(() => {
+                const role = ROLE_DEFS[viewingAs.role] || ROLE_DEFS.receptionist;
+                const perms = viewingAs.customPermissions || role.modules;
+                const accessible = Object.entries(perms).filter(([, v]) => v);
+                return (
+                  <>
+                    <div className="sh-workspace-head">
+                      <div className="sh-workspace-member">
+                        <div className="sh-workspace-avatar" style={{ background: role.bg, color: role.color }}>
+                          {viewingAs.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          <span className={`sh-status-dot-xl ${viewingAs.status}`}/>
+                        </div>
+                        <div className="sh-workspace-identity">
+                          <h2 className="sh-workspace-name">{viewingAs.name}</h2>
+                          <div className="sh-workspace-role" style={{ background: role.bg, color: role.color }}>
+                            {role.emoji} {role.label}
+                          </div>
+                          <p className="sh-workspace-module-count">{accessible.length} module{accessible.length > 1 ? 's' : ''} accessible{accessible.length > 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                      <button className="sh-workspace-close" onClick={() => setViewingAs(null)}>
+                        <X size={20}/>
+                      </button>
+                    </div>
+
+                    <p className="sh-workspace-hint">
+                      Cliquez sur un module pour y accéder directement dans le PMS.
+                    </p>
+
+                    <div className="sh-workspace-grid">
+                      {accessible.map(([key]) => {
+                        const mod = MODULE_LABELS[key];
+                        const route = MODULE_ROUTES[key];
+                        return (
+                          <motion.button
+                            key={key}
+                            className="sh-workspace-tile"
+                            whileHover={{ y: -4, boxShadow: `0 8px 24px ${role.color}22` }}
+                            whileTap={{ scale: 0.96 }}
+                            style={{ '--role-color': role.color, '--role-bg': role.bg }}
+                            onClick={() => {
+                              if (route && onNavigate) onNavigate(route);
+                              setViewingAs(null);
+                              setSelectedStaff(null);
+                            }}
+                          >
+                            <span className="sh-workspace-tile-emoji">{mod?.icon}</span>
+                            <span className="sh-workspace-tile-label">{mod?.label}</span>
+                            <ExternalLink size={11} className="sh-workspace-tile-link"/>
+                          </motion.button>
+                        );
+                      })}
                     </div>
                   </>
                 );
