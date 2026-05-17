@@ -4,10 +4,19 @@ import {
   Key, Copy, RefreshCw, CheckCircle2, AlertCircle,
   ChevronRight, ExternalLink, Sparkles, Building2,
   CreditCard, Wifi, Star, Ticket, BadgeCheck,
-  ChevronDown, ChevronUp, Clock, Infinity
+  ChevronDown, ChevronUp, Clock, Infinity,
+  MessageCircle, Plus, Loader2, Package, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './ClientPlans.css';
+
+/* ─── Engagement periods ────────────────────────────────── */
+const ENGAGEMENTS = [
+  { id: 'monthly',   label: '1 Mois',  discount: 0,  badge: null   },
+  { id: 'annual',    label: '1 An',    discount: 5,  badge: '-5%'  },
+  { id: 'biennial',  label: '2 Ans',   discount: 10, badge: '-10%' },
+  { id: 'triennial', label: '3 Ans',   discount: 20, badge: '-20%' },
+];
 
 /* ─── Constants ─────────────────────────────────────────── */
 /* ── Tarification par chambre (MAD — Dirhams) ── */
@@ -229,13 +238,54 @@ const ActivationModal = ({ onClose }) => {
 
 /* ─── Main Component ──────────────────────────────────────── */
 const ClientPlans = ({ pmsMode }) => {
-  const [activateOpen, setActivateOpen] = useState(false);
-  const [activePlan]    = useState('pro');
-  const [annual, setAnnual] = useState(false);
-  const [faqOpen, setFaqOpen] = useState(null);
-  const [rooms, setRooms] = useState(10);
+  const [activateOpen,    setActivateOpen]    = useState(false);
+  const [activePlan]                          = useState('pro');
+  const [annual,          setAnnual]          = useState(false);
+  const [faqOpen,         setFaqOpen]         = useState(null);
+  const [rooms,           setRooms]           = useState(10);
+  const [engId,           setEngId]           = useState('monthly');
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const [checkoutError,   setCheckoutError]   = useState(null);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
   const changeRooms = (delta) => setRooms(r => Math.max(1, Math.min(500, r + delta)));
+
+  /* ── Detect ?checkout=success in URL ── */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') === 'success') {
+      setCheckoutSuccess(true);
+      window.history.replaceState({}, '', window.location.pathname + '?plans');
+    }
+  }, []);
+
+  /* ── Stripe Checkout ── */
+  const handleCheckout = async (planId, addChannelManager = false) => {
+    const key = planId + (addChannelManager ? '_cm' : '');
+    setCheckoutLoading(key);
+    setCheckoutError(null);
+    try {
+      const res  = await fetch('/api/stripe/checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ planId, rooms, period: engId, addChannelManager }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error || 'Erreur lors de la création du paiement.');
+        setCheckoutLoading(null);
+      }
+    } catch {
+      setCheckoutError('Serveur de paiement inaccessible. Veuillez réessayer.');
+      setCheckoutLoading(null);
+    }
+  };
+
+  const eng        = ENGAGEMENTS.find(e => e.id === engId);
+  const priceStd   = Math.round(rooms * 25 * (1 - eng.discount / 100));
+  const priceInteg = Math.round(rooms * 30 * (1 - eng.discount / 100));
 
   const FAQ = [
     { q: 'Comment fonctionne le Pack à Vie ?', a: 'Vous payez une seule fois et accédez à toutes les fonctionnalités PRO à vie, y compris les mises à jour futures. Le Channel Manager est inclus mais nécessite une configuration initiale avec notre équipe.' },
@@ -247,154 +297,252 @@ const ClientPlans = ({ pmsMode }) => {
   return (
     <motion.div className="cp-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
 
+      {/* ── Checkout success banner ── */}
+      <AnimatePresence>
+        {checkoutSuccess && (
+          <motion.div className="cp-checkout-success"
+            initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+          >
+            <CheckCircle2 size={18} color="#10B981"/>
+            <div>
+              <strong>Paiement confirmé !</strong>
+              <span> Votre abonnement est actif. Bienvenue sur HosFlow.</span>
+            </div>
+            <button onClick={() => setCheckoutSuccess(false)}><X size={14}/></button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Checkout error banner ── */}
+      <AnimatePresence>
+        {checkoutError && (
+          <motion.div className="cp-checkout-error"
+            initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+          >
+            <AlertCircle size={16} color="#EF4444"/>
+            <span>{checkoutError}</span>
+            <button onClick={() => setCheckoutError(null)}><X size={13}/></button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Header ── */}
       <div className="cp-header">
         <div className="cp-header-text">
           <h1>Abonnement & Licences</h1>
-          <p>Gérez votre plan, activez votre licence ou passez au Pack à Vie.</p>
+          <p>Choisissez votre plan, souscrivez en ligne et gérez votre abonnement.</p>
         </div>
         <div className="cp-header-actions">
-          <div className="cp-toggle-annual">
-            <span className={!annual ? 'active' : ''} onClick={() => setAnnual(false)}>Mensuel</span>
-            <span className={annual  ? 'active' : ''} onClick={() => setAnnual(true)}>Annuel <em>-20%</em></span>
-          </div>
           <button className="cp-activate-btn" onClick={() => setActivateOpen(true)}>
             <Ticket size={14}/> Activer une licence
           </button>
         </div>
       </div>
 
-      {/* ── Room counter ── */}
-      <div className="cp-calc-title">
-        <span className="cp-calc-title-icon">🧮</span>
-        Calculez votre tarif en direct
-      </div>
-      <div className="cp-room-counter">
-        <div className="cp-rc-left">
-          <Building2 size={15} color="#FF385C"/>
-          <span className="cp-rc-label">Nombre de chambres</span>
-          <span className="cp-rc-hint">Le tarif s'adapte automatiquement</span>
-        </div>
-        <div className="cp-rc-stepper">
-          <button className="cp-rc-btn" onClick={() => changeRooms(-5)} disabled={rooms <= 1}>−5</button>
-          <button className="cp-rc-btn" onClick={() => changeRooms(-1)} disabled={rooms <= 1}>−</button>
-          <input
-            type="number"
-            className="cp-rc-input"
-            min={1} max={500}
-            value={rooms}
-            onChange={e => setRooms(Math.max(1, Math.min(500, parseInt(e.target.value) || 1)))}
-          />
-          <button className="cp-rc-btn" onClick={() => changeRooms(1)}>+</button>
-          <button className="cp-rc-btn" onClick={() => changeRooms(5)}>+5</button>
-        </div>
-      </div>
+      {/* ── Simulator card (rooms + engagement) ── */}
+      <div className="cp-simulator-card">
+        <div className="cp-sim-title">Simulateur de Plan</div>
+        <p className="cp-sim-sub">Ajustez pour voir votre tarif personnalisé</p>
 
-      {/* ── Current plan banner ── */}
-      <div className="cp-current-banner">
-        <div className="cp-cb-left">
-          <Zap size={15} color="#FF385C"/>
-          <span>Plan actif :</span>
-          <strong>PRO Intelligence</strong>
-          <span className="cp-cb-since">depuis le 1 janv. 2026</span>
-        </div>
-        <div className="cp-cb-right">
-          <span className="cp-cb-renew"><Clock size={12}/> Prochain prélèvement : 1 Juin 2026 · <strong>499 MAD</strong></span>
-          <button className="cp-cb-btn">Gérer <ChevronRight size={11}/></button>
+        <div className="cp-sim-row">
+          {/* Rooms */}
+          <div className="cp-sim-col">
+            <div className="cp-sim-label">CHAMBRES</div>
+            <div className="cp-sim-rooms-wrap">
+              <input
+                type="range" min={1} max={100} value={rooms}
+                className="cp-sim-slider"
+                onChange={e => setRooms(parseInt(e.target.value))}
+              />
+              <div className="cp-sim-rooms-info">
+                <span className="cp-sim-rooms-num">{rooms}</span>
+                <div className="cp-sim-rooms-edge"><span>1 CH.</span><span>100 CH.</span></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Engagement */}
+          <div className="cp-sim-col">
+            <div className="cp-sim-label">ENGAGEMENT
+              {eng.discount > 0 && <span className="cp-sim-discount-tag">Paiement {eng.label === '1 An' ? 'Annuel' : eng.label === '2 Ans' ? 'Biennal' : 'Triennal'}</span>}
+            </div>
+            <div className="cp-eng-tabs">
+              {ENGAGEMENTS.map(e => (
+                <button
+                  key={e.id}
+                  className={`cp-eng-tab ${engId === e.id ? 'active' : ''}`}
+                  onClick={() => setEngId(e.id)}
+                >
+                  {e.label}
+                  {e.badge && <span className="cp-eng-badge">{e.badge}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* ── Plans grid ── */}
       <div className="cp-plans-grid">
-        {PLANS.map(plan => (
-          <motion.div
-            key={plan.id}
-            className={`cp-card ${plan.featured ? 'featured' : ''} ${plan.lifetime ? 'lifetime' : ''} ${activePlan === plan.id ? 'current' : ''}`}
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-          >
-            {plan.featured && <div className="cp-recommended">Recommandé</div>}
-            {plan.lifetime && <div className="cp-lifetime-badge"><Infinity size={11}/> À VIE</div>}
-            {activePlan === plan.id && <div className="cp-active-mark"><Check size={10}/>Plan actuel</div>}
 
-            <div className="cp-card-top" style={{ '--plan-color': plan.color }}>
-              <div className="cp-plan-tier" style={{ color: plan.color }}>{plan.tier}</div>
-              <div className="cp-plan-name">{plan.name}</div>
-              {plan.formula ? (
-                <>
-                  <div className="cp-plan-price">
-                    <span className="amount">
-                      {plan.formula(rooms, annual)}
-                      <span className="currency"> MAD</span>
-                    </span>
-                    <span className="period">{plan.period}</span>
-                  </div>
-                  <div className="cp-price-formula">
-                    <span>{plan.unitLabel} × {rooms} ch</span>
-                  </div>
-                  {annual && (
-                    <div className="cp-annual-save">Économie : {Math.round(plan.formula(rooms, false) * 0.2 * 12)} MAD/an</div>
-                  )}
-                </>
-              ) : (
-                <div className="cp-plan-price">
-                  <span className="amount">
-                    {plan.price}
-                    <span className="currency"> MAD</span>
-                  </span>
-                  <span className="period">{plan.period}</span>
-                </div>
-              )}
+        {/* ─ PMS Standard ─ */}
+        <motion.div className="cp-card" whileHover={{ y: -3 }} transition={{ duration: 0.18 }}>
+          <div className="cp-card-top" style={{ '--plan-color': '#3B82F6' }}>
+            <div className="cp-plan-tier" style={{ color: '#3B82F6' }}>ESSENTIEL</div>
+            <div className="cp-plan-name">PMS Standard</div>
+            <div className="cp-plan-price">
+              <span className="amount">{priceStd}<span className="currency"> MAD</span></span>
+              <span className="period">/mois</span>
             </div>
-
-            <ul className="cp-feats-list">
-              {plan.features.map((f, i) => <FeatureRow key={i} feature={f} />)}
-            </ul>
-
-            <div className="cp-card-action">
-              {plan.lifetime ? (
-                <button className="cp-btn lifetime-btn" onClick={() => setActivateOpen(true)}>
-                  <Key size={14}/> Activer le Pack à Vie
-                </button>
-              ) : activePlan === plan.id ? (
-                <button className="cp-btn current-btn" disabled>
-                  <Check size={14}/> Plan actuel
-                </button>
-              ) : (
-                <button className="cp-btn" style={{ '--plan-color': plan.color }}>
-                  Choisir ce plan <ChevronRight size={13}/>
-                </button>
-              )}
+            <div className="cp-price-breakdown">
+              <div className="cp-pb-row"><span>Prix unit.</span><span>25 MAD /ch</span></div>
+              <div className="cp-pb-row"><span>Volume</span><span>{rooms} ch</span></div>
+              {eng.discount > 0 && <div className="cp-pb-row discount"><span>Réduction {eng.label}</span><span>−{eng.discount}%</span></div>}
+              <div className="cp-pb-total"><span>Total</span><span>{priceStd} MAD</span></div>
             </div>
+          </div>
+          <ul className="cp-feats-list">
+            {PLANS.find(p => p.id === 'starter').features.map((f, i) => <FeatureRow key={i} feature={f} />)}
+          </ul>
+          <div className="cp-card-action">
+            <button
+              className="cp-btn trial-btn"
+              onClick={() => handleCheckout('standard')}
+              disabled={checkoutLoading === 'standard'}
+            >
+              {checkoutLoading === 'standard'
+                ? <><Loader2 size={14} className="spin"/> Redirection…</>
+                : <><Sparkles size={13}/> Essai Gratuit 14 jours</>
+              }
+            </button>
+            <div className="cp-trial-note">Sans carte bancaire • Annulable à tout moment</div>
+          </div>
+        </motion.div>
 
-            {plan.lifetime && (
-              <div className="cp-lifetime-note">
-                <Shield size={11} color="#D97706"/>
-                Paiement unique · Mises à jour à vie · Support VIP
-              </div>
-            )}
-          </motion.div>
-        ))}
+        {/* ─ PMS Intégral (featured) ─ */}
+        <motion.div className="cp-card featured" whileHover={{ y: -3 }} transition={{ duration: 0.18 }}>
+          <div className="cp-recommended">RECOMMANDÉ</div>
+          <div className="cp-card-top" style={{ '--plan-color': '#FF385C' }}>
+            <div className="cp-plan-tier" style={{ color: '#FF385C' }}>PRO</div>
+            <div className="cp-plan-name">PMS Intégral</div>
+            <div className="cp-plan-price">
+              <span className="amount">{priceInteg}<span className="currency"> MAD</span></span>
+              <span className="period">/mois</span>
+            </div>
+            <div className="cp-price-breakdown">
+              <div className="cp-pb-row"><span>Prix unit.</span><span>30 MAD /ch</span></div>
+              <div className="cp-pb-row"><span>Volume</span><span>{rooms} ch</span></div>
+              {eng.discount > 0 && <div className="cp-pb-row discount"><span>Réduction {eng.label}</span><span>−{eng.discount}%</span></div>}
+              <div className="cp-pb-total"><span>À payer</span><span>{priceInteg} MAD</span></div>
+            </div>
+          </div>
+          <ul className="cp-feats-list">
+            {PLANS.find(p => p.id === 'pro').features.map((f, i) => <FeatureRow key={i} feature={f} />)}
+          </ul>
+          <div className="cp-card-action">
+            <button
+              className="cp-btn featured-btn"
+              onClick={() => handleCheckout('integral')}
+              disabled={checkoutLoading === 'integral'}
+            >
+              {checkoutLoading === 'integral'
+                ? <><Loader2 size={14} className="spin"/> Redirection…</>
+                : <>Choisir ce plan <ArrowRight size={13}/></>
+              }
+            </button>
+          </div>
+        </motion.div>
+
+        {/* ─ Elite Lifetime ─ */}
+        <motion.div className="cp-card lifetime" whileHover={{ y: -3 }} transition={{ duration: 0.18 }}>
+          <div className="cp-lifetime-badge"><Infinity size={11}/> À VIE</div>
+          <div className="cp-card-top" style={{ '--plan-color': '#D97706' }}>
+            <div className="cp-plan-tier" style={{ color: '#D97706' }}>PACK À VIE</div>
+            <div className="cp-plan-name">Elite Lifetime</div>
+            <div className="cp-plan-price">
+              <span className="amount">3 490<span className="currency"> MAD</span></span>
+              <span className="period">paiement unique</span>
+            </div>
+          </div>
+          <ul className="cp-feats-list">
+            {PLANS.find(p => p.id === 'lifetime').features.map((f, i) => <FeatureRow key={i} feature={f} />)}
+          </ul>
+          <div className="cp-card-action">
+            <button
+              className="cp-btn lifetime-stripe-btn"
+              onClick={() => handleCheckout('lifetime')}
+              disabled={checkoutLoading === 'lifetime'}
+            >
+              {checkoutLoading === 'lifetime'
+                ? <><Loader2 size={14} className="spin"/> Redirection…</>
+                : <><CreditCard size={13}/> Acheter la licence</>
+              }
+            </button>
+            <button className="cp-btn ghost-btn" onClick={() => setActivateOpen(true)}>
+              <Key size={13}/> J'ai déjà un code
+            </button>
+          </div>
+          <div className="cp-lifetime-note">
+            <Shield size={11} color="#D97706"/>
+            Paiement unique · Mises à jour à vie · Support VIP
+          </div>
+        </motion.div>
       </div>
 
-      {/* ── Channel Manager "non intégré" status ── */}
-      <div className="cp-cm-status">
-        <div className="cp-cm-icon"><Globe size={18} color="#D97706"/></div>
-        <div className="cp-cm-info">
-          <div className="cp-cm-title">
-            Channel Manager
-            <span className="cp-badge-warn">NON INTÉGRÉ</span>
+      {/* ── Channel Manager Add-on ── */}
+      <div className="cp-cm-addon-card">
+        <div className="cp-cma-left">
+          <div className="cp-cma-icon"><Globe size={20} color="#3B82F6"/></div>
+          <div>
+            <div className="cp-cma-title">
+              Channel Manager Add-on
+              <span className="cp-cma-badge">Pour PMS Standard</span>
+            </div>
+            <div className="cp-cma-sub">Synchronisation OTA en temps réel via Channex.io — Airbnb, Booking.com, Vrbo…</div>
           </div>
-          <p>Le Channel Manager est inclus dans votre licence mais n'est pas encore synchronisé. Complétez la configuration pour activer la synchronisation OTA en temps réel.</p>
         </div>
-        <div className="cp-cm-steps-inline">
-          <div className="cp-step pending"><span>1</span>Créer un compte Channex.io</div>
-          <div className="cp-step pending"><span>2</span>Saisir la clé API dans Intégrations</div>
-          <div className="cp-step pending"><span>3</span>Mapper vos propriétés OTA</div>
+        <div className="cp-cma-pricing">
+          <div className="cp-cma-price">
+            <span className="cp-cma-amount">{rooms * 25}</span>
+            <span className="cp-cma-cur"> MAD/mois</span>
+          </div>
+          <div className="cp-cma-formula">25 MAD × {rooms} chambres</div>
         </div>
-        <button className="cp-cm-action" onClick={() => setActivateOpen(true)}>
-          Configurer <ExternalLink size={12}/>
-        </button>
+        <div className="cp-cma-actions">
+          <button
+            className="cp-btn featured-btn sm"
+            onClick={() => handleCheckout('standard', true)}
+            disabled={checkoutLoading === 'standard_cm'}
+          >
+            {checkoutLoading === 'standard_cm'
+              ? <><Loader2 size={13} className="spin"/> Redirection…</>
+              : <><Plus size={13}/> Standard + Channel Manager</>
+            }
+          </button>
+          <button
+            className="cp-btn ghost-btn sm"
+            onClick={() => handleCheckout('cm_addon')}
+            disabled={checkoutLoading === 'cm_addon'}
+          >
+            {checkoutLoading === 'cm_addon'
+              ? <><Loader2 size={13} className="spin"/> …</>
+              : <>Add-on seul</>
+            }
+          </button>
+        </div>
+        <div className="cp-cma-lifetime">
+          <span>Option à vie :</span>
+          <button
+            className="cp-cma-life-btn"
+            onClick={() => handleCheckout('cm_lifetime')}
+            disabled={checkoutLoading === 'cm_lifetime'}
+          >
+            {checkoutLoading === 'cm_lifetime' ? <Loader2 size={11} className="spin"/> : <Infinity size={11}/>}
+            Channel Manager Lifetime — 1 490 MAD
+          </button>
+        </div>
       </div>
 
       {/* ── FAQ ── */}
@@ -420,6 +568,23 @@ const ClientPlans = ({ pmsMode }) => {
             </AnimatePresence>
           </div>
         ))}
+      </div>
+
+      {/* ── Dark footer bar ── */}
+      <div className="cp-footer-bar">
+        <div className="cp-footer-left">
+          <Package size={16}/>
+          <span>Config + Formation : <strong>1 500 MAD</strong> <em>(paiement unique)</em></span>
+          <span className="cp-footer-sub">Migration de données, onboarding et formation inclus</span>
+        </div>
+        <a
+          href="https://wa.me/212600000000?text=Bonjour%2C%20je%20souhaite%20configurer%20HosFlow"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cp-whatsapp-btn"
+        >
+          <MessageCircle size={15}/> WhatsApp Expert
+        </a>
       </div>
 
       {/* ── Modal ── */}

@@ -910,3 +910,508 @@
 .cp-calc-title-icon {
   font-size: 1.1rem;
 }
+
+/* ── Checkout banners ──────────────────────────────────── */
+.cp-checkout-success,
+.cp-checkout-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+}
+
+.cp-checkout-success {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+}
+
+.cp-checkout-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+}
+
+.cp-checkout-success button,
+.cp-checkout-error button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+.cp-checkout-success button:hover,
+.cp-checkout-error button:hover { opacity: 1; }
+
+/* ── Simulator card ────────────────────────────────────── */
+.cp-simulator-card {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 20px 24px 22px;
+}
+
+.cp-sim-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+
+.cp-sim-sub {
+  font-size: 0.76rem;
+  color: #94A3B8;
+  margin: 0 0 18px;
+}
+
+.cp-sim-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  .cp-sim-row { grid-template-columns: 1fr; }
+}
+
+.cp-sim-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cp-sim-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #94A3B8;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-sim-discount-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #ECFDF5;
+  color: #10B981;
+  border: 1px solid #A7F3D0;
+  border-radius: 20px;
+  padding: 1px 7px;
+  letter-spacing: 0;
+}
+
+/* Range slider */
+.cp-sim-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #FF385C, #FF385C);
+  outline: none;
+  cursor: pointer;
+}
+.cp-sim-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 2.5px solid #FF385C;
+  box-shadow: 0 2px 6px rgba(255,56,92,0.25);
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.cp-sim-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 2px 10px rgba(255,56,92,0.4);
+}
+
+.cp-sim-rooms-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cp-sim-rooms-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cp-sim-rooms-num {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #FF385C;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.cp-sim-rooms-edge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-size: 0.66rem;
+  color: #CBD5E1;
+  font-weight: 600;
+}
+
+/* ── Engagement tabs ───────────────────────────────────── */
+.cp-eng-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.cp-eng-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 13px;
+  border-radius: 9px;
+  background: white;
+  border: 1.5px solid #E2E8F0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #64748B;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.cp-eng-tab:hover { border-color: #CBD5E1; color: #0F172A; }
+.cp-eng-tab.active {
+  background: #0F172A;
+  border-color: #0F172A;
+  color: white;
+}
+.cp-eng-tab.active .cp-eng-badge { background: rgba(255,255,255,0.15); color: white; }
+
+.cp-eng-badge {
+  font-size: 0.64rem;
+  font-weight: 800;
+  background: #ECFDF5;
+  color: #10B981;
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+
+/* ── Price breakdown table in card ────────────────────── */
+.cp-price-breakdown {
+  margin-top: 10px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 9px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cp-card:not(.featured) .cp-price-breakdown {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+.cp-pb-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.cp-card.featured .cp-pb-row { color: rgba(255,255,255,0.65); }
+
+.cp-pb-row.discount {
+  color: #10B981;
+  font-weight: 700;
+}
+
+.cp-pb-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #0F172A;
+  border-top: 1px solid #E2E8F0;
+  margin-top: 4px;
+  padding-top: 5px;
+}
+
+.cp-card.featured .cp-pb-total {
+  color: white;
+  border-color: rgba(255,255,255,0.2);
+}
+
+/* ── Plan card buttons ─────────────────────────────────── */
+.cp-trial-btn {
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  transition: all 0.15s;
+}
+.cp-trial-btn:hover:not(:disabled) { background: #DBEAFE; }
+.cp-trial-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cp-trial-note {
+  font-size: 0.68rem;
+  color: #94A3B8;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.cp-featured-btn {
+  background: linear-gradient(135deg, #FF385C, #E11D48);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  transition: all 0.15s;
+  box-shadow: 0 4px 14px rgba(255,56,92,0.3);
+}
+.cp-featured-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255,56,92,0.35); }
+.cp-featured-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.cp-featured-btn.sm { width: auto; padding: 8px 14px; font-size: 0.76rem; }
+
+.cp-lifetime-stripe-btn {
+  background: linear-gradient(135deg, #D97706, #B45309);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  transition: all 0.15s;
+  box-shadow: 0 4px 14px rgba(217,119,6,0.3);
+}
+.cp-lifetime-stripe-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(217,119,6,0.35); }
+.cp-lifetime-stripe-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cp-ghost-btn {
+  background: transparent;
+  color: #64748B;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  transition: all 0.12s;
+  margin-top: 6px;
+}
+.cp-ghost-btn:hover { background: #F8FAFC; border-color: #CBD5E1; }
+.cp-ghost-btn.sm { width: auto; margin-top: 0; }
+
+/* ── Channel Manager Add-on card ───────────────────────── */
+.cp-cm-addon-card {
+  background: white;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 16px;
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 12px 24px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .cp-cm-addon-card { grid-template-columns: 1fr; }
+}
+
+.cp-cma-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  grid-column: 1;
+}
+
+.cp-cma-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #EFF6FF;
+  border: 1.5px solid #BFDBFE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cp-cma-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 3px;
+}
+
+.cp-cma-badge {
+  font-size: 0.66rem;
+  font-weight: 700;
+  background: #EFF6FF;
+  color: #3B82F6;
+  border: 1px solid #BFDBFE;
+  border-radius: 20px;
+  padding: 1px 7px;
+}
+
+.cp-cma-sub {
+  font-size: 0.74rem;
+  color: #64748B;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cp-cma-pricing {
+  text-align: right;
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.cp-cma-amount {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #0F172A;
+  letter-spacing: -0.04em;
+}
+
+.cp-cma-cur {
+  font-size: 0.75rem;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.cp-cma-formula {
+  font-size: 0.68rem;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.cp-cma-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+}
+
+.cp-cma-lifetime {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  color: #94A3B8;
+  padding-top: 4px;
+  border-top: 1px solid #F1F5F9;
+}
+
+.cp-cma-life-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid #E2E8F0;
+  border-radius: 7px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #D97706;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.cp-cma-life-btn:hover { background: #FEF3C7; border-color: #FDE68A; }
+.cp-cma-life-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Dark footer bar ───────────────────────────────────── */
+.cp-footer-bar {
+  background: #0F172A;
+  border-radius: 16px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.cp-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255,255,255,0.85);
+  font-size: 0.82rem;
+}
+
+.cp-footer-left svg { color: #94A3B8; flex-shrink: 0; }
+
+.cp-footer-left strong { color: white; font-weight: 800; }
+.cp-footer-left em { color: #64748B; font-style: normal; font-size: 0.75rem; }
+
+.cp-footer-sub {
+  font-size: 0.72rem;
+  color: #475569;
+  padding-left: 4px;
+}
+
+.cp-whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: #25D366;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.cp-whatsapp-btn:hover { background: #1DAA52; transform: translateY(-1px); }
