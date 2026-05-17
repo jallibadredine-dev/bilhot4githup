@@ -1,5 +1,6 @@
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
+import { supabase } from './lib/supabase';
 
 // Core Layout & Common Components (Eager Load)
 import Sidebar from './components/layout/Sidebar';
@@ -56,9 +57,29 @@ const LoadingFallback = () => (
 function App() {
   const [isLanding, setIsLanding] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
-  const [pmsMode, setPmsMode] = useState('pro'); // Default to PRO
+  const [pmsMode, setPmsMode] = useState('pro');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setIsAuthenticated(true);
+      }
+      setSessionChecked(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Folio State: shared between ServicesHub and SmartInventory
   const [roomFolios, setRoomFolios] = useState({
@@ -165,6 +186,10 @@ function App() {
         return <ModularDashboard pmsMode="pro" onModuleSelect={setActiveView} />;
     }
   };
+
+  if (!sessionChecked) {
+    return <LoadingFallback />;
+  }
 
   if (!isAuthenticated) {
     return (

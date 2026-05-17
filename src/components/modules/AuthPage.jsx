@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { ArrowRight, X, Eye, EyeOff, User, Mail, Lock, Check } from 'lucide-react';
+import { ArrowRight, X, Eye, EyeOff, User, Mail, Lock, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../../lib/supabase';
 import './AuthPage.css';
 
 const AuthPage = ({ onLogin, onClose }) => {
-  const [mode, setMode] = useState('register'); // 'register' | 'login'
+  const [mode, setMode] = useState('register');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [errors, setErrors] = useState({});
+  const [authError, setAuthError] = useState(null);
 
   const validate = () => {
     const e = {};
@@ -18,22 +20,67 @@ const AuthPage = ({ onLogin, onClose }) => {
     return e;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setAuthError(null);
     const errs = validate();
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+
     setIsLoading(true);
-    setTimeout(() => onLogin('pro'), 1200);
+    try {
+      if (mode === 'register') {
+        const { data, error } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: {
+            data: { full_name: form.name }
+          }
+        });
+        if (error) throw error;
+        onLogin('pro');
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password
+        });
+        if (error) throw error;
+        onLogin('pro');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      if (err.message?.includes('already registered') || err.message?.includes('User already registered')) {
+        setAuthError('Ce compte existe déjà. Utilisez l\'onglet Connexion.');
+      } else if (err.message?.includes('Invalid login credentials')) {
+        setAuthError('Email ou mot de passe incorrect.');
+      } else if (err.message?.includes('Email not confirmed')) {
+        setAuthError('Vérifiez votre email pour confirmer votre compte.');
+      } else {
+        setAuthError(err.message || 'Une erreur est survenue. Réessayez.');
+      }
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
+    setAuthError(null);
     setIsLoading(true);
-    setTimeout(() => onLogin('pro'), 900);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (err) {
+      setIsLoading(false);
+      setAuthError('Connexion Google impossible. Réessayez.');
+    }
   };
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+    if (authError) setAuthError(null);
   };
 
   if (isLoading) {
@@ -80,17 +127,16 @@ const AuthPage = ({ onLogin, onClose }) => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.45, ease: 'easeOut' }}
         >
-          {/* Tab switcher */}
           <div className="auth-tabs">
             <button
               className={`auth-tab ${mode === 'register' ? 'active' : ''}`}
-              onClick={() => { setMode('register'); setErrors({}); }}
+              onClick={() => { setMode('register'); setErrors({}); setAuthError(null); }}
             >
               Inscription
             </button>
             <button
               className={`auth-tab ${mode === 'login' ? 'active' : ''}`}
-              onClick={() => { setMode('login'); setErrors({}); }}
+              onClick={() => { setMode('login'); setErrors({}); setAuthError(null); }}
             >
               Connexion
             </button>
@@ -113,6 +159,17 @@ const AuthPage = ({ onLogin, onClose }) => {
                     : 'Connectez-vous à votre espace Hova.'}
                 </p>
               </div>
+
+              {authError && (
+                <motion.div
+                  className="auth-error-banner"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <AlertCircle size={15} />
+                  <span>{authError}</span>
+                </motion.div>
+              )}
 
               <form onSubmit={handleSubmit} className="auth-form" noValidate>
                 {mode === 'register' && (
@@ -174,14 +231,12 @@ const AuthPage = ({ onLogin, onClose }) => {
                   {mode === 'register' ? (
                     <><Check size={16} /> Créer mon compte gratuit</>
                   ) : (
-                    <>Connexion <ArrowRight size={16} /></>
+                    <>Se connecter <ArrowRight size={16} /></>
                   )}
                 </button>
               </form>
 
-              <div className="auth-divider">
-                <span>ou</span>
-              </div>
+              <div className="auth-divider"><span>ou</span></div>
 
               <button className="btn-google" onClick={handleGoogleLogin} type="button">
                 <svg width="18" height="18" viewBox="0 0 18 18">
@@ -195,7 +250,9 @@ const AuthPage = ({ onLogin, onClose }) => {
 
               {mode === 'register' && (
                 <p className="auth-legal">
-                  En vous inscrivant, vous acceptez nos <span className="auth-link">Conditions d'utilisation</span> et notre <span className="auth-link">Politique de confidentialité</span>.
+                  En vous inscrivant, vous acceptez nos{' '}
+                  <span className="auth-link">Conditions d'utilisation</span> et notre{' '}
+                  <span className="auth-link">Politique de confidentialité</span>.
                 </p>
               )}
             </motion.div>
