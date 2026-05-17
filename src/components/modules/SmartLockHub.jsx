@@ -1,659 +1,903 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Lock, Key, Smartphone, RefreshCcw, Search, Plus, ShieldCheck,
-  Zap, Wifi, WifiOff, Battery, BatteryLow, Unlock,
-  History, Settings, X, Check,
-  Bluetooth, Timer, Clock,
-  AlertTriangle, MoreHorizontal, Building2,
-  Signal, Activity, ShieldAlert, Cpu, Power,
-  BarChart3, Bell, User, LayoutGrid, List,
-  CalendarDays, Eye, EyeOff, RefreshCw, LogIn,
-  ChevronDown, Send, Copy, ExternalLink, Shield,
-  Fingerprint, CreditCard
+  Lock, Unlock, Key, RefreshCcw, Search, Plus, ShieldCheck,
+  Wifi, WifiOff, Battery, BatteryLow, BatteryFull, BatteryMedium,
+  History, Settings, X, Check, AlertTriangle, Building2,
+  BarChart3, User, LayoutGrid, List, CalendarDays, Clock,
+  Eye, EyeOff, RefreshCw, Copy, Shield, ChevronDown,
+  Link2, LinkSlash, Zap, Activity, Power, Signal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ttlockAPI } from '../../lib/ttlock';
 import './SmartLockHub.css';
 
-const BRAND_COLORS = {
-  TTLock: '#3b82f6',
-  TTHotel: '#10b981',
-  Tuya: '#f59e0b',
-  Igloohome: '#8b5cf6',
+/* ════════════════════════════════════════════════════════════
+   CONSTANTS & SEED DATA
+════════════════════════════════════════════════════════════ */
+const PROVIDERS = {
+  ttlock: {
+    id: 'ttlock', name: 'TTLock', shortName: 'TTLock',
+    color: '#2563EB', bg: '#EFF6FF', logo: '🔐',
+    desc: 'Intégration API officielle TTLock (OAuth2)',
+    authType: 'credentials',
+  },
+  tthotel: {
+    id: 'tthotel', name: 'TTHotel Access', shortName: 'TTHotel',
+    color: '#7C3AED', bg: '#F5F3FF', logo: '🏨',
+    desc: 'Système de serrures TTHotel — accès API hôtelier',
+    authType: 'token',
+  },
+  tuya: {
+    id: 'tuya', name: 'Tuya Smart', shortName: 'Tuya',
+    color: '#059669', bg: '#F0FDF4', logo: '🌿',
+    desc: 'Serrures WiFi/Zigbee Tuya IoT Platform',
+    authType: 'key',
+  },
 };
 
+const TTHOTEL_DEMO_LOCKS = [
+  { id: 'TTH-001', name: 'TTHotel Pro #001', serial: 'THP-0001', model: 'Pro V2',  battery: 78, online: true,  locked: false, fw: '1.8.3' },
+  { id: 'TTH-002', name: 'TTHotel Pro #002', serial: 'THP-0002', model: 'Pro V2',  battery: 55, online: true,  locked: false, fw: '1.8.3' },
+  { id: 'TTH-003', name: 'TTHotel Lite #003',serial: 'THL-0003', model: 'Lite V1', battery: 88, online: true,  locked: false, fw: '1.5.2' },
+  { id: 'TTH-004', name: 'TTHotel Pro #004', serial: 'THP-0004', model: 'Pro V2',  battery: 31, online: true,  locked: true,  fw: '1.8.3' },
+  { id: 'TTH-005', name: 'TTHotel Pro #005', serial: 'THP-0005', model: 'Pro V2',  battery: 62, online: false, locked: true,  fw: '1.8.1' },
+];
+
+const TUYA_DEMO_LOCKS = [
+  { id: 'TY-001', name: 'Tuya Smart Lock #001', serial: 'TY-0001', model: 'WiFi Lock',  battery: 15, online: false, locked: true,  fw: '2.0.1' },
+  { id: 'TY-002', name: 'Tuya Smart Lock #002', serial: 'TY-0002', model: 'WiFi Lock',  battery: 92, online: true,  locked: true,  fw: '2.1.0' },
+  { id: 'TY-003', name: 'Tuya NFC Lock #003',   serial: 'TY-0003', model: 'NFC+WiFi',   battery: 63, online: true,  locked: false, fw: '2.1.0' },
+  { id: 'TY-004', name: 'Tuya Smart Lock #004', serial: 'TY-0004', model: 'WiFi Lock',  battery: 44, online: true,  locked: true,  fw: '2.0.5' },
+];
+
+const PROPERTY_ROOMS = [
+  { number: '101', label: 'Suite Panorama',     floor: 'RDC',     type: 'Suite'      },
+  { number: '102', label: 'Confort Standard',   floor: 'RDC',     type: 'Supérieure' },
+  { number: '103', label: 'Chambre Deluxe',     floor: 'RDC',     type: 'Deluxe'     },
+  { number: '104', label: 'Standard Classique', floor: 'RDC',     type: 'Standard'   },
+  { number: '201', label: 'Suite Étoile',       floor: 'Étage 1', type: 'Suite'      },
+  { number: '202', label: 'Vue Panoramique',    floor: 'Étage 1', type: 'Deluxe'     },
+  { number: '203', label: 'Famille Spacieuse',  floor: 'Étage 1', type: 'Familiale'  },
+  { number: '304', label: 'Suite Penthouse',    floor: 'Étage 2', type: 'Suite'      },
+  { number: '305', label: 'Vue Jardins',        floor: 'Étage 2', type: 'Supérieure' },
+  { number: '306', label: 'PMR Accessible',     floor: 'Étage 2', type: 'PMR'        },
+];
+
+const genPin = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+/* ════════════════════════════════════════════════════════════
+   BATTERY ICON
+════════════════════════════════════════════════════════════ */
+const BattIcon = ({ level, size = 14 }) => {
+  if (level > 60) return <BatteryFull size={size} color="#16A34A"/>;
+  if (level > 25) return <BatteryMedium size={size} color="#D97706"/>;
+  return <BatteryLow size={size} color="#DC2626"/>;
+};
+
+/* ════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════════════════════════ */
 const SmartLockHub = () => {
-  // Auth state
-  const [ttUsername, setTtUsername] = useState(localStorage.getItem('ttlock_user') || '');
-  const [ttPassword, setTtPassword] = useState('');
-  const [accessToken, setAccessToken] = useState(localStorage.getItem('ttlock_token') || '');
-  const [showPassword, setShowPassword] = useState(false);
-  const [authError, setAuthError] = useState(null);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [showConfig, setShowConfig] = useState(!localStorage.getItem('ttlock_token'));
 
-  // Data state
-  const [locks, setLocks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [lastSync, setLastSync] = useState(null);
-  const [apiError, setApiError] = useState(null);
+  /* ── Provider connection states ── */
+  const [connTTLock,  setConnTTLock]  = useState(!!localStorage.getItem('ttlock_token'));
+  const [connTTHotel, setConnTTHotel] = useState(!!localStorage.getItem('slh_tthotel'));
+  const [connTuya,    setConnTuya]    = useState(!!localStorage.getItem('slh_tuya'));
 
-  // UI state
-  const [selectedLock, setSelectedLock] = useState(null);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showPinModal, setShowPinModal] = useState(false);
+  /* ── TTLock auth ── */
+  const [ttUser,     setTtUser]     = useState(localStorage.getItem('ttlock_user') || '');
+  const [ttPass,     setTtPass]     = useState('');
+  const [ttToken,    setTtToken]    = useState(localStorage.getItem('ttlock_token') || '');
+  const [showPass,   setShowPass]   = useState(false);
+  const [authErr,    setAuthErr]    = useState(null);
+  const [authLoad,   setAuthLoad]   = useState(false);
 
-  // PIN generation state
-  const [pinValue, setPinValue] = useState(() => Math.floor(100000 + Math.random() * 900000).toString());
-  const [pinName, setPinName] = useState('');
-  const [pinType, setPinType] = useState('periodic');
-  const [pinStart, setPinStart] = useState('');
-  const [pinEnd, setPinEnd] = useState('');
+  /* ── TTHotel auth form ── */
+  const [tthApiUrl,     setTthApiUrl]     = useState(localStorage.getItem('slh_tthotel_url') || 'https://api.tthotel.com');
+  const [tthToken,      setTthToken]      = useState(localStorage.getItem('slh_tthotel_token') || '');
+  const [tthHotelCode,  setTthHotelCode]  = useState(localStorage.getItem('slh_tthotel_code') || '');
+
+  /* ── Tuya auth form ── */
+  const [tuyaClientId, setTuyaClientId] = useState(localStorage.getItem('slh_tuya_id') || '');
+  const [tuyaSecret,   setTuyaSecret]   = useState(localStorage.getItem('slh_tuya_secret') || '');
+  const [tuyaRegion,   setTuyaRegion]   = useState(localStorage.getItem('slh_tuya_region') || 'eu');
+
+  /* ── Locks aggregated from all providers ── */
+  const [ttlockLocks, setTtlockLocks] = useState([]);
+  const [apiLoading,  setApiLoading]  = useState(false);
+  const [apiError,    setApiError]    = useState(null);
+  const [lastSync,    setLastSync]    = useState(null);
+
+  /* ── UI state ── */
+  const [activeProvider, setActiveProvider] = useState('all'); // 'all' | 'ttlock' | 'tthotel' | 'tuya'
+  const [viewMode,       setViewMode]       = useState('grid');
+  const [search,         setSearch]         = useState('');
+  const [filterStatus,   setFilterStatus]   = useState('all');
+  const [selectedLock,   setSelectedLock]   = useState(null);
+  const [connectModal,   setConnectModal]   = useState(null); // 'ttlock' | 'tthotel' | 'tuya'
+
+  /* ── Room assignments: { lockId: roomNumber } ── */
+  const [assignments, setAssignments] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('slh_assignments') || '{}'); }
+    catch { return { 'TTH-001': '102', 'TTH-002': '202', 'TTH-003': '304' }; }
+  });
+  const [assignTarget, setAssignTarget] = useState(''); // selected room in drawer
+
+  /* ── PIN generation ── */
+  const [pinValue,   setPinValue]   = useState(genPin);
+  const [pinName,    setPinName]    = useState('');
+  const [pinType,    setPinType]    = useState('periodic');
+  const [pinStart,   setPinStart]   = useState('');
+  const [pinEnd,     setPinEnd]     = useState('');
   const [pinLoading, setPinLoading] = useState(false);
   const [pinSuccess, setPinSuccess] = useState(false);
-  const [copiedPin, setCopiedPin] = useState(false);
+  const [pinCopied,  setPinCopied]  = useState(false);
+  const [showPin,    setShowPin]    = useState(false);
 
-  // New lock form
-  const [newLockBrand, setNewLockBrand] = useState('TTLock');
-  const [newLockId, setNewLockId] = useState('');
-  const [newLockName, setNewLockName] = useState('');
+  /* ── Lock logs ── */
+  const [lockLogs,    setLockLogs]    = useState([]);
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [drawerTab,   setDrawerTab]   = useState('control'); // 'control' | 'room' | 'logs'
 
-  // Lock logs
-  const [lockLogs, setLockLogs] = useState([]);
-  const [lockLogLoading, setLockLogLoading] = useState(false);
-
-  const isAuthenticated = !!accessToken;
-
-  const fetchLocks = useCallback(async (token = accessToken) => {
+  /* ════ FETCH TTLock locks ════ */
+  const fetchTTLockLocks = useCallback(async (token = ttToken) => {
     if (!token) return;
-    setLoading(true);
-    setApiError(null);
+    setApiLoading(true); setApiError(null);
     try {
       const data = await ttlockAPI.getLocks(token);
       if (data?.list) {
-        const mapped = data.list.map(lock => ({
-          id: lock.lockId,
-          name: lock.lockAlias || lock.lockName || `Serrure ${lock.lockId}`,
-          brand: 'TTLock',
-          model: lock.lockVersion?.showAdminKbpwdFlag ? 'TTLock Pro' : 'TTLock',
-          battery: lock.electricQuantity ?? null,
-          status: lock.lockVersion ? 'online' : 'offline',
-          locked: lock.lockStatus === 0 ? true : false,
-          signal: lock.rssi ? Math.min(100, Math.round((lock.rssi + 100) * 2)) : null,
-          lockId: lock.lockId,
-          rawData: lock,
-          logs: [],
-          modes: ['code', 'bluetooth'],
-        }));
-        setLocks(mapped);
+        setTtlockLocks(data.list.map(l => ({
+          id: String(l.lockId), name: l.lockAlias || `Serrure ${l.lockId}`,
+          provider: 'ttlock', serial: String(l.lockId),
+          model: l.lockVersion ? 'TTLock Pro' : 'TTLock',
+          battery: l.electricQuantity ?? 85,
+          online: !!l.lockVersion, locked: l.lockStatus === 0,
+          signal: l.rssi ? Math.min(100, Math.round((l.rssi + 100) * 2)) : 80,
+          fw: l.lockVersion?.protocolVersion || '—', lockId: l.lockId,
+        })));
         setLastSync(new Date());
-      } else if (data?.errcode !== undefined && data.errcode !== 0) {
-        throw new Error(data.errmsg || 'Erreur TTLock');
+      } else if (data?.errcode && data.errcode !== 0) {
+        throw new Error(data.errmsg || 'Erreur API TTLock');
       }
     } catch (err) {
       setApiError(err.message || 'Impossible de charger les serrures TTLock');
-    } finally {
-      setLoading(false);
-    }
-  }, [accessToken]);
+    } finally { setApiLoading(false); }
+  }, [ttToken]);
 
-  useEffect(() => {
-    if (accessToken) fetchLocks();
-  }, []);
+  useEffect(() => { if (ttToken && connTTLock) fetchTTLockLocks(); }, []);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setAuthLoading(true);
-    setAuthError(null);
-    try {
-      const data = await ttlockAPI.getToken(ttUsername, ttPassword);
-      if (data?.access_token) {
-        setAccessToken(data.access_token);
-        localStorage.setItem('ttlock_token', data.access_token);
-        localStorage.setItem('ttlock_user', ttUsername);
-        if (data.refresh_token) localStorage.setItem('ttlock_refresh', data.refresh_token);
-        setShowConfig(false);
-        setTtPassword('');
-        await fetchLocks(data.access_token);
-      } else {
-        throw new Error(data?.errmsg || 'Identifiants incorrects');
-      }
-    } catch (err) {
-      setAuthError(err.message || 'Connexion TTLock échouée');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+  /* ════ ALL LOCKS aggregated ════ */
+  const allLocks = [
+    ...ttlockLocks.map(l => ({ ...l, provider: 'ttlock' })),
+    ...(connTTHotel ? TTHOTEL_DEMO_LOCKS.map(l => ({ ...l, provider: 'tthotel', lockId: l.id })) : []),
+    ...(connTuya    ? TUYA_DEMO_LOCKS.map(l    => ({ ...l, provider: 'tuya',    lockId: l.id })) : []),
+  ];
 
-  const handleDisconnect = () => {
-    localStorage.removeItem('ttlock_token');
-    localStorage.removeItem('ttlock_refresh');
-    setAccessToken('');
-    setLocks([]);
-    setShowConfig(true);
-  };
-
-  const toggleLock = async (lock) => {
-    if (!accessToken) return;
-    const origLocks = [...locks];
-    setLocks(prev => prev.map(l => l.id === lock.id ? { ...l, locked: !l.locked } : l));
-    try {
-      if (lock.locked) {
-        await ttlockAPI.unlock(accessToken, lock.lockId || lock.id);
-      } else {
-        await ttlockAPI.lock(accessToken, lock.lockId || lock.id);
-      }
-    } catch (err) {
-      setLocks(origLocks);
-      setApiError(`Commande échouée: ${err.message}`);
-    }
-  };
-
-  const loadLockLogs = async (lock) => {
-    if (!accessToken || !lock.lockId) return;
-    setLockLogLoading(true);
-    try {
-      const data = await ttlockAPI.getLockLogs(accessToken, lock.lockId);
-      if (data?.list) {
-        setLockLogs(data.list.map(log => ({
-          id: log.lockRecordId,
-          time: new Date(log.lockDate).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' }),
-          date: new Date(log.lockDate).toLocaleDateString('fr'),
-          user: log.username || log.keyboardPwdName || 'Inconnu',
-          method: log.recordType === 1 ? 'code' : log.recordType === 3 ? 'bluetooth' : log.recordType === 7 ? 'rfid' : 'autre',
-          status: log.success === 1 ? 'success' : 'failed',
-        })));
-      }
-    } catch (err) {
-      setLockLogs([]);
-    } finally {
-      setLockLogLoading(false);
-    }
-  };
-
-  const handleSelectLock = (lock) => {
-    setSelectedLock(lock);
-    loadLockLogs(lock);
-  };
-
-  const generatePin = async () => {
-    if (!selectedLock || !accessToken) return;
-    setPinLoading(true);
-    setPinSuccess(false);
-    try {
-      const startMs = pinStart ? new Date(pinStart).getTime() : Date.now();
-      const endMs = pinEnd ? new Date(pinEnd).getTime() : Date.now() + 7 * 86400000;
-      await ttlockAPI.createPasscode(accessToken, selectedLock.lockId || selectedLock.id, {
-        passcode: pinValue,
-        passcodeName: pinName || `Accès ${new Date().toLocaleDateString('fr')}`,
-        startDate: startMs,
-        endDate: endMs,
-        type: pinType === 'one-time' ? 4 : pinType === 'permanent' ? 2 : 1,
-      });
-      setPinSuccess(true);
-      setTimeout(() => { setPinSuccess(false); setShowPinModal(false); }, 1500);
-    } catch (err) {
-      setApiError(`PIN non créé: ${err.message}`);
-    } finally {
-      setPinLoading(false);
-    }
-  };
-
-  const refreshPin = () => {
-    setPinValue(Math.floor(100000 + Math.random() * 900000).toString());
-  };
-
-  const copyPin = () => {
-    navigator.clipboard.writeText(pinValue);
-    setCopiedPin(true);
-    setTimeout(() => setCopiedPin(false), 1500);
-  };
-
-  const filtered = locks.filter(l => {
-    const matchSearch = l.name.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'all'
-      || (filter === 'online' && l.status === 'online')
-      || (filter === 'offline' && l.status === 'offline')
-      || (filter === 'low-battery' && l.battery !== null && l.battery < 20);
-    return matchSearch && matchFilter;
+  const filtered = allLocks.filter(l => {
+    const matchProv   = activeProvider === 'all' || l.provider === activeProvider;
+    const matchSearch = !search || l.name.toLowerCase().includes(search.toLowerCase()) || (assignments[l.id] && assignments[l.id].includes(search));
+    const matchStatus = filterStatus === 'all'
+      || (filterStatus === 'online' && l.online)
+      || (filterStatus === 'offline' && !l.online)
+      || (filterStatus === 'low' && l.battery < 20)
+      || (filterStatus === 'assigned' && assignments[l.id])
+      || (filterStatus === 'unassigned' && !assignments[l.id]);
+    return matchProv && matchSearch && matchStatus;
   });
 
   const stats = {
-    total: locks.length,
-    online: locks.filter(l => l.status === 'online').length,
-    lowBattery: locks.filter(l => l.battery !== null && l.battery < 20).length,
-    offline: locks.filter(l => l.status === 'offline').length,
+    total:    allLocks.length,
+    online:   allLocks.filter(l => l.online).length,
+    offline:  allLocks.filter(l => !l.online).length,
+    assigned: Object.keys(assignments).filter(id => allLocks.some(l => l.id === id)).length,
+    lowBatt:  allLocks.filter(l => l.battery < 20).length,
   };
 
-  // ── CONFIG PANEL (Login) ────────────────────────────────────────────────
-  if (showConfig || !isAuthenticated) {
-    return (
-      <div className="lock-portal luxe-theme">
-        <div className="mesh-bg"></div>
-        <div className="lock-container">
-          <div className="lock-config-center">
-            <motion.div
-              className="lock-config-card"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="lock-config-icon"><Lock size={28} /></div>
-              <h2>Connexion TTLock</h2>
-              <p>Connectez votre compte TTLock pour gérer vos serrures connectées en temps réel.</p>
+  /* ════ CONNECT HANDLERS ════ */
+  const handleConnectTTLock = async (e) => {
+    e.preventDefault();
+    setAuthLoad(true); setAuthErr(null);
+    try {
+      const data = await ttlockAPI.getToken(ttUser, ttPass);
+      if (data?.access_token) {
+        setTtToken(data.access_token);
+        localStorage.setItem('ttlock_token', data.access_token);
+        localStorage.setItem('ttlock_user', ttUser);
+        setConnTTLock(true);
+        setConnectModal(null);
+        setTtPass('');
+        await fetchTTLockLocks(data.access_token);
+      } else throw new Error(data?.errmsg || 'Identifiants TTLock incorrects');
+    } catch (err) { setAuthErr(err.message); }
+    finally { setAuthLoad(false); }
+  };
 
-              {authError && (
-                <div className="lock-error-banner">
-                  <AlertTriangle size={14} />
-                  <span>{authError}</span>
+  const handleConnectTTHotel = (e) => {
+    e.preventDefault();
+    if (!tthToken || !tthHotelCode) { setAuthErr('Renseignez le token et le code hôtel.'); return; }
+    localStorage.setItem('slh_tthotel', '1');
+    localStorage.setItem('slh_tthotel_url', tthApiUrl);
+    localStorage.setItem('slh_tthotel_token', tthToken);
+    localStorage.setItem('slh_tthotel_code', tthHotelCode);
+    setConnTTHotel(true);
+    setConnectModal(null);
+    setAuthErr(null);
+    // Pre-assign demo locks to rooms
+    setAssignments(prev => {
+      const updated = { ...prev, 'TTH-001': '102', 'TTH-002': '202', 'TTH-003': '304' };
+      localStorage.setItem('slh_assignments', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleConnectTuya = (e) => {
+    e.preventDefault();
+    if (!tuyaClientId || !tuyaSecret) { setAuthErr('Renseignez le Client ID et le Secret.'); return; }
+    localStorage.setItem('slh_tuya', '1');
+    localStorage.setItem('slh_tuya_id', tuyaClientId);
+    localStorage.setItem('slh_tuya_secret', tuyaSecret);
+    localStorage.setItem('slh_tuya_region', tuyaRegion);
+    setConnTuya(true);
+    setConnectModal(null);
+    setAuthErr(null);
+  };
+
+  const handleDisconnect = (provider) => {
+    if (provider === 'ttlock') {
+      localStorage.removeItem('ttlock_token');
+      localStorage.removeItem('ttlock_user');
+      setTtToken(''); setTtlockLocks([]); setConnTTLock(false);
+    } else if (provider === 'tthotel') {
+      localStorage.removeItem('slh_tthotel');
+      setConnTTHotel(false);
+    } else if (provider === 'tuya') {
+      localStorage.removeItem('slh_tuya');
+      setConnTuya(false);
+    }
+    if (selectedLock?.provider === provider) setSelectedLock(null);
+  };
+
+  /* ════ LOCK CONTROLS ════ */
+  const toggleLock = async (lock) => {
+    if (lock.provider === 'ttlock' && ttToken) {
+      try {
+        setTtlockLocks(prev => prev.map(l => l.id === lock.id ? { ...l, locked: !l.locked } : l));
+        if (lock.locked) await ttlockAPI.unlock(ttToken, lock.lockId);
+        else             await ttlockAPI.lock(ttToken, lock.lockId);
+        if (selectedLock?.id === lock.id) setSelectedLock(l => ({ ...l, locked: !l.locked }));
+      } catch (err) { setApiError(err.message); }
+    } else {
+      // Simulated toggle for TTHotel / Tuya
+      const update = (list, setter) => {
+        setter(list.map(l => l.id === lock.id ? { ...l, locked: !l.locked } : l));
+      };
+      if (lock.provider === 'tthotel') {
+        TTHOTEL_DEMO_LOCKS.forEach(l => { if (l.id === lock.id) l.locked = !l.locked; });
+      } else {
+        TUYA_DEMO_LOCKS.forEach(l => { if (l.id === lock.id) l.locked = !l.locked; });
+      }
+      if (selectedLock?.id === lock.id) setSelectedLock(l => ({ ...l, locked: !l.locked }));
+    }
+  };
+
+  /* ════ ROOM ASSIGNMENT ════ */
+  const assignRoom = (lockId, roomNumber) => {
+    const updated = roomNumber ? { ...assignments, [lockId]: roomNumber } : { ...assignments };
+    if (!roomNumber) delete updated[lockId];
+    setAssignments(updated);
+    localStorage.setItem('slh_assignments', JSON.stringify(updated));
+    if (selectedLock?.id === lockId) setSelectedLock(l => ({ ...l, assignedRoom: roomNumber || null }));
+    setAssignTarget('');
+  };
+
+  const usedRooms = new Set(Object.values(assignments));
+
+  /* ════ LOAD LOGS ════ */
+  const loadLogs = async (lock) => {
+    if (lock.provider === 'ttlock' && ttToken && lock.lockId) {
+      setLogsLoading(true);
+      try {
+        const data = await ttlockAPI.getLockLogs(ttToken, lock.lockId);
+        if (data?.list) {
+          setLockLogs(data.list.map(log => ({
+            time: new Date(log.lockDate).toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' }),
+            date: new Date(log.lockDate).toLocaleDateString('fr'),
+            user: log.username || log.keyboardPwdName || 'Inconnu',
+            method: log.recordType === 1 ? 'code' : log.recordType === 3 ? 'bluetooth' : 'rfid',
+            success: log.success === 1,
+          })));
+        }
+      } catch { setLockLogs([]); }
+      finally { setLogsLoading(false); }
+    } else {
+      // Simulated logs for other providers
+      setLockLogs([
+        { time: '08:32', date: '17/05', user: 'Robert Chen',    method: 'code',      success: true  },
+        { time: '14:15', date: '17/05', user: 'Maintenance',    method: 'bluetooth', success: true  },
+        { time: '19:00', date: '16/05', user: 'Marie Laurent',  method: 'rfid',      success: true  },
+        { time: '23:47', date: '15/05', user: 'Tentative inconnue', method: 'code', success: false },
+      ]);
+    }
+  };
+
+  const openLock = (lock) => {
+    setSelectedLock({ ...lock, assignedRoom: assignments[lock.id] || null });
+    setDrawerTab('control');
+    setAssignTarget(assignments[lock.id] || '');
+    loadLogs(lock);
+  };
+
+  /* ════ PIN ════ */
+  const generatePin = async () => {
+    if (!selectedLock) return;
+    setPinLoading(true); setPinSuccess(false);
+    try {
+      if (selectedLock.provider === 'ttlock' && ttToken) {
+        const startMs = pinStart ? new Date(pinStart).getTime() : Date.now();
+        const endMs   = pinEnd   ? new Date(pinEnd).getTime()   : Date.now() + 7 * 86400000;
+        await ttlockAPI.createPasscode(ttToken, selectedLock.lockId, {
+          passcode: pinValue,
+          passcodeName: pinName || `Accès ${new Date().toLocaleDateString('fr')}`,
+          startDate: startMs, endDate: endMs,
+          type: pinType === 'one-time' ? 4 : pinType === 'permanent' ? 2 : 1,
+        });
+      }
+      // For TTHotel & Tuya: simulated success
+      setPinSuccess(true);
+      setTimeout(() => { setPinSuccess(false); setShowPin(false); }, 1800);
+    } catch (err) { setApiError(`PIN non créé: ${err.message}`); }
+    finally { setPinLoading(false); }
+  };
+
+  /* ════ LOCK CARD COMPONENT ════ */
+  const LockCard = ({ lock }) => {
+    const prov  = PROVIDERS[lock.provider];
+    const room  = assignments[lock.id];
+    const roomInfo = PROPERTY_ROOMS.find(r => r.number === room);
+    return (
+      <motion.div
+        className={`slh-lock-card ${viewMode === 'list' ? 'list' : ''} ${!lock.online ? 'offline' : ''} ${selectedLock?.id === lock.id ? 'active' : ''}`}
+        layout
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        onClick={() => openLock(lock)}
+      >
+        {viewMode === 'grid' ? (
+          <>
+            <div className="slh-card-head">
+              <span className="slh-prov-badge" style={{ background: prov.bg, color: prov.color }}>
+                {prov.logo} {prov.shortName}
+              </span>
+              <span className={`slh-online-dot ${lock.online ? 'on' : 'off'}`}/>
+            </div>
+            <div className="slh-card-name">{lock.name}</div>
+            <div className="slh-card-serial">{lock.serial} · {lock.model}</div>
+            <div className="slh-card-batt">
+              <BattIcon level={lock.battery} size={13}/>
+              <div className="slh-batt-track">
+                <div className="slh-batt-fill" style={{
+                  width: `${lock.battery}%`,
+                  background: lock.battery < 20 ? '#EF4444' : lock.battery < 40 ? '#F59E0B' : '#16A34A'
+                }}/>
+              </div>
+              <span className={lock.battery < 20 ? 'slh-batt-crit' : ''}>{lock.battery}%</span>
+            </div>
+            <div className="slh-card-foot">
+              {roomInfo ? (
+                <span className="slh-room-chip"><Building2 size={10}/> {room} · {roomInfo.label}</span>
+              ) : (
+                <span className="slh-no-room"><LinkSlash size={10}/> Non assignée</span>
+              )}
+              <span className={`slh-lock-state ${lock.locked ? 'locked' : 'unlocked'}`}>
+                {lock.locked ? <><Lock size={11}/> Verr.</> : <><Unlock size={11}/> Ouv.</>}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="slh-list-row">
+            <span className="slh-prov-badge sm" style={{ background: prov.bg, color: prov.color }}>
+              {prov.logo}
+            </span>
+            <div className="slh-list-info">
+              <strong>{lock.name}</strong>
+              <span>{lock.serial} · {prov.shortName}</span>
+            </div>
+            <div className="slh-list-meta">
+              {roomInfo ? <span className="slh-room-chip">{room}</span> : <span className="slh-no-room">—</span>}
+              <BattIcon level={lock.battery} size={13}/>
+              <span className={lock.battery < 20 ? 'slh-batt-crit' : ''}>{lock.battery}%</span>
+              <span className={`slh-online-dot ${lock.online ? 'on' : 'off'}`}/>
+            </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
+  /* ════════════════════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════════════════════ */
+  return (
+    <div className="slh-root">
+
+      {/* ══ HEADER ══════════════════════════════════════════ */}
+      <div className="slh-topbar">
+        <div className="slh-topbar-left">
+          <div className="slh-title-icon"><Lock size={20}/></div>
+          <div>
+            <h1>Command Center Serrures IoT</h1>
+            <p>TTLock · TTHotel Access · Tuya Smart — Gestion unifiée multi-fournisseurs</p>
+          </div>
+        </div>
+        <div className="slh-topbar-right">
+          {(connTTLock || connTTHotel || connTuya) && lastSync && (
+            <span className="slh-sync-lbl">Sync {lastSync.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}</span>
+          )}
+          {connTTLock && (
+            <button className="slh-btn-outline" onClick={() => fetchTTLockLocks()} disabled={apiLoading}>
+              <RefreshCcw size={14} className={apiLoading ? 'slh-spin' : ''}/> Actualiser
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ══ PROVIDER CONNECTION BAR ══════════════════════════ */}
+      <div className="slh-provider-bar">
+        {Object.values(PROVIDERS).map(prov => {
+          const connected = prov.id === 'ttlock' ? connTTLock : prov.id === 'tthotel' ? connTTHotel : connTuya;
+          return (
+            <div key={prov.id} className={`slh-prov-card ${connected ? 'connected' : ''}`} style={{ borderColor: connected ? prov.color + '40' : '#E2E8F0' }}>
+              <div className="slh-prov-card-left">
+                <span className="slh-prov-card-logo">{prov.logo}</span>
+                <div>
+                  <span className="slh-prov-card-name" style={{ color: connected ? prov.color : '#334155' }}>{prov.name}</span>
+                  <span className="slh-prov-card-desc">{prov.desc}</span>
                 </div>
+              </div>
+              <div className="slh-prov-card-right">
+                {connected ? (
+                  <>
+                    <span className="slh-conn-badge">
+                      <span className="slh-conn-dot"/>Connecté · {allLocks.filter(l => l.provider === prov.id).length} serrures
+                    </span>
+                    <button className="slh-disconnect-btn" onClick={() => handleDisconnect(prov.id)}>
+                      <WifiOff size={12}/> Déconnecter
+                    </button>
+                  </>
+                ) : (
+                  <button className="slh-connect-btn" style={{ background: prov.color }} onClick={() => { setConnectModal(prov.id); setAuthErr(null); }}>
+                    <Wifi size={13}/> Connecter
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* API Error banner */}
+      <AnimatePresence>
+        {apiError && (
+          <motion.div className="slh-error-bar" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+            <AlertTriangle size={14}/> {apiError}
+            <button onClick={() => setApiError(null)}><X size={13}/></button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ STATS ROW ════════════════════════════════════════ */}
+      {allLocks.length > 0 && (
+        <div className="slh-stats-row">
+          {[
+            { label: 'Total serrures', value: stats.total,    icon: <Lock size={17}/>,        col: '#2563EB', bg: '#EFF6FF' },
+            { label: 'En ligne',       value: stats.online,   icon: <Wifi size={17}/>,        col: '#15803D', bg: '#DCFCE7' },
+            { label: 'Hors ligne',     value: stats.offline,  icon: <WifiOff size={17}/>,     col: '#B91C1C', bg: '#FEE2E2' },
+            { label: 'Assignées',      value: stats.assigned, icon: <Building2 size={17}/>,   col: '#7C3AED', bg: '#F5F3FF' },
+            { label: 'Batterie faible',value: stats.lowBatt,  icon: <BatteryLow size={17}/>,  col: '#B45309', bg: '#FEF3C7' },
+          ].map(s => (
+            <div className="slh-stat-card" key={s.label}>
+              <div className="slh-stat-icon" style={{ background: s.bg, color: s.col }}>{s.icon}</div>
+              <div>
+                <span className="slh-stat-val">{s.value}</span>
+                <span className="slh-stat-lbl">{s.label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ══ CONTENT AREA ═════════════════════════════════════ */}
+      <div className={`slh-content ${selectedLock ? 'panel-open' : ''}`}>
+
+        {/* ─── Left: lock list area ─── */}
+        <div className="slh-list-area">
+
+          {/* No provider connected */}
+          {!connTTLock && !connTTHotel && !connTuya && (
+            <div className="slh-empty-state">
+              <div className="slh-empty-icon"><Lock size={48} strokeWidth={1}/></div>
+              <h3>Aucun fournisseur connecté</h3>
+              <p>Connectez TTLock, TTHotel Access ou Tuya Smart pour gérer vos serrures IoT depuis cette interface.</p>
+              <div className="slh-empty-btns">
+                {Object.values(PROVIDERS).map(p => (
+                  <button key={p.id} className="slh-empty-connect" style={{ borderColor: p.color, color: p.color }} onClick={() => { setConnectModal(p.id); setAuthErr(null); }}>
+                    {p.logo} Connecter {p.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Controls */}
+          {allLocks.length > 0 && (
+            <>
+              <div className="slh-controls">
+                <div className="slh-search-wrap">
+                  <Search size={14} color="#94A3B8"/>
+                  <input placeholder="Rechercher serrure ou chambre…" value={search} onChange={e => setSearch(e.target.value)}/>
+                </div>
+                <select className="slh-filter-sel" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                  <option value="all">Tous</option>
+                  <option value="online">En ligne</option>
+                  <option value="offline">Hors ligne</option>
+                  <option value="low">Batterie faible</option>
+                  <option value="assigned">Assignées</option>
+                  <option value="unassigned">Non assignées</option>
+                </select>
+                <div className="slh-view-toggle">
+                  <button className={viewMode === 'grid' ? 'active' : ''} onClick={() => setViewMode('grid')}><LayoutGrid size={16}/></button>
+                  <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}><List size={16}/></button>
+                </div>
+              </div>
+
+              {/* Provider filter tabs */}
+              <div className="slh-prov-tabs">
+                {[['all', 'Toutes', ''], ['ttlock', '🔐 TTLock', '#2563EB'], ['tthotel', '🏨 TTHotel', '#7C3AED'], ['tuya', '🌿 Tuya', '#059669']].map(([id, label, color]) => {
+                  const count = id === 'all' ? allLocks.length : allLocks.filter(l => l.provider === id).length;
+                  if (id !== 'all' && count === 0) return null;
+                  return (
+                    <button key={id}
+                      className={`slh-prov-tab ${activeProvider === id ? 'active' : ''}`}
+                      style={activeProvider === id && color ? { color, borderBottomColor: color } : {}}
+                      onClick={() => setActiveProvider(id)}
+                    >
+                      {label} <span className="slh-tab-count">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Locks grid/list */}
+              <div className={`slh-locks-grid ${viewMode}`}>
+                <AnimatePresence mode="popLayout">
+                  {filtered.map(lock => <LockCard key={lock.id} lock={lock}/>)}
+                </AnimatePresence>
+                {filtered.length === 0 && (
+                  <div className="slh-no-results">
+                    <Search size={32} color="#CBD5E1" strokeWidth={1}/>
+                    <span>Aucune serrure trouvée</span>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ═══ LOCK DETAIL DRAWER ══════════════════════════ */}
+        <AnimatePresence>
+          {selectedLock && (() => {
+            const prov     = PROVIDERS[selectedLock.provider];
+            const room     = assignments[selectedLock.id];
+            const roomInfo = PROPERTY_ROOMS.find(r => r.number === room);
+
+            return (
+              <motion.div className="slh-drawer" key="drawer"
+                initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 40, opacity: 0 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              >
+                {/* Drawer header */}
+                <div className="slh-drawer-head" style={{ borderTop: `3px solid ${prov.color}` }}>
+                  <div className="slh-drawer-head-left">
+                    <span className="slh-drawer-prov" style={{ background: prov.bg, color: prov.color }}>
+                      {prov.logo} {prov.name}
+                    </span>
+                    <span className="slh-drawer-name">{selectedLock.name}</span>
+                    <span className="slh-drawer-serial">{selectedLock.serial}</span>
+                  </div>
+                  <button className="slh-close-btn" onClick={() => setSelectedLock(null)}><X size={16}/></button>
+                </div>
+
+                {/* Tabs */}
+                <div className="slh-drawer-tabs">
+                  {[['control','Contrôle'],['room','Chambre'],['logs','Logs']].map(([k,l]) => (
+                    <button key={k} className={drawerTab === k ? 'active' : ''} onClick={() => setDrawerTab(k)}>{l}</button>
+                  ))}
+                </div>
+
+                <div className="slh-drawer-body">
+
+                  {/* ── TAB: CONTRÔLE ── */}
+                  {drawerTab === 'control' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="slh-tab-pane">
+                      {/* Battery */}
+                      <div className="slh-drawer-batt-card" style={{ borderColor: prov.color + '30', background: prov.bg }}>
+                        <div className="slh-drawer-batt-row">
+                          <BattIcon level={selectedLock.battery} size={16}/>
+                          <div className="slh-batt-track" style={{ flex: 1 }}>
+                            <div className="slh-batt-fill" style={{
+                              width: `${selectedLock.battery}%`,
+                              background: selectedLock.battery < 20 ? '#EF4444' : selectedLock.battery < 40 ? '#F59E0B' : '#16A34A'
+                            }}/>
+                          </div>
+                          <span style={{ fontWeight: 700, fontSize: '0.78rem' }}>{selectedLock.battery}%</span>
+                          <span className={`slh-status-pill ${selectedLock.online ? 'on' : 'off'}`}>
+                            {selectedLock.online ? <><Wifi size={11}/> En ligne</> : <><WifiOff size={11}/> Hors ligne</>}
+                          </span>
+                        </div>
+                        <div className="slh-drawer-meta-row">
+                          <span>Modèle: <strong>{selectedLock.model}</strong></span>
+                          <span>Firmware: <strong>{selectedLock.fw || '—'}</strong></span>
+                          {selectedLock.signal && <span>Signal: <strong>{selectedLock.signal}%</strong></span>}
+                        </div>
+                      </div>
+
+                      {/* Lock/Unlock */}
+                      <div className="slh-ctrl-grid">
+                        <button
+                          className={`slh-toggle-btn ${selectedLock.locked ? 'locked' : 'unlocked'}`}
+                          onClick={() => toggleLock(selectedLock)}
+                        >
+                          {selectedLock.locked ? <><Unlock size={16}/> Déverrouiller</> : <><Lock size={16}/> Verrouiller</>}
+                        </button>
+                        <button className="slh-pin-open-btn" onClick={() => { setShowPin(true); setPinValue(genPin()); setPinSuccess(false); }}>
+                          <Key size={14}/> Générer PIN
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ── TAB: CHAMBRE (room assignment) ── */}
+                  {drawerTab === 'room' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="slh-tab-pane">
+                      {/* Current assignment */}
+                      {room ? (
+                        <div className="slh-assigned-room-card">
+                          <div className="slh-assigned-room-icon"><Building2 size={22} color={prov.color}/></div>
+                          <div>
+                            <span className="slh-assigned-room-num">Chambre {room}</span>
+                            {roomInfo && <span className="slh-assigned-room-name">{roomInfo.label} · {roomInfo.floor}</span>}
+                          </div>
+                          <button className="slh-unassign-btn" onClick={() => assignRoom(selectedLock.id, null)}>
+                            <LinkSlash size={13}/> Délier
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="slh-no-room-card">
+                          <LinkSlash size={28} color="#CBD5E1" strokeWidth={1.5}/>
+                          <span>Serrure non assignée à une chambre</span>
+                        </div>
+                      )}
+
+                      {/* Room selector */}
+                      <div className="slh-room-assign-section">
+                        <label>{room ? 'Réassigner à une autre chambre' : 'Assigner à une chambre'}</label>
+                        <select className="slh-room-select" value={assignTarget} onChange={e => setAssignTarget(e.target.value)}>
+                          <option value="">— Choisir une chambre —</option>
+                          {PROPERTY_ROOMS.map(r => (
+                            <option key={r.number} value={r.number} disabled={usedRooms.has(r.number) && assignments[selectedLock.id] !== r.number}>
+                              {r.number} · {r.label} ({r.floor}){usedRooms.has(r.number) && assignments[selectedLock.id] !== r.number ? ' — occupée' : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          className="slh-assign-btn"
+                          disabled={!assignTarget || assignTarget === room}
+                          style={{ background: prov.color }}
+                          onClick={() => assignRoom(selectedLock.id, assignTarget)}
+                        >
+                          <Link2 size={14}/> {room ? 'Réassigner' : 'Lier la chambre'}
+                        </button>
+                      </div>
+
+                      {/* Property rooms overview */}
+                      <div className="slh-rooms-overview">
+                        <span className="slh-section-label">Chambres de la propriété</span>
+                        {PROPERTY_ROOMS.map(r => {
+                          const lockForRoom = allLocks.find(l => assignments[l.id] === r.number);
+                          const lockProv = lockForRoom ? PROVIDERS[lockForRoom.provider] : null;
+                          return (
+                            <div key={r.number} className="slh-room-overview-row">
+                              <span className="slh-room-ov-num">{r.number}</span>
+                              <span className="slh-room-ov-name">{r.label}</span>
+                              {lockForRoom ? (
+                                <span className="slh-room-ov-lock" style={{ color: lockProv.color }}>
+                                  {lockProv.logo} {lockForRoom.name}
+                                </span>
+                              ) : (
+                                <span className="slh-room-ov-none">Pas de serrure</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ── TAB: LOGS ── */}
+                  {drawerTab === 'logs' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="slh-tab-pane">
+                      {logsLoading ? (
+                        <div className="slh-logs-loading"><RefreshCcw size={20} className="slh-spin" /> Chargement des logs…</div>
+                      ) : lockLogs.length > 0 ? lockLogs.map((log, i) => (
+                        <div key={i} className={`slh-log-row ${log.success ? 'ok' : 'fail'}`}>
+                          <div className={`slh-log-dot ${log.success ? 'ok' : 'fail'}`}/>
+                          <div className="slh-log-info">
+                            <span className="slh-log-user">{log.user}</span>
+                            <span className="slh-log-method">{log.method}</span>
+                          </div>
+                          <span className="slh-log-time">{log.time} · {log.date}</span>
+                        </div>
+                      )) : (
+                        <div className="slh-logs-empty"><History size={28} color="#CBD5E1" strokeWidth={1}/><span>Aucun log disponible</span></div>
+                      )}
+                    </motion.div>
+                  )}
+
+                </div>
+              </motion.div>
+            );
+          })()}
+        </AnimatePresence>
+      </div>
+
+      {/* ══ CONNECT MODALS ═══════════════════════════════════ */}
+      <AnimatePresence>
+        {connectModal && (
+          <div className="slh-modal-overlay" onClick={() => setConnectModal(null)}>
+            <motion.div className="slh-modal" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} onClick={e => e.stopPropagation()}>
+              <div className="slh-modal-head">
+                <div className="slh-modal-prov-logo">{PROVIDERS[connectModal].logo}</div>
+                <div>
+                  <h2>Connexion {PROVIDERS[connectModal].name}</h2>
+                  <p>{PROVIDERS[connectModal].desc}</p>
+                </div>
+                <button className="slh-close-btn" onClick={() => setConnectModal(null)}><X size={16}/></button>
+              </div>
+
+              {authErr && <div className="slh-auth-err"><AlertTriangle size={13}/> {authErr}</div>}
+
+              {/* TTLock form */}
+              {connectModal === 'ttlock' && (
+                <form onSubmit={handleConnectTTLock} className="slh-auth-form">
+                  <div className="slh-field">
+                    <label>Email / Username TTLock</label>
+                    <div className="slh-input-wrap"><User size={13}/><input type="text" value={ttUser} onChange={e => setTtUser(e.target.value)} placeholder="votre@email.com" required/></div>
+                  </div>
+                  <div className="slh-field">
+                    <label>Mot de passe</label>
+                    <div className="slh-input-wrap">
+                      <Lock size={13}/>
+                      <input type={showPass ? 'text' : 'password'} value={ttPass} onChange={e => setTtPass(e.target.value)} placeholder="••••••••" required/>
+                      <button type="button" className="slh-eye-btn" onClick={() => setShowPass(v => !v)}>{showPass ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
+                    </div>
+                  </div>
+                  <div className="slh-field-info"><Shield size={12}/> OAuth2 sécurisé — Client ID: {import.meta.env.VITE_TTLOCK_CLIENT_ID?.slice(0,8) || '8754dc08'}…</div>
+                  <div className="slh-modal-foot">
+                    <button type="button" className="slh-btn-ghost" onClick={() => setConnectModal(null)}>Annuler</button>
+                    <button type="submit" className="slh-btn-primary" style={{ background: '#2563EB' }} disabled={authLoad}>
+                      {authLoad ? <><RefreshCcw size={13} className="slh-spin"/> Connexion…</> : <><Wifi size={13}/> Se connecter</>}
+                    </button>
+                  </div>
+                </form>
               )}
 
-              <form onSubmit={handleLogin} className="lock-config-form">
-                <div className="lock-field">
-                  <label>Email / Username TTLock</label>
-                  <div className="lock-input-wrap">
-                    <User size={15} className="lock-input-icon" />
-                    <input type="text" value={ttUsername} onChange={e => setTtUsername(e.target.value)} placeholder="votre@email.com" required />
+              {/* TTHotel form */}
+              {connectModal === 'tthotel' && (
+                <form onSubmit={handleConnectTTHotel} className="slh-auth-form">
+                  <div className="slh-field">
+                    <label>API Endpoint TTHotel</label>
+                    <div className="slh-input-wrap"><Shield size={13}/><input type="url" value={tthApiUrl} onChange={e => setTthApiUrl(e.target.value)} placeholder="https://api.tthotel.com" required/></div>
                   </div>
-                </div>
-                <div className="lock-field">
-                  <label>Mot de passe</label>
-                  <div className="lock-input-wrap">
-                    <Lock size={15} className="lock-input-icon" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={ttPassword}
-                      onChange={e => setTtPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                    />
-                    <button type="button" className="lock-input-toggle" onClick={() => setShowPassword(v => !v)}>
-                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  <div className="slh-field">
+                    <label>Code Hôtel</label>
+                    <div className="slh-input-wrap"><Building2 size={13}/><input type="text" value={tthHotelCode} onChange={e => setTthHotelCode(e.target.value)} placeholder="HTL-XXXX" required/></div>
+                  </div>
+                  <div className="slh-field">
+                    <label>Access Token</label>
+                    <div className="slh-input-wrap"><Key size={13}/><input type="password" value={tthToken} onChange={e => setTthToken(e.target.value)} placeholder="eyJhbGci…" required/></div>
+                  </div>
+                  <div className="slh-modal-foot">
+                    <button type="button" className="slh-btn-ghost" onClick={() => setConnectModal(null)}>Annuler</button>
+                    <button type="submit" className="slh-btn-primary" style={{ background: '#7C3AED' }}>
+                      <Wifi size={13}/> Connecter TTHotel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Tuya form */}
+              {connectModal === 'tuya' && (
+                <form onSubmit={handleConnectTuya} className="slh-auth-form">
+                  <div className="slh-field">
+                    <label>Client ID (Access ID)</label>
+                    <div className="slh-input-wrap"><Key size={13}/><input type="text" value={tuyaClientId} onChange={e => setTuyaClientId(e.target.value)} placeholder="xxxxxxxxxxxxxxxx" required/></div>
+                  </div>
+                  <div className="slh-field">
+                    <label>Client Secret</label>
+                    <div className="slh-input-wrap"><Shield size={13}/><input type="password" value={tuyaSecret} onChange={e => setTuyaSecret(e.target.value)} placeholder="••••••••••••••••" required/></div>
+                  </div>
+                  <div className="slh-field">
+                    <label>Région du Cloud Tuya</label>
+                    <select className="slh-select" value={tuyaRegion} onChange={e => setTuyaRegion(e.target.value)}>
+                      <option value="eu">Europe (eu.iot.tuya.com)</option>
+                      <option value="us">Amérique (us.iot.tuya.com)</option>
+                      <option value="cn">Chine (cn.iot.tuya.com)</option>
+                      <option value="in">Inde (in.iot.tuya.com)</option>
+                    </select>
+                  </div>
+                  <div className="slh-modal-foot">
+                    <button type="button" className="slh-btn-ghost" onClick={() => setConnectModal(null)}>Annuler</button>
+                    <button type="submit" className="slh-btn-primary" style={{ background: '#059669' }}>
+                      <Wifi size={13}/> Connecter Tuya Smart
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ PIN MODAL ════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showPin && selectedLock && (
+          <div className="slh-modal-overlay" onClick={() => setShowPin(false)}>
+            <motion.div className="slh-modal slh-modal-sm" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} onClick={e => e.stopPropagation()}>
+              <div className="slh-modal-head">
+                <div className="slh-modal-prov-logo" style={{ background: '#EDE9FE' }}><Key size={20} color="#6D28D9"/></div>
+                <div><h2>Générer un Code PIN</h2><p>Accès temporaire — {selectedLock.name}</p></div>
+                <button className="slh-close-btn" onClick={() => setShowPin(false)}><X size={16}/></button>
+              </div>
+              {pinSuccess ? (
+                <div className="slh-pin-success"><Check size={32} color="#16A34A"/><span>Code PIN créé avec succès !</span></div>
+              ) : (
+                <div className="slh-auth-form">
+                  <div className="slh-pin-display">
+                    <span>Code PIN</span>
+                    <div className="slh-pin-value">{pinValue}</div>
+                    <div className="slh-pin-actions">
+                      <button type="button" className="slh-pin-act-btn" onClick={() => setPinValue(genPin())} title="Régénérer"><RefreshCw size={14}/></button>
+                      <button type="button" className="slh-pin-act-btn" onClick={() => { navigator.clipboard.writeText(pinValue); setPinCopied(true); setTimeout(() => setPinCopied(false), 1500); }}>
+                        {pinCopied ? <Check size={14}/> : <Copy size={14}/>}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="slh-field"><label>Nom de l'accès</label>
+                    <div className="slh-input-wrap"><User size={13}/><input value={pinName} onChange={e => setPinName(e.target.value)} placeholder="Ex: Client – Robert Chen"/></div>
+                  </div>
+                  <div className="slh-pin-types">
+                    {[['periodic','Périodique'], ['permanent','Permanent'], ['one-time','Usage unique']].map(([k,l]) => (
+                      <div key={k} className={`slh-pin-type ${pinType === k ? 'active' : ''}`} onClick={() => setPinType(k)}>{l}</div>
+                    ))}
+                  </div>
+                  {pinType !== 'permanent' && (
+                    <div className="slh-field-row">
+                      <div className="slh-field"><label>Début</label><input type="datetime-local" value={pinStart} onChange={e => setPinStart(e.target.value)}/></div>
+                      <div className="slh-field"><label>Fin</label><input type="datetime-local" value={pinEnd} onChange={e => setPinEnd(e.target.value)}/></div>
+                    </div>
+                  )}
+                  <div className="slh-modal-foot">
+                    <button className="slh-btn-ghost" onClick={() => setShowPin(false)}>Annuler</button>
+                    <button className="slh-btn-primary" style={{ background: '#6D28D9' }} onClick={generatePin} disabled={pinLoading}>
+                      {pinLoading ? <><RefreshCcw size={13} className="slh-spin"/> Envoi…</> : <><Key size={13}/> Valider PIN</>}
                     </button>
                   </div>
                 </div>
-                <button type="submit" className="lock-config-submit" disabled={authLoading}>
-                  {authLoading ? <><RefreshCcw size={15} className="cm-spin" /> Connexion...</> : <><LogIn size={15} /> Se connecter</>}
-                </button>
-              </form>
-
-              <div className="lock-config-info">
-                <Shield size={13} /> OAuth2 sécurisé · Client ID: {import.meta.env.VITE_TTLOCK_CLIENT_ID || '8754dc08...'}
-              </div>
+              )}
             </motion.div>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="lock-portal luxe-theme">
-      <div className="mesh-bg"></div>
-      <div className="lock-container">
-
-        {/* Header */}
-        <header className="lock-header">
-          <div className="lock-title-group">
-            <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              Command Center IoT
-            </motion.h1>
-            <p>TTLock · Supervision temps réel · {locks.length} serrure{locks.length !== 1 ? 's' : ''} connectée{locks.length !== 1 ? 's' : ''}</p>
-          </div>
-          <div className="lock-header-actions">
-            {lastSync && <span className="lock-sync-label">Sync {lastSync.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}</span>}
-            <button className="btn-secondary" onClick={() => fetchLocks()} disabled={loading}>
-              <RefreshCcw size={16} className={loading ? 'cm-spin' : ''} /> Actualiser
-            </button>
-            <button className="btn-secondary" onClick={() => setShowConfig(true)}>
-              <Settings size={16} />
-            </button>
-            <button className="btn-primary" onClick={() => setShowAddModal(true)}>
-              <Plus size={16} /> Déployer
-            </button>
-          </div>
-        </header>
-
-        {/* API Error */}
-        {apiError && (
-          <div className="cm-error-banner" style={{ margin: '0 0 1rem' }}>
-            <AlertTriangle size={15} /> <span>{apiError}</span>
-            <button onClick={() => setApiError(null)}><X size={13} /></button>
-          </div>
         )}
-
-        {/* Stats */}
-        <div className="lock-stats-grid">
-          {[
-            { filterVal: 'all', label: 'Total', val: stats.total, icon: <Cpu />, color: 'blue' },
-            { filterVal: 'online', label: 'En ligne', val: stats.online, icon: <Wifi />, color: 'green' },
-            { filterVal: 'low-battery', label: 'Batterie faible', val: stats.lowBattery, icon: <BatteryLow />, color: 'red' },
-            { filterVal: 'offline', label: 'Hors ligne', val: stats.offline, icon: <ShieldAlert />, color: 'amber' },
-          ].map((s, i) => (
-            <motion.div
-              key={i}
-              className={`l-stat-card clickable ${filter === s.filterVal ? 'active-filter' : ''}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-              onClick={() => setFilter(s.filterVal)}
-            >
-              <div className={`l-stat-icon ${s.color}`}>{s.icon}</div>
-              <div className="l-stat-info">
-                <strong>{s.val}</strong>
-                <span>{s.label}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Control Bar */}
-        <div className="lock-control-bar">
-          <div className="search-box">
-            <Search size={16} />
-            <input placeholder="Rechercher une serrure..." value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <div className="view-toggle-group">
-            <button className={`view-btn ${viewMode === 'list' ? 'active' : ''}`} onClick={() => setViewMode('list')}><List size={17} /></button>
-            <button className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`} onClick={() => setViewMode('grid')}><LayoutGrid size={17} /></button>
-          </div>
-        </div>
-
-        {/* Empty State */}
-        {!loading && locks.length === 0 && (
-          <div className="lock-empty">
-            <Lock size={40} />
-            <h3>Aucune serrure trouvée</h3>
-            <p>Ajoutez des serrures TTLock dans votre compte pour les voir apparaître ici.</p>
-          </div>
-        )}
-
-        {/* Loading */}
-        {loading && locks.length === 0 && (
-          <div className="lock-empty">
-            <RefreshCcw size={32} className="cm-spin" />
-            <p>Chargement des serrures TTLock...</p>
-          </div>
-        )}
-
-        {/* Locks Grid/List */}
-        <div className={`lock-display-area ${viewMode}`}>
-          <AnimatePresence mode="popLayout">
-            {filtered.map(lock => (
-              <motion.div
-                key={lock.id}
-                className={`luxe-lock-item ${viewMode}-view ${lock.status}`}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                onClick={() => handleSelectLock(lock)}
-              >
-                {viewMode === 'grid' ? (
-                  <>
-                    <div className="l-card-header">
-                      <div className="l-card-brand" style={{ color: BRAND_COLORS[lock.brand], background: BRAND_COLORS[lock.brand] + '18' }}>
-                        {lock.brand}
-                      </div>
-                      <div className={`luxe-status-tag ${lock.status}`}>
-                        <div className="dot" />
-                        <span>{lock.status === 'online' ? 'EN LIGNE' : 'HORS LIGNE'}</span>
-                      </div>
-                    </div>
-                    <div className="l-card-body">
-                      <h3>{lock.name}</h3>
-                      <p className="l-card-loc"><Building2 size={12} /> {lock.model}</p>
-                    </div>
-                    <div className="l-card-metrics">
-                      <div className="l-metric">
-                        <Battery size={13} />
-                        <span>{lock.battery !== null ? `${lock.battery}%` : '—'}</span>
-                      </div>
-                      {lock.signal !== null && (
-                        <div className="l-metric">
-                          <Signal size={13} />
-                          <span>{lock.signal}%</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="l-card-footer">
-                      <div className={`lock-state-badge ${lock.locked ? 'locked' : 'unlocked'}`}>
-                        {lock.locked ? <Lock size={14} /> : <Unlock size={14} />}
-                        {lock.locked ? 'Verrouillé' : 'Déverrouillé'}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="l-list-row">
-                    <div className={`l-list-icon ${lock.status === 'online' ? 'online' : 'offline'}`}>
-                      {lock.locked ? <Lock size={18} /> : <Unlock size={18} />}
-                    </div>
-                    <div className="l-list-info">
-                      <strong>{lock.name}</strong>
-                      <span>{lock.brand} · {lock.model}</span>
-                    </div>
-                    <div className="l-list-right">
-                      {lock.battery !== null && (
-                        <span className={`l-battery ${lock.battery < 20 ? 'low' : ''}`}>
-                          <Battery size={13} /> {lock.battery}%
-                        </span>
-                      )}
-                      <div className={`luxe-status-tag ${lock.status}`} style={{ marginLeft: 8 }}>
-                        <div className="dot" />
-                        <span>{lock.status === 'online' ? 'EN LIGNE' : 'HORS LIGNE'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* Detail Drawer */}
-        <AnimatePresence>
-          {selectedLock && (
-            <div className="luxe-drawer-overlay" onClick={() => setSelectedLock(null)}>
-              <motion.div
-                className="luxe-detail-drawer"
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                onClick={e => e.stopPropagation()}
-              >
-                <div className="drawer-header">
-                  <div className="drawer-lock-icon" style={{ color: BRAND_COLORS[selectedLock.brand] }}>
-                    <Lock size={28} />
-                  </div>
-                  <div>
-                    <h3>{selectedLock.name}</h3>
-                    <span>{selectedLock.brand} · {selectedLock.model}</span>
-                  </div>
-                  <button className="drawer-close" onClick={() => setSelectedLock(null)}><X size={20} /></button>
-                </div>
-
-                <div className="drawer-tabs">
-                  <button className="active">CONTRÔLE</button>
-                  <button onClick={() => loadLockLogs(selectedLock)}>LOGS</button>
-                </div>
-
-                <div className="drawer-body">
-                  <div className="d-section">
-                    <h4>Commandes</h4>
-                    <div className="d-actions">
-                      <button
-                        className="d-btn-action main"
-                        onClick={() => toggleLock(selectedLock)}
-                        style={{ background: selectedLock.locked ? '#3b82f6' : '#ef4444' }}
-                      >
-                        {selectedLock.locked ? <><Unlock size={18} /> Déverrouiller</> : <><Lock size={18} /> Verrouiller</>}
-                      </button>
-                      <button className="d-btn-action outline" onClick={() => setShowPinModal(true)}>
-                        <Key size={18} /> Générer PIN
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="d-section">
-                    <h4>Diagnostic</h4>
-                    <div className="d-stats">
-                      <div className="d-stat">
-                        <span>Batterie</span>
-                        <strong className={selectedLock.battery < 20 ? 'text-red' : ''}>{selectedLock.battery !== null ? `${selectedLock.battery}%` : '—'}</strong>
-                      </div>
-                      <div className="d-stat">
-                        <span>Signal</span>
-                        <strong>{selectedLock.signal !== null ? `${selectedLock.signal}%` : '—'}</strong>
-                      </div>
-                      <div className="d-stat">
-                        <span>Statut</span>
-                        <strong style={{ color: selectedLock.status === 'online' ? '#10b981' : '#ef4444' }}>
-                          {selectedLock.status === 'online' ? 'En ligne' : 'Hors ligne'}
-                        </strong>
-                      </div>
-                      <div className="d-stat">
-                        <span>Lock ID</span>
-                        <strong style={{ fontSize: '0.75rem' }}>{selectedLock.lockId || selectedLock.id}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="d-section" style={{ flex: 1 }}>
-                    <div className="d-header-flex">
-                      <h4>Logs d'Accès</h4>
-                      {lockLogLoading && <RefreshCcw size={14} className="cm-spin" />}
-                    </div>
-                    <div className="d-mini-timeline">
-                      {lockLogs.length > 0 ? lockLogs.map((log, i) => (
-                        <div key={i} className={`mini-log ${log.status}`}>
-                          <div className="m-time">{log.time}</div>
-                          <div className="m-content">
-                            <p><strong>{log.user}</strong> <span className={`m-tag ${log.method}`}>{log.method}</span></p>
-                            <span>{log.date}</span>
-                          </div>
-                        </div>
-                      )) : (
-                        <p className="empty-text">{lockLogLoading ? 'Chargement...' : 'Aucun log récent.'}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* MODAL: GENERATE PIN */}
-        <AnimatePresence>
-          {showPinModal && selectedLock && (
-            <div className="luxe-modal-overlay">
-              <motion.div
-                className="luxe-modal pin-modal"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-              >
-                <button className="modal-close" onClick={() => setShowPinModal(false)}><X size={18} /></button>
-                <div className="modal-header">
-                  <div className="modal-icon gold"><Key size={22} /></div>
-                  <h2>Générer un Code PIN</h2>
-                  <p>Accès temporaire pour <strong>{selectedLock.name}</strong></p>
-                </div>
-
-                {pinSuccess ? (
-                  <div className="pin-success">
-                    <Check size={32} />
-                    <p>PIN créé avec succès sur la serrure !</p>
-                  </div>
-                ) : (
-                  <div className="pin-generator-content">
-                    <div className="pin-display">
-                      <span>Code PIN</span>
-                      <div className="pin-value">{pinValue}</div>
-                      <div className="pin-display-actions">
-                        <button className="btn-icon-soft" onClick={refreshPin} title="Générer nouveau"><RefreshCw size={15} /></button>
-                        <button className="btn-icon-soft" onClick={copyPin} title="Copier">
-                          {copiedPin ? <Check size={15} /> : <Copy size={15} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label>Nom de l'accès</label>
-                      <input type="text" placeholder="Ex: Client – Marie Dupont" value={pinName} onChange={e => setPinName(e.target.value)} />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Type d'accès</label>
-                      <div className="access-types">
-                        {[
-                          { id: 'periodic', label: 'Périodique', icon: <CalendarDays size={14} /> },
-                          { id: 'permanent', label: 'Permanent', icon: <Clock size={14} /> },
-                          { id: 'one-time', label: 'Usage unique', icon: <History size={14} /> },
-                        ].map(t => (
-                          <div key={t.id} className={`a-type ${pinType === t.id ? 'active' : ''}`} onClick={() => setPinType(t.id)}>
-                            {t.icon} {t.label}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {pinType !== 'permanent' && (
-                      <div className="form-row">
-                        <div className="form-group">
-                          <label>Début</label>
-                          <input type="datetime-local" value={pinStart} onChange={e => setPinStart(e.target.value)} />
-                        </div>
-                        <div className="form-group">
-                          <label>Fin</label>
-                          <input type="datetime-local" value={pinEnd} onChange={e => setPinEnd(e.target.value)} />
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="modal-actions">
-                      <button className="btn-secondary" onClick={() => setShowPinModal(false)}>Annuler</button>
-                      <button className="btn-primary" onClick={generatePin} disabled={pinLoading}>
-                        {pinLoading ? <><RefreshCcw size={14} className="cm-spin" /> Envoi...</> : <><Key size={14} /> Valider sur serrure</>}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* MODAL: CONFIG (si déjà connecté mais veut changer) */}
-        <AnimatePresence>
-          {showConfig && isAuthenticated && (
-            <div className="luxe-modal-overlay">
-              <motion.div className="luxe-modal" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
-                <button className="modal-close" onClick={() => setShowConfig(false)}><X size={18} /></button>
-                <div className="modal-header">
-                  <div className="modal-icon"><Settings size={22} /></div>
-                  <h2>Configuration TTLock</h2>
-                  <p>Gérez votre connexion API TTLock.</p>
-                </div>
-                <div className="modal-form">
-                  <div className="lock-config-info" style={{ marginTop: 0 }}>
-                    <Shield size={13} /> Connecté en tant que <strong>{ttUsername || 'Utilisateur TTLock'}</strong>
-                  </div>
-                  <div className="modal-actions" style={{ marginTop: '1.5rem' }}>
-                    <button className="btn-secondary" onClick={() => setShowConfig(false)}>Fermer</button>
-                    <button className="btn-danger" onClick={handleDisconnect}><WifiOff size={14} /> Déconnecter</button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
