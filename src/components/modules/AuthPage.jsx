@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowRight, X, Eye, EyeOff, User, Mail, Lock, Check, AlertCircle, ChevronRight, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
@@ -15,6 +15,19 @@ const AuthPage = ({ onLogin, onClose }) => {
   const [errors, setErrors] = useState({});
   const [authError, setAuthError] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  // ── Accès admin caché : 3 clics rapides sur le logo ──
+  const logoClickCount = useRef(0);
+  const logoClickTimer = useRef(null);
+  const handleLogoClick = () => {
+    logoClickCount.current += 1;
+    if (logoClickTimer.current) clearTimeout(logoClickTimer.current);
+    logoClickTimer.current = setTimeout(() => { logoClickCount.current = 0; }, 2000);
+    if (logoClickCount.current >= 3) {
+      logoClickCount.current = 0;
+      window.location.href = window.location.pathname + '?admin';
+    }
+  };
 
   const validate = () => {
     const e = {};
@@ -123,7 +136,7 @@ const AuthPage = ({ onLogin, onClose }) => {
 
       <header className="auth-header">
         <div className="logo-group">
-          <div className="logo-icon-auth">H</div>
+          <div className="logo-icon-auth" onClick={handleLogoClick} style={{ cursor:'default', userSelect:'none' }}>H</div>
           <h2>Hova</h2>
         </div>
         {onClose && (

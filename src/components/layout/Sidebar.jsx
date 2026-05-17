@@ -2,7 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard, Calendar, ClipboardCheck, Settings, Moon, Key,
   Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database,
-  ShieldCheck, CreditCard, Bot, Building2, Star, XCircle,
+  CreditCard, Bot, Building2, Star, XCircle,
   UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code,
   Workflow, ClipboardList, Home
 } from 'lucide-react';
@@ -100,7 +100,6 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
             <SidebarItem id="plans"       icon={CreditCard} label="Abonnement"     activeView={activeView} setActiveView={setActiveView}
               extraStyle={{ borderTop: '1px solid #F0F0F0', marginTop: 4, paddingTop: 12 }}
             />
-            <SidebarItem id="super-admin" icon={ShieldCheck} label="Super Admin"  activeView={activeView} setActiveView={setActiveView} />
           </div>
 
         </div>

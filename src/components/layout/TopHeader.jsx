@@ -144,7 +144,7 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }
                   </button>
                   <button
                     className="th-dd-item"
-                    onClick={() => { setActiveView('system-admin'); setDropdownOpen(false); }}
+                    onClick={() => { setActiveView('settings'); setDropdownOpen(false); }}
                   >
                     <User size={15} />
                     <span>Mon compte</span>

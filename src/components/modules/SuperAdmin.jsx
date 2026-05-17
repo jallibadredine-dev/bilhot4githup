@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
-  LayoutDashboard, Users, CreditCard, Globe, HeadphonesIcon,
+  LayoutDashboard, Users, CreditCard, Globe, HeadphonesIcon, Calendar,
   Shield, TrendingUp, TrendingDown, Server, Zap, RefreshCw,
   AlertTriangle, CheckCircle, XCircle, Search, Filter,
   ChevronDown, MoreHorizontal, Plus, Lock, Unlock, Eye, EyeOff,
@@ -71,6 +71,49 @@ const INITIAL_PLANS = {
   gold: { price: 349, features: ['channex', 'iot', 'comms', 'reporting'], propertiesLimit: 20 },
   enterprise: { price: 899, features: ['ai', 'iot', 'comms', 'channex', 'reporting', 'multi'], propertiesLimit: 999 },
 };
+
+const PROPERTIES_MOCK = [
+  { id: 1, name: 'Villa Horizon', type: 'Villa', rooms: 4, status: 'active', occupancy: 85, city: 'Marrakech', mrr: 2200 },
+  { id: 2, name: 'Riad Dar El Sadaka', type: 'Riad', rooms: 12, status: 'active', occupancy: 72, city: 'Fès', mrr: 3600 },
+  { id: 3, name: 'Atlas Suites', type: 'Résidence', rooms: 28, status: 'maintenance', occupancy: 0, city: 'Agadir', mrr: 7000 },
+  { id: 4, name: 'Palm Resort', type: 'Hôtel', rooms: 64, status: 'active', occupancy: 91, city: 'Casablanca', mrr: 19200 },
+];
+
+const RESERVATIONS_MOCK = [
+  { id: 'R001', guest: 'Marc Vallet',        property: 'Villa Horizon',       room: 'Suite 1',      checkin: '17/05', checkout: '22/05', status: 'confirmed', source: 'Airbnb',       amount: 2850 },
+  { id: 'R002', guest: 'Sarah Jenkins',      property: 'Riad Dar El Sadaka',  room: 'Chambre 3',    checkin: '18/05', checkout: '20/05', status: 'checkin',   source: 'Booking.com',  amount: 1200 },
+  { id: 'R003', guest: 'Ayoub El Fassi',     property: 'Atlas Suites',        room: 'Apt 12',       checkin: '20/05', checkout: '25/05', status: 'pending',   source: 'Direct',       amount: 750  },
+  { id: 'R004', guest: 'James Wilson',       property: 'Palm Resort',         room: 'Deluxe 201',   checkin: '15/05', checkout: '17/05', status: 'checkout',  source: 'Vrbo',         amount: 980  },
+  { id: 'R005', guest: 'Nadia Benchekroun',  property: 'Villa Horizon',       room: 'Suite 2',      checkin: '22/05', checkout: '28/05', status: 'confirmed', source: 'Direct',       amount: 3400 },
+];
+
+const AUTOMATION_RULES = [
+  { id: 'a1', name: 'Check-in Automatique',  trigger: 'J-1 avant arrivée',     action: 'Envoyer email + code porte',  enabled: true,  runs: 247 },
+  { id: 'a2', name: 'Relance Paiement',      trigger: 'Facture > 3 jours',      action: 'SMS + Email de rappel',       enabled: true,  runs: 18  },
+  { id: 'a3', name: 'Demande d\'Avis',       trigger: 'J+1 après départ',        action: 'Email Google Review',         enabled: false, runs: 103 },
+  { id: 'a4', name: 'Alerte Ménage',         trigger: 'Checkout confirmé',       action: 'Notification équipe',         enabled: true,  runs: 312 },
+  { id: 'a5', name: 'Upsell Séjour',         trigger: 'J-3 avant arrivée',       action: 'Email offres services',       enabled: false, runs: 45  },
+];
+
+const AUDIT_LOGS_DATA = [
+  { id: 1, user: 'Admin',           action: 'Connexion Super Admin',           resource: 'Système',                  time: '23:05', type: 'auth'     },
+  { id: 2, user: 'test@hova.app',   action: 'Mise à jour plan Silver → Gold',  resource: 'Client Résidence Elysée',  time: '22:47', type: 'billing'  },
+  { id: 3, user: 'Channex API',     action: 'Sync 14 réservations',            resource: 'Villa Horizon',            time: '22:30', type: 'api'      },
+  { id: 4, user: 'Admin',           action: 'Création utilisateur',            resource: 'user@newclient.ma',        time: '21:18', type: 'user'     },
+  { id: 5, user: 'TTLock API',      action: 'Code porte #4729 généré',         resource: 'Riad Dar El Sadaka',       time: '20:55', type: 'security' },
+  { id: 6, user: 'Oracle AI',       action: 'Réponse guest #1482',             resource: 'Palm Resort inbox',        time: '20:33', type: 'ai'       },
+  { id: 7, user: 'test@hova.app',   action: 'Déconnexion',                     resource: 'Session',                  time: '20:10', type: 'auth'     },
+  { id: 8, user: 'Stripe Webhook',  action: 'Paiement reçu 2 990 MAD',         resource: 'Facture INV-2026-084',     time: '19:44', type: 'billing'  },
+];
+
+const EMAIL_TEMPLATES_DATA = [
+  { id: 'checkin',  name: 'Confirmation Arrivée',  trigger: 'J-1 check-in',            channels: ['Email','WhatsApp'],  status: 'active',   sent: 247 },
+  { id: 'welcome',  name: 'Bienvenue Client',       trigger: 'Check-in effectué',        channels: ['WhatsApp'],          status: 'active',   sent: 189 },
+  { id: 'checkout', name: 'Rappel Départ',           trigger: 'Jour J (8h00)',            channels: ['Email','SMS'],        status: 'active',   sent: 203 },
+  { id: 'review',   name: 'Demande d\'Avis',         trigger: 'J+1 après départ',          channels: ['Email'],             status: 'inactive', sent: 98  },
+  { id: 'invoice',  name: 'Facture Séjour',           trigger: 'Après paiement confirmé',  channels: ['Email'],             status: 'active',   sent: 312 },
+  { id: 'promo',    name: 'Offre Fidélité',           trigger: 'Client inactif 60j',       channels: ['Email','SMS'],        status: 'inactive', sent: 14  },
+];
 
 /* ────────────────────────────────────────
    COMPONENTS
@@ -299,22 +342,35 @@ export default function SuperAdmin() {
 
   const navigation = [
     { section: 'SURVEILLANCE FINANCIÈRE', items: [
-      { id: 'billing', label: 'Paiements & Facturation', icon: <CreditCard size={18} /> },
-      { id: 'plan-builder', label: 'Abonnements & Offres', icon: <Layers size={18} /> },
-      { id: 'stripe-config', label: 'Configuration Stripe', icon: <Wallet size={18} /> },
+      { id: 'billing',       label: 'Paiements & Facturation', icon: <CreditCard size={18} /> },
+      { id: 'plan-builder',  label: 'Abonnements & Offres',    icon: <Layers size={18} /> },
+      { id: 'stripe-config', label: 'Configuration Stripe',    icon: <Wallet size={18} /> },
     ]},
     { section: 'UTILISATEURS & ACCÈS', items: [
-      { id: 'users', label: 'Utilisateurs & Profils', icon: <UserCheck size={18} /> },
+      { id: 'users',       label: 'Utilisateurs & Profils', icon: <UserCheck size={18} /> },
+      { id: 'permissions', label: 'Permissions & Rôles',    icon: <Shield size={18} /> },
+    ]},
+    { section: 'PROPRIÉTÉS & RÉSERVATIONS', items: [
+      { id: 'properties',   label: 'Propriétés & Chambres', icon: <Building2 size={18} /> },
+      { id: 'reservations', label: 'Réservations',           icon: <Calendar size={18} /> },
     ]},
     { section: 'LICENCES & CLIENTS', items: [
-      { id: 'mms-hot', label: 'Management PMS Hôte', icon: <Home size={18} />, hidden: mode === 'pro' },
-      { id: 'mms-pro', label: 'Management PMS Pro', icon: <Building2 size={18} />, hidden: mode === 'hot' },
-      { id: 'clients-led', label: 'Base Clients LED', icon: <Users size={18} /> },
+      { id: 'mms-hot',     label: 'Management PMS Hôte', icon: <Home size={18} />,      hidden: mode === 'pro' },
+      { id: 'mms-pro',     label: 'Management PMS Pro',  icon: <Building2 size={18} />, hidden: mode === 'hot' },
+      { id: 'clients-led', label: 'Base Clients LED',    icon: <Users size={18} /> },
     ]},
-    { section: 'TECHNIQUE & CONNECTIVITÉ', items: [
+    { section: 'COMMUNICATION', items: [
+      { id: 'notifications',   label: 'Notifications & Alertes', icon: <Bell size={18} /> },
+      { id: 'email-templates', label: 'Templates Messages',      icon: <Mail size={18} /> },
+    ]},
+    { section: 'TECHNIQUE & AUTOMATISATION', items: [
       { id: 'integrations', label: 'Hub d\'Intégrations', icon: <Terminal size={18} /> },
-      { id: 'permissions', label: 'Permissions & Rôles', icon: <Shield size={18} /> },
-    ]}
+      { id: 'automations',  label: 'Automatisations',     icon: <Zap size={18} /> },
+    ]},
+    { section: 'SYSTÈME', items: [
+      { id: 'audit-logs',      label: 'Journal d\'Activité', icon: <FileText size={18} /> },
+      { id: 'system-settings', label: 'Paramètres Système',  icon: <Settings size={18} /> },
+    ]},
   ];
 
   const renderContent = () => {
@@ -993,6 +1049,343 @@ export default function SuperAdmin() {
                 </div>
               </div>
             )}
+          </motion.div>
+        );
+
+      case 'properties':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            <div className="sa-widget-row" style={{ marginBottom: 20 }}>
+              {[
+                { label: 'PROPRIÉTÉS ACTIVES', val: '3',           icon: <Building2 size={18}/>, color: '#3B82F6' },
+                { label: 'CHAMBRES TOTALES',   val: '108',          icon: <Home size={18}/>,     color: '#10B981' },
+                { label: 'TAUX OCCUP. MOY.',   val: '82%',          icon: <TrendingUp size={18}/>, color: '#8B5CF6' },
+                { label: 'MRR PROPRIÉTÉS',     val: '32 000 MAD',   icon: <Wallet size={18}/>,  color: '#F59E0B' },
+              ].map(w => (
+                <div key={w.label} className="sa-card sa-interactive-card" style={{ flex: 1 }}>
+                  <div className="card-lbl">{w.label}</div>
+                  <div className="card-val" style={{ fontSize: '1.3rem', color: w.color }}>{w.val}</div>
+                </div>
+              ))}
+            </div>
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <h3>Gestion des Propriétés</h3>
+                <button className="white-action-btn primary-cobalt sa-clickable"><Plus size={14}/> Nouvelle Propriété</button>
+              </div>
+              <div className="sa-table-wrap mt-4">
+                <table className="sa-modern-table">
+                  <thead><tr><th>PROPRIÉTÉ</th><th>TYPE</th><th>VILLE</th><th>CHAMBRES</th><th>OCCUPATION</th><th>MRR</th><th>STATUT</th><th>ACTIONS</th></tr></thead>
+                  <tbody>
+                    {PROPERTIES_MOCK.map(p => (
+                      <tr key={p.id}>
+                        <td className="font-bold sa-clickable">{p.name}</td>
+                        <td className="text-slate-500">{p.type}</td>
+                        <td className="text-slate-500">{p.city}</td>
+                        <td>{p.rooms}</td>
+                        <td>
+                          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                            <div style={{ width:60, height:6, background:'#E2E8F0', borderRadius:3, overflow:'hidden' }}>
+                              <div style={{ width:`${p.occupancy}%`, height:'100%', background: p.occupancy > 80 ? '#10B981' : p.occupancy > 50 ? '#F59E0B' : '#EF4444', borderRadius:3 }}/>
+                            </div>
+                            <span style={{ fontSize:'0.78rem', fontWeight:700 }}>{p.occupancy}%</span>
+                          </div>
+                        </td>
+                        <td className="font-bold">{p.mrr.toLocaleString('fr-FR')} MAD</td>
+                        <td><span className={`status-pill ${p.status}`}>{p.status === 'active' ? 'Actif' : 'Maintenance'}</span></td>
+                        <td style={{ display:'flex', gap:4 }}>
+                          <button className="icon-btn-gray sa-clickable"><Settings size={13}/></button>
+                          <button className="icon-btn-gray sa-clickable"><Eye size={13}/></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'reservations':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            <div className="sa-widget-row" style={{ marginBottom: 20 }}>
+              {[
+                { label: "CHECK-INS AUJOURD'HUI", val: '3', color: '#10B981' },
+                { label: 'CHECKOUTS AUJOURD\'HUI', val: '2', color: '#F59E0B' },
+                { label: 'EN ATTENTE',             val: '1', color: '#EF4444' },
+                { label: 'CONFIRMÉES',             val: '4', color: '#3B82F6' },
+              ].map(w => (
+                <div key={w.label} className="sa-card sa-interactive-card" style={{ flex: 1 }}>
+                  <div className="card-lbl">{w.label}</div>
+                  <div className="card-val" style={{ fontSize:'1.8rem', color: w.color }}>{w.val}</div>
+                </div>
+              ))}
+            </div>
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <h3>Réservations en Cours & À Venir</h3>
+                <div style={{ display:'flex', gap:8 }}>
+                  <div className="sa-search-mini"><Search size={14}/><input type="text" placeholder="Chercher un client..." /></div>
+                  <button className="white-action-btn primary-cobalt sa-clickable"><Plus size={14}/> Réservation</button>
+                </div>
+              </div>
+              <div className="sa-table-wrap mt-4">
+                <table className="sa-modern-table">
+                  <thead><tr><th>#</th><th>CLIENT</th><th>PROPRIÉTÉ</th><th>CHAMBRE</th><th>ARRIVÉE</th><th>DÉPART</th><th>SOURCE</th><th>MONTANT</th><th>STATUT</th></tr></thead>
+                  <tbody>
+                    {RESERVATIONS_MOCK.map(r => (
+                      <tr key={r.id}>
+                        <td className="text-slate-400" style={{ fontSize:'0.72rem' }}>{r.id}</td>
+                        <td className="font-bold sa-clickable">{r.guest}</td>
+                        <td className="text-slate-500">{r.property}</td>
+                        <td>{r.room}</td>
+                        <td>{r.checkin}</td>
+                        <td>{r.checkout}</td>
+                        <td><span style={{ fontSize:'0.7rem', fontWeight:700, background:'#EFF6FF', color:'#3B82F6', padding:'2px 7px', borderRadius:4 }}>{r.source}</span></td>
+                        <td className="font-bold">{r.amount.toLocaleString('fr-FR')} MAD</td>
+                        <td><span className={`status-pill ${r.status === 'checkin' ? 'active' : r.status === 'checkout' ? 'silver' : r.status === 'pending' ? 'bronze' : 'active'}`}>{r.status}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'notifications':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            <div className="sa-card mb-4">
+              <div className="sa-card-header">
+                <h3>Canaux de Notification</h3>
+                <span className="plan-pill gold">3 Canaux Actifs</span>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:12, padding:'8px 0' }}>
+                {[
+                  { name: 'Email (EmailJS)',     status: true,  icon: <Mail size={18}/>,        color: '#3B82F6', info: 'Envoi automatique via EmailJS configuré' },
+                  { name: 'WhatsApp (Twilio)',   status: true,  icon: <MessageSquare size={18}/>, color: '#25D366', info: 'Twilio API opérationnelle' },
+                  { name: 'SMS (Twilio)',         status: true,  icon: <Bell size={18}/>,         color: '#F59E0B', info: 'Numéro +212 actif' },
+                  { name: 'Push Navigateur',     status: false, icon: <Bell size={18}/>,         color: '#94A3B8', info: 'Non configuré — requiert VAPID keys' },
+                ].map(ch => (
+                  <div key={ch.name} style={{ border:`1.5px solid ${ch.status ? '#D1FAE5' : '#E2E8F0'}`, borderRadius:12, padding:'14px 16px', background: ch.status ? '#F0FDF4' : '#F8FAFC', display:'flex', alignItems:'center', gap:12 }}>
+                    <div style={{ color: ch.color }}>{ch.icon}</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:800, fontSize:'0.85rem', color:'#0F172A', marginBottom:3 }}>{ch.name}</div>
+                      <div style={{ fontSize:'0.72rem', color:'#64748B' }}>{ch.info}</div>
+                    </div>
+                    <label className="sa-mini-toggle"><input type="checkbox" defaultChecked={ch.status}/><span className="toggle-slider"/></label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="sa-card">
+              <div className="sa-card-header"><h3>Dernières Notifications Envoyées</h3></div>
+              <div className="sa-table-wrap mt-2">
+                <table className="sa-modern-table">
+                  <thead><tr><th>DESTINATAIRE</th><th>CANAL</th><th>SUJET</th><th>STATUT</th><th>HEURE</th></tr></thead>
+                  <tbody>
+                    {[
+                      { to: 'Marc Vallet',    canal: 'WhatsApp', subject: 'Code d\'accès Villa Horizon',  status: 'delivered', time: '22:47' },
+                      { to: 'Sarah Jenkins',  canal: 'Email',    subject: 'Confirmation arrivée Riad',    status: 'delivered', time: '21:05' },
+                      { to: 'Ayoub El Fassi', canal: 'SMS',      subject: 'Rappel paiement en attente',   status: 'pending',   time: '20:30' },
+                      { to: 'James Wilson',   canal: 'Email',    subject: 'Facture séjour Palm Resort',   status: 'delivered', time: '19:55' },
+                    ].map((n, i) => (
+                      <tr key={i}>
+                        <td className="font-bold">{n.to}</td>
+                        <td><span style={{ fontSize:'0.72rem', fontWeight:700, background:'#EFF6FF', color:'#3B82F6', padding:'2px 7px', borderRadius:4 }}>{n.canal}</span></td>
+                        <td className="text-slate-500">{n.subject}</td>
+                        <td><span className={`status-pill ${n.status === 'delivered' ? 'active' : 'silver'}`}>{n.status}</span></td>
+                        <td className="text-slate-400">{n.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'email-templates':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <h3>Templates de Messages</h3>
+                <button className="white-action-btn primary-cobalt sa-clickable"><Plus size={14}/> Nouveau Template</button>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px,1fr))', gap:12, padding:'12px 0 4px' }}>
+                {EMAIL_TEMPLATES_DATA.map(t => (
+                  <div key={t.id} style={{ border:`1.5px solid ${t.status === 'active' ? '#BFDBFE' : '#E2E8F0'}`, borderRadius:12, padding:'14px 16px', background: t.status === 'active' ? '#EFF6FF' : '#F8FAFC' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                      <div style={{ fontWeight:800, fontSize:'0.88rem', color:'#0F172A' }}>{t.name}</div>
+                      <label className="sa-mini-toggle"><input type="checkbox" defaultChecked={t.status === 'active'}/><span className="toggle-slider"/></label>
+                    </div>
+                    <div style={{ fontSize:'0.72rem', color:'#64748B', marginBottom:6 }}>⏰ {t.trigger}</div>
+                    <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:8 }}>
+                      {t.channels.map(c => <span key={c} style={{ background:'#E0E7FF', color:'#4338CA', borderRadius:4, padding:'1px 6px', fontSize:'0.68rem', fontWeight:700 }}>{c}</span>)}
+                    </div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                      <span style={{ fontSize:'0.7rem', color:'#94A3B8' }}>{t.sent} envois</span>
+                      <button className="icon-btn-gray sa-clickable"><Settings size={13}/></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'automations':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            <div className="sa-widget-row" style={{ marginBottom: 20 }}>
+              {[
+                { label: 'RÈGLES ACTIVES', val: '3',      color: '#10B981' },
+                { label: 'DÉCLENCHEMENTS', val: '726',    color: '#3B82F6' },
+                { label: 'CE MOIS',        val: '+48',    color: '#8B5CF6' },
+                { label: 'TAUX SUCCÈS',    val: '99.2%',  color: '#F59E0B' },
+              ].map(w => (
+                <div key={w.label} className="sa-card sa-interactive-card" style={{ flex:1 }}>
+                  <div className="card-lbl">{w.label}</div>
+                  <div className="card-val" style={{ fontSize:'1.6rem', color:w.color }}>{w.val}</div>
+                </div>
+              ))}
+            </div>
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <h3>Règles d'Automatisation</h3>
+                <button className="white-action-btn primary-cobalt sa-clickable"><Plus size={14}/> Nouvelle Règle</button>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:10, padding:'8px 0' }}>
+                {AUTOMATION_RULES.map(rule => (
+                  <div key={rule.id} style={{ border:'1.5px solid #E2E8F0', borderRadius:12, padding:'14px 16px', display:'flex', alignItems:'center', gap:14, background: rule.enabled ? '#FAFAFA' : '#F8FAFC' }}>
+                    <label className="sa-mini-toggle" style={{ flexShrink:0 }}>
+                      <input type="checkbox" defaultChecked={rule.enabled}/><span className="toggle-slider"/>
+                    </label>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:800, fontSize:'0.88rem', color:'#0F172A', marginBottom:4 }}>{rule.name}</div>
+                      <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+                        <span style={{ background:'#FEF3C7', color:'#92400E', borderRadius:5, padding:'2px 8px', fontSize:'0.7rem', fontWeight:700 }}>⚡ {rule.trigger}</span>
+                        <span style={{ color:'#94A3B8', fontSize:'0.8rem' }}>→</span>
+                        <span style={{ background:'#D1FAE5', color:'#065F46', borderRadius:5, padding:'2px 8px', fontSize:'0.7rem', fontWeight:700 }}>✓ {rule.action}</span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign:'right', minWidth:70 }}>
+                      <div style={{ fontSize:'0.78rem', fontWeight:800, color:'#0F172A' }}>{rule.runs.toLocaleString()}</div>
+                      <div style={{ fontSize:'0.68rem', color:'#94A3B8' }}>déclenchements</div>
+                    </div>
+                    <button className="icon-btn-gray sa-clickable"><Settings size={13}/></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'audit-logs':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <h3>Journal d'Activité Système</h3>
+                <div style={{ display:'flex', gap:8 }}>
+                  <select className="sa-modern-select" style={{ padding:'6px 10px', fontSize:'0.78rem' }}>
+                    <option>Toutes les actions</option>
+                    <option>Authentification</option>
+                    <option>Facturation</option>
+                    <option>API</option>
+                    <option>Sécurité</option>
+                  </select>
+                  <button className="white-action-btn sa-clickable"><Share2 size={13}/> Exporter</button>
+                </div>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', padding:'4px 0' }}>
+                {AUDIT_LOGS_DATA.map((log, i) => {
+                  const tc = { auth:'#3B82F6', billing:'#10B981', api:'#8B5CF6', user:'#F59E0B', security:'#EF4444', ai:'#EC4899' };
+                  const tl = { auth:'AUTH', billing:'BILLING', api:'API', user:'USER', security:'SEC', ai:'AI' };
+                  return (
+                    <div key={log.id} style={{ display:'flex', alignItems:'center', gap:12, padding:'11px 0', borderBottom: i < AUDIT_LOGS_DATA.length-1 ? '1px solid #F1F5F9' : 'none' }}>
+                      <div style={{ width:8, height:8, borderRadius:'50%', background: tc[log.type] || '#94A3B8', flexShrink:0 }}/>
+                      <div style={{ width:52, textAlign:'center' }}>
+                        <span style={{ background: (tc[log.type] || '#94A3B8') + '20', color: tc[log.type] || '#94A3B8', borderRadius:4, padding:'1px 5px', fontSize:'0.62rem', fontWeight:800 }}>{tl[log.type]}</span>
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontWeight:700, fontSize:'0.82rem', color:'#0F172A' }}>{log.action}</div>
+                        <div style={{ fontSize:'0.72rem', color:'#94A3B8' }}>{log.resource}</div>
+                      </div>
+                      <div style={{ fontSize:'0.74rem', color:'#64748B', fontWeight:600 }}>{log.user}</div>
+                      <div style={{ fontSize:'0.72rem', color:'#CBD5E1', minWidth:40, textAlign:'right' }}>{log.time}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'system-settings':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            <div className="sa-card mb-4">
+              <div className="sa-card-header"><h3>Paramètres Généraux</h3></div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, padding:'8px 0' }}>
+                {[
+                  { label:'Nom de la Plateforme', value:'HosFlow / Hova' },
+                  { label:'Devise par défaut',     value:'MAD (Dirham Marocain)' },
+                  { label:'Fuseau Horaire',        value:'Africa/Casablanca (GMT+1)' },
+                  { label:'Langue Interface',      value:'Français (FR)' },
+                ].map(f => (
+                  <div key={f.label} className="config-group">
+                    <label>{f.label}</label>
+                    <input type="text" className="sa-modern-input" defaultValue={f.value}/>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="sa-card mb-4">
+              <div className="sa-card-header"><h3>Sécurité & Accès</h3></div>
+              <div style={{ display:'flex', flexDirection:'column', gap:0, padding:'4px 0' }}>
+                {[
+                  { label:'Authentification 2FA',    desc:'Requérir 2FA pour tous les admins',               enabled:false },
+                  { label:'Session auto-expire',      desc:'Déconnexion après 8h d\'inactivité',              enabled:true  },
+                  { label:'Logs d\'accès étendus',    desc:'Enregistrer toutes les actions utilisateurs',     enabled:true  },
+                  { label:'Mode maintenance',         desc:'Bloquer l\'accès utilisateurs (admin uniquement)', enabled:false },
+                ].map((s, i, arr) => (
+                  <div key={s.label} style={{ display:'flex', alignItems:'center', gap:12, padding:'13px 0', borderBottom: i < arr.length-1 ? '1px solid #F1F5F9' : 'none' }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:700, fontSize:'0.85rem', color:'#0F172A' }}>{s.label}</div>
+                      <div style={{ fontSize:'0.74rem', color:'#94A3B8' }}>{s.desc}</div>
+                    </div>
+                    <label className="sa-mini-toggle"><input type="checkbox" defaultChecked={s.enabled}/><span className="toggle-slider"/></label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="sa-card">
+              <div className="sa-card-header"><h3>Informations Système</h3></div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, padding:'8px 0' }}>
+                {[
+                  { label:'Version App',      value:'v2.4.1-beta' },
+                  { label:'Framework',        value:'React 19 + Vite 8' },
+                  { label:'Base de Données',  value:'Supabase (PostgreSQL 16)' },
+                  { label:'Déploiement',      value:'Replit Cloud' },
+                  { label:'Dernière Build',   value:'17/05/2026 · 23:06' },
+                  { label:'Uptime',           value:'99.97%' },
+                ].map(f => (
+                  <div key={f.label} style={{ border:'1px solid #E2E8F0', borderRadius:9, padding:'10px 12px' }}>
+                    <div style={{ fontSize:'0.68rem', fontWeight:700, color:'#94A3B8', marginBottom:4, textTransform:'uppercase' }}>{f.label}</div>
+                    <div style={{ fontSize:'0.82rem', fontWeight:700, color:'#0F172A' }}>{f.value}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display:'flex', gap:8, marginTop:16 }}>
+                <button className="white-action-btn sa-clickable"><Database size={13}/> Sauvegarde BDD</button>
+                <button className="white-action-btn sa-clickable"><RefreshCw size={13}/> Vider le Cache</button>
+                <button className="white-action-btn sa-clickable" style={{ color:'#EF4444', borderColor:'#FECACA' }}><AlertTriangle size={13}/> Mode Maintenance</button>
+              </div>
+            </div>
           </motion.div>
         );
 
