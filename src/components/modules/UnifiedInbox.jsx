@@ -1,307 +1,658 @@
-import React, { useState } from 'react';
-import { MessageSquare, Phone, Mail, Paperclip, Send, Settings, CheckCircle2, AlertCircle, RefreshCw, X, FileText, Image as ImageIcon, Plus } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  MessageSquare, Send, Search, RefreshCw, Settings, CheckCircle2,
+  AlertCircle, X, Sparkles, ChevronRight, Zap, Globe, Calendar,
+  Building2, Phone, Mail, Key, FileText, Wifi, Clock, Users,
+  Filter, MoreHorizontal, Star, Flag, Archive, Bell, BellOff,
+  ArrowLeft, ExternalLink, Loader2
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { channexAPI } from '../../lib/channex';
 import './UnifiedInbox.css';
 
+/* ─── OTA DEFINITIONS (mirroring ChannelManager) ─────────── */
+const OTA_DEFS = [
+  { id: 'airbnb',      name: 'Airbnb',        color: '#FF5A5F', bg: '#FFF0F0', logo: '🏠', keywords: ['airbnb'] },
+  { id: 'booking',     name: 'Booking.com',   color: '#003580', bg: '#E8F0FF', logo: '🔵', keywords: ['booking'] },
+  { id: 'expedia',     name: 'Expedia',       color: '#FFC72C', bg: '#FFF8E0', logo: '✈️', keywords: ['expedia'] },
+  { id: 'tripadvisor', name: 'TripAdvisor',   color: '#00AA6C', bg: '#E0F7EE', logo: '🦉', keywords: ['tripadvisor'] },
+  { id: 'vrbo',        name: 'Vrbo',          color: '#1B468A', bg: '#E8EEFF', logo: '🏡', keywords: ['vrbo'] },
+  { id: 'agoda',       name: 'Agoda',         color: '#E0113A', bg: '#FFE8EC', logo: '🌏', keywords: ['agoda'] },
+  { id: 'google',      name: 'Google Hotels', color: '#4285F4', bg: '#E8F0FF', logo: '🔍', keywords: ['google'] },
+  { id: 'whatsapp',    name: 'WhatsApp',      color: '#25D366', bg: '#E8FDF0', logo: '💬', keywords: ['whatsapp'] },
+  { id: 'direct',      name: 'Direct',        color: '#FF385C', bg: '#FFF1F2', logo: '🏨', keywords: ['direct'] },
+];
+
+/* ─── DEMO CONVERSATIONS (per OTA) ─────────────────────────── */
+const DEMO_THREADS = {
+  airbnb: [
+    {
+      guestName: 'Emma Wilson',       reservation: 'AIR-8472', checkIn: '2026-05-20', checkOut: '2026-05-23', room: 'Studio Cosy Centre-Ville', nights: 3, amount: 255, unread: 1,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: "Hi! What time can I check in? I'll be arriving around 15:00.", time: '09:15' },
+        { id: 'm2', sender: 'host',  text: "Hello Emma! Check-in is from 14:00. Your room will be ready. I'll send you the access code 1 hour before.", time: '09:22' },
+        { id: 'm3', sender: 'guest', text: 'Perfect, thank you! Is there parking nearby?', time: '09:45' },
+      ],
+    },
+    {
+      guestName: 'Lucas Ferreira',    reservation: 'AIR-9183', checkIn: '2026-05-18', checkOut: '2026-05-19', room: 'Loft Moderne avec Vue', nights: 1, amount: 110, unread: 1,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: 'Bonjour ! Le late check-out est possible jusqu\'à 13h demain ?', time: '08:30' },
+      ],
+    },
+  ],
+  booking: [
+    {
+      guestName: 'Hans Müller',       reservation: 'BKG-44291', checkIn: '2026-05-19', checkOut: '2026-05-22', room: 'Chambre Supérieure', nights: 3, amount: 390, unread: 0,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: 'Guten Tag, I would like to request a baby cot for my infant daughter.', time: '14:20' },
+        { id: 'm2', sender: 'host',  text: 'Bonjour M. Müller! Bien sûr, un lit bébé sera installé dans votre chambre avant votre arrivée.', time: '14:35' },
+        { id: 'm3', sender: 'guest', text: 'Thank you so much! We look forward to our stay.', time: '14:40' },
+      ],
+    },
+    {
+      guestName: 'Yuki Tanaka',       reservation: 'BKG-55012', checkIn: '2026-05-21', checkOut: '2026-05-25', room: 'Suite Junior', nights: 4, amount: 760, unread: 1,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: 'こんにちは。Wi-Fiのパスワードを教えていただけますか？', time: 'Yesterday' },
+        { id: 'm2', sender: 'ai',    text: 'Bonjour Yuki ! 🌸 Le réseau Wi-Fi est "Hova_Guest" — Mot de passe: Hova2026#. Bonne connexion !', time: 'Yesterday', isAI: true },
+      ],
+    },
+  ],
+  expedia: [
+    {
+      guestName: 'Michael Johnson',   reservation: 'EXP-7823', checkIn: '2026-05-22', checkOut: '2026-05-24', room: 'Classic Room', nights: 2, amount: 178, unread: 1,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: 'Do you offer airport shuttle service? We land at 22:30.', time: 'Monday' },
+      ],
+    },
+  ],
+  tripadvisor: [
+    {
+      guestName: 'Sophie Lecomte',    reservation: 'TRP-3301', checkIn: '2026-05-23', checkOut: '2026-05-26', room: 'Chambre Vue Mer', nights: 3, amount: 435, unread: 0,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: 'Bonjour, est-ce que le petit-déjeuner est inclus dans notre réservation ?', time: 'Oct 12' },
+        { id: 'm2', sender: 'host',  text: 'Bonjour Sophie ! Oui, le petit-déjeuner buffet est inclus, servi de 7h à 10h30. À bientôt !', time: 'Oct 12' },
+      ],
+    },
+  ],
+  vrbo: [
+    {
+      guestName: 'Carlos Mendoza',    reservation: 'VRB-1192', checkIn: '2026-05-25', checkOut: '2026-06-01', room: 'Villa Provençale 4 Ch.', nights: 7, amount: 2940, unread: 2,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: 'Hola! We are a group of 7. Is the BBQ available for use?', time: '11:00' },
+        { id: 'm2', sender: 'guest', text: 'Also, can we bring our dog? She is very well-behaved 🐕', time: '11:02' },
+      ],
+    },
+  ],
+  agoda: [
+    {
+      guestName: 'Wei Zhang',         reservation: 'AGD-8841', checkIn: '2026-05-20', checkOut: '2026-05-23', room: 'Standard Room', nights: 3, amount: 225, unread: 0,
+      msgs: [
+        { id: 'm1', sender: 'guest', text: 'Hello, is there a safe box in the room for valuables?', time: 'Tue' },
+        { id: 'm2', sender: 'host',  text: 'Hi Wei! Yes, each room has a digital safe. Code instructions will be in the welcome booklet.', time: 'Tue' },
+      ],
+    },
+  ],
+};
+
+/* ─── AI SUGGESTIONS ─────────────────────────────────────── */
+const getSuggestions = (lastGuestMsg = '') => {
+  const t = lastGuestMsg.toLowerCase();
+  if (t.includes('check') || t.includes('arrive') || t.includes('time') || t.includes('heure'))
+    return ['Check-in dès 14h00. Votre chambre sera prête.', 'Je vous envoie le code d\'accès 1h avant votre arrivée.', 'L\'accueil est ouvert jusqu\'à 22h.'];
+  if (t.includes('wifi') || t.includes('internet') || t.includes('password') || t.includes('パスワード'))
+    return ['Wi-Fi: "Hova_Guest" | Mot de passe: Hova2026#', 'Le Wi-Fi est gratuit et disponible partout.'];
+  if (t.includes('parking') || t.includes('park'))
+    return ['Parking gratuit sur place, accès par badge.', 'Parking public à 200m, €2/h.'];
+  if (t.includes('baby') || t.includes('cot') || t.includes('bébé') || t.includes('lit'))
+    return ['Bien sûr ! Un lit bébé sera installé avant votre arrivée.', 'Nous disposons de lits bébé gratuits sur demande.'];
+  if (t.includes('breakfast') || t.includes('petit-déjeuner') || t.includes('petit dejeuner'))
+    return ['Petit-déjeuner buffet inclus de 7h30 à 10h30.', 'Le restaurant ouvre à 7h, comptez €15/pers si non inclus.'];
+  if (t.includes('late') || t.includes('checkout') || t.includes('check-out'))
+    return ['Late check-out jusqu\'à 13h sous réserve de dispo, gratuit.', 'Nous pouvons garder vos bagages si vous partez plus tard.'];
+  if (t.includes('dog') || t.includes('pet') || t.includes('animal') || t.includes('chien'))
+    return ['Les animaux de compagnie sont les bienvenus (supplément €10/nuit).', 'Votre compagnon est le bienvenu ! Précisez-nous le nombre.'];
+  if (t.includes('shuttle') || t.includes('airport') || t.includes('taxi') || t.includes('transport'))
+    return ['Navette aéroport disponible sur réservation (€25/trajet).', 'Taxi : appelez le +33 1 XX XX XX XX, compter 30 min.'];
+  return [
+    'Merci pour votre message ! Nous traitons votre demande.',
+    'Bien reçu, nous revenons vers vous sous 1h.',
+    'Bonjour, ravi de vous aider ! Que puis-je faire pour vous ?',
+  ];
+};
+
+/* ─── HELPERS ────────────────────────────────────────────── */
+const fmtTime = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 86400 && d.getDate() === now.getDate()) return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  if (diff < 172800) return 'Hier';
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+};
+
+const otaForChannelName = (name = '') => {
+  const n = name.toLowerCase();
+  return OTA_DEFS.find(o => o.keywords.some(k => n.includes(k)));
+};
+
+/* ════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════════════════════════ */
 const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'config'
-  const [selectedChat, setSelectedChat] = useState(1);
-  const [messageInput, setMessageInput] = useState('');
 
-  // Config State
-  const [channels, setChannels] = useState([
-    { id: 'whatsapp', name: 'WhatsApp Business API', connected: true, type: 'api', color: '#25D366' },
-    { id: 'booking', name: 'Booking.com', connected: true, type: 'app', color: '#003580' },
-    { id: 'airbnb', name: 'Airbnb', connected: true, type: 'app', color: '#FF5A5F' },
-    { id: 'messenger', name: 'Facebook Messenger', connected: false, type: 'oauth', color: '#0084FF' },
-    { id: 'instagram', name: 'Instagram Direct', connected: false, type: 'oauth', color: '#E1306C' },
-    { id: 'sms', name: 'SMS (Twilio)', connected: true, type: 'api', color: '#10B981' }
-  ]);
+  const [conversations,  setConversations]  = useState([]);
+  const [threadMap,      setThreadMap]      = useState({});   // { convId: [msg] }
+  const [selectedId,     setSelectedId]     = useState(null);
+  const [input,          setInput]          = useState('');
+  const [filterSource,   setFilterSource]   = useState('all');
+  const [searchQ,        setSearchQ]        = useState('');
+  const [syncStatus,     setSyncStatus]     = useState('idle'); // idle|loading|connected|error
+  const [apiError,       setApiError]       = useState(null);
+  const [lastSync,       setLastSync]       = useState(null);
+  const [sending,        setSending]        = useState(false);
+  const [suggestions,    setSuggestions]    = useState([]);
+  const [showContext,    setShowContext]     = useState(true);
+  const [unreadMap,      setUnreadMap]      = useState({});   // { convId: count }
+  const messagesEndRef  = useRef(null);
 
-  // Mock Conversations
-  const [conversations] = useState([
-    { id: 1, guest: 'Alexandre Dubois', source: 'whatsapp', lastMsg: 'Bonjour, est-ce que le late check-out est possible ?', time: '10:42', unread: 2, reservation: 'RES-9482', pmsLinked: true },
-    { id: 2, guest: 'Sarah Connor', source: 'airbnb', lastMsg: 'I will arrive around 8 PM. Thanks!', time: 'Yesterday', unread: 0, reservation: 'RES-1033', pmsLinked: true },
-    { id: 3, guest: '+33 6 12 34 56 78', source: 'sms', lastMsg: 'Merci pour le code de la porte.', time: 'Monday', unread: 0, reservation: null, pmsLinked: false },
-    { id: 4, guest: 'Maria Rossi', source: 'booking', lastMsg: 'Can we book a table at the restaurant?', time: 'Oct 12', unread: 1, reservation: 'RES-5521', pmsLinked: true },
-  ]);
+  /* ── Read connected state from localStorage ── */
+  const channexToken   = localStorage.getItem('channex_token');
+  const connectedOTAs  = OTA_DEFS.filter(o => localStorage.getItem(`cm_ota_${o.id}`));
+  const hasAnyConnection = !!channexToken || connectedOTAs.length > 0;
 
-  // Mock Active Chat
-  const [activeMessages, setActiveMessages] = useState([
-    { id: 1, sender: 'guest', text: 'Bonjour, nous arrivons demain. Est-ce que le late check-out est possible ?', time: '10:40' },
-    { id: 2, sender: 'system', text: 'Automated AI Reply: Bonjour Alexandre ! Le late check-out est sujet à disponibilité. Nous vous tiendrons au courant demain matin.', time: '10:41', ai: true },
-    { id: 3, sender: 'guest', text: 'Super, merci beaucoup.', time: '10:42' }
-  ]);
+  /* ── Build conversations on mount ── */
+  const buildConversations = useCallback(async () => {
+    const allConvs = [];
+    const allThreads = {};
+    const allUnread = {};
 
-  const toggleChannel = (id) => {
-    setChannels(prev => prev.map(c => c.id === id ? { ...c, connected: !c.connected } : c));
+    /* 1. Channex real data */
+    if (channexToken) {
+      setSyncStatus('loading');
+      setApiError(null);
+      try {
+        const [msgRes, bookRes] = await Promise.allSettled([
+          channexAPI.getMessages(channexToken),
+          channexAPI.getBookings(channexToken),
+        ]);
+        const rawMsgs  = msgRes.status  === 'fulfilled' ? msgRes.value?.data  || [] : [];
+        const rawBooks = bookRes.status === 'fulfilled' ? bookRes.value?.data || [] : [];
+
+        /* Group messages by booking_id */
+        const grouped = {};
+        rawMsgs.forEach(m => {
+          const bid = m.attributes?.booking_id;
+          if (!bid) return;
+          if (!grouped[bid]) grouped[bid] = [];
+          grouped[bid].push(m);
+        });
+
+        Object.entries(grouped).forEach(([bookingId, msgs]) => {
+          const booking = rawBooks.find(b => b.id === bookingId);
+          const chanName = booking?.attributes?.channel_name || '';
+          const ota      = otaForChannelName(chanName);
+          const lastMsg  = msgs[msgs.length - 1];
+          const unreadCnt = msgs.filter(m =>
+            m.attributes?.sender_type !== 'host' && !m.attributes?.read
+          ).length;
+
+          allConvs.push({
+            id:          bookingId,
+            guestName:   booking?.attributes?.customer?.name || 'Voyageur',
+            source:      ota?.id    || 'direct',
+            sourceColor: ota?.color || '#717171',
+            sourceName:  chanName   || 'Channex',
+            sourceLogo:  ota?.logo  || '🌐',
+            reservation: booking?.attributes?.external_booking_id || bookingId.slice(0, 8).toUpperCase(),
+            checkIn:     booking?.attributes?.arrival_date,
+            checkOut:    booking?.attributes?.departure_date,
+            room:        booking?.attributes?.room_type_name || '—',
+            nights:      null,
+            amount:      booking?.attributes?.amount || null,
+            isReal:      true,
+            lastMsg:     lastMsg?.attributes?.text || '',
+            lastTime:    fmtTime(lastMsg?.attributes?.inserted_at),
+          });
+          allUnread[bookingId] = unreadCnt;
+          allThreads[bookingId] = msgs.map(m => ({
+            id:     m.id,
+            text:   m.attributes?.text || m.attributes?.message || '',
+            sender: m.attributes?.sender_type === 'guest' ? 'guest' : 'host',
+            time:   fmtTime(m.attributes?.inserted_at),
+            isAI:   false,
+          }));
+        });
+        setSyncStatus('connected');
+        setLastSync(new Date());
+      } catch (e) {
+        setSyncStatus('error');
+        setApiError(e.message || 'Erreur API Channex');
+      }
+    }
+
+    /* 2. Demo conversations for each connected OTA */
+    connectedOTAs.forEach(ota => {
+      const demos = DEMO_THREADS[ota.id] || [];
+      demos.forEach((d, i) => {
+        const convId = `ota_${ota.id}_${i}`;
+        const unreadCnt = d.msgs.filter(m => m.sender === 'guest').slice(-2).length; // last 2 guest msgs as "unread"
+        allConvs.push({
+          id:          convId,
+          guestName:   d.guestName,
+          source:      ota.id,
+          sourceColor: ota.color,
+          sourceName:  ota.name,
+          sourceLogo:  ota.logo,
+          reservation: d.reservation,
+          checkIn:     d.checkIn,
+          checkOut:    d.checkOut,
+          room:        d.room,
+          nights:      d.nights,
+          amount:      d.amount,
+          isReal:      false,
+          lastMsg:     d.msgs[d.msgs.length - 1]?.text || '',
+          lastTime:    d.msgs[d.msgs.length - 1]?.time || '',
+        });
+        allUnread[convId] = d.unread || 0;
+        allThreads[convId] = d.msgs;
+      });
+    });
+
+    setConversations(allConvs);
+    setThreadMap(allThreads);
+    setUnreadMap(allUnread);
+
+    /* Auto-select first unread, or first */
+    const firstUnread = allConvs.find(c => (allUnread[c.id] || 0) > 0);
+    const toSelect = (firstUnread || allConvs[0])?.id || null;
+    setSelectedId(toSelect);
+    if (toSelect) refreshSuggestions(allThreads[toSelect] || []);
+
+    if (!channexToken && allConvs.length > 0) setSyncStatus('demo');
+  }, []);
+
+  useEffect(() => { buildConversations(); }, []);
+
+  /* Scroll to bottom when thread changes */
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [selectedId, threadMap]);
+
+  /* ── Refresh suggestions when conversation changes ── */
+  const refreshSuggestions = (thread) => {
+    const lastGuest = [...(thread || [])].reverse().find(m => m.sender === 'guest');
+    setSuggestions(getSuggestions(lastGuest?.text || ''));
   };
 
-  const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
+  const selectConv = (id) => {
+    setSelectedId(id);
+    setUnreadMap(prev => ({ ...prev, [id]: 0 }));
+    refreshSuggestions(threadMap[id] || []);
+  };
+
+  /* ── Send message ── */
+  const sendMessage = async () => {
+    if (!input.trim() || !selectedId) return;
+    setSending(true);
     const newMsg = {
-      id: Date.now(),
+      id:   `local_${Date.now()}`,
+      text: input.trim(),
       sender: 'host',
-      text: messageInput,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      isAI: false,
     };
-    setActiveMessages([...activeMessages, newMsg]);
-    setMessageInput('');
+
+    /* Optimistic update */
+    setThreadMap(prev => ({ ...prev, [selectedId]: [...(prev[selectedId] || []), newMsg] }));
+    setConversations(prev => prev.map(c => c.id === selectedId ? { ...c, lastMsg: input.trim(), lastTime: newMsg.time } : c));
+    const sentText = input.trim();
+    setInput('');
+
+    /* Real API if Channex */
+    const conv = conversations.find(c => c.id === selectedId);
+    if (conv?.isReal && channexToken) {
+      try { await channexAPI.sendMessage(channexToken, selectedId, sentText); }
+      catch (e) { console.error('Send failed:', e); }
+    }
+    setSending(false);
+    refreshSuggestions([...threadMap[selectedId] || [], newMsg]);
   };
 
-  const renderSourceIcon = (source) => {
-    const channel = channels.find(c => c.id === source);
-    if (!channel) return <MessageSquare size={14} />;
-    
-    // Quick brand initials or colors since we don't have branded SVG components readily available
-    return (
-      <div className="source-badge" style={{ backgroundColor: channel.color }}>
-        {source === 'whatsapp' ? 'WA' : source === 'airbnb' ? 'ab' : source === 'booking' ? 'B.' : source === 'sms' ? 'SMS' : 'Msg'}
-      </div>
-    );
-  };
+  /* ── Filtered conversations ── */
+  const filteredConvs = conversations.filter(c => {
+    const matchSrc = filterSource === 'all' || c.source === filterSource;
+    const matchQ   = !searchQ || c.guestName.toLowerCase().includes(searchQ.toLowerCase()) ||
+                     c.reservation.toLowerCase().includes(searchQ.toLowerCase()) ||
+                     c.lastMsg.toLowerCase().includes(searchQ.toLowerCase());
+    return matchSrc && matchQ;
+  });
 
-  const activeChatData = conversations.find(c => c.id === selectedChat);
+  const totalUnread    = Object.values(unreadMap).reduce((s, n) => s + n, 0);
+  const selectedConv   = conversations.find(c => c.id === selectedId);
+  const selectedThread = threadMap[selectedId] || [];
+  const sourcesInUse   = [...new Set(conversations.map(c => c.source))];
 
+  /* ════════════════════════════════════════════════════════
+     RENDER
+  ════════════════════════════════════════════════════════ */
   return (
-    <div className={`unified-inbox-module mode-${pmsMode}`}>
-      
-      {/* Header */}
-      <div className="inbox-header glass-panel">
-        <div className="header-left">
-          <MessageSquare className="header-icon" size={24} />
-          <h2>Inbox Omnicanale</h2>
-          <span className="badge-pro">BETA</span>
+    <div className="ui-container">
+
+      {/* ── TOP BAR ── */}
+      <div className="ui-topbar">
+        <div className="ui-topbar-left">
+          <MessageSquare size={20} color="#FF385C"/>
+          <h1 className="ui-title">Inbox Omnicanal</h1>
+          {totalUnread > 0 && <span className="ui-unread-badge">{totalUnread}</span>}
+          <span className="ui-ai-badge"><Sparkles size={10}/> AI</span>
         </div>
-        <div className="header-right">
-          <button 
-            className={`btn-toggle-view ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => setActiveTab('chat')}
-          >
-            <MessageSquare size={16} /> Messages
-          </button>
-          <button 
-            className={`btn-toggle-view ${activeTab === 'config' ? 'active' : ''}`}
-            onClick={() => setActiveTab('config')}
-          >
-            <Settings size={16} /> Connexions (Admin)
-          </button>
+
+        <div className="ui-topbar-center">
+          <div className="ui-search-wrap">
+            <Search size={14} className="ui-search-icon"/>
+            <input className="ui-search" placeholder="Rechercher invité, réservation…" value={searchQ} onChange={e => setSearchQ(e.target.value)}/>
+          </div>
         </div>
-      </div>
 
-      {activeTab === 'chat' ? (
-        <div className="inbox-layout">
-          {/* Sidebar Ticket List */}
-          <div className="inbox-sidebar glass-panel">
-            <div className="sidebar-search">
-              <input type="text" placeholder="Rechercher un invité, un message..." />
-            </div>
-            
-            <div className="ticket-list hide-scrollbar">
-              {conversations.map(conv => (
-                <div 
-                  key={conv.id} 
-                  className={`ticket-item ${selectedChat === conv.id ? 'active' : ''} ${conv.unread ? 'unread' : ''}`}
-                  onClick={() => setSelectedChat(conv.id)}
-                >
-                  <div className="ticket-avatar">
-                    <div className="avatar-circle">{conv.guest.charAt(0)}</div>
-                    <div className="source-indicator">{renderSourceIcon(conv.source)}</div>
-                  </div>
-                  <div className="ticket-info">
-                    <div className="ticket-top">
-                      <span className="guest-name">{conv.guest}</span>
-                      <span className="msg-time">{conv.time}</span>
-                    </div>
-                    <div className="ticket-bottom">
-                      <span className="last-msg">{conv.lastMsg}</span>
-                      {conv.unread > 0 && <span className="unread-badge">{conv.unread}</span>}
-                    </div>
-                    {conv.pmsLinked && (
-                      <div className="pms-link-badge">
-                        <CheckCircle2 size={12} /> {conv.reservation}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="ui-topbar-right">
+          {/* Sync status */}
+          <div className={`ui-sync-badge ${syncStatus}`}>
+            {syncStatus === 'loading' && <Loader2 size={12} className="ui-spin"/>}
+            {syncStatus === 'connected' && <><span className="ui-dot green"/>{lastSync ? `Synchro ${fmtTime(lastSync.toISOString())}` : 'Connecté'}</>}
+            {syncStatus === 'error' && <><span className="ui-dot red"/>Erreur API</>}
+            {syncStatus === 'demo' && <><span className="ui-dot orange"/>Mode Démo</>}
+            {syncStatus === 'idle' && <><span className="ui-dot grey"/>En attente</>}
           </div>
-
-          {/* Main Chat Area */}
-          <div className="inbox-main glass-panel">
-            {activeChatData ? (
-              <>
-                <div className="chat-header">
-                  <div className="chat-guest-info">
-                    <h3>{activeChatData.guest}</h3>
-                    <div className="chat-meta">
-                      <span className="source-tag" style={{ background: channels.find(c => c.id === activeChatData.source)?.color + '20', color: channels.find(c => c.id === activeChatData.source)?.color }}>
-                        Via {channels.find(c => c.id === activeChatData.source)?.name}
-                      </span>
-                      {activeChatData.pmsLinked ? (
-                        <span className="pms-status linked"><CheckCircle2 size={14}/> Profil PMS Connecté</span>
-                      ) : (
-                        <span className="pms-status unlinked"><AlertCircle size={14}/> Non réconcilié</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="chat-actions">
-                    <button className="action-icon"><Phone size={18} /></button>
-                    <button className="action-icon"><Mail size={18} /></button>
-                  </div>
-                </div>
-
-                <div className="chat-messages hide-scrollbar">
-                  {activeMessages.map(msg => (
-                    <div key={msg.id} className={`message-bubble ${msg.sender}`}>
-                      {msg.ai && <span className="ai-label"><RefreshCw size={10}/> Réponse Autopilot</span>}
-                      <div className="msg-text">{msg.text}</div>
-                      <div className="msg-time">{msg.time}</div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="chat-input-area">
-                  <button className="attachment-btn"><Paperclip size={20} /></button>
-                  <input 
-                    type="text" 
-                    placeholder={`Répondre à ${activeChatData.guest} (SMS/WhatsApp/Booking...)`}
-                    value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  />
-                  <button className="send-btn" onClick={handleSendMessage} disabled={!messageInput.trim()}>
-                    <Send size={18} />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="empty-chat">
-                <MessageSquare size={48} />
-                <p>Sélectionnez une conversation pour commencer</p>
-              </div>
-            )}
-          </div>
-          
-          {/* Reservation Context Sidebar (Optional Extra Pane) */}
-          {activeChatData && activeChatData.pmsLinked && (
-            <div className="context-sidebar glass-panel">
-               <h3>Détails Séjour</h3>
-               <div className="res-card">
-                 <div className="res-badge">N° {activeChatData.reservation}</div>
-                 <div className="res-detail"><strong>Check-in:</strong> 15 Oct 2026</div>
-                 <div className="res-detail"><strong>Check-out:</strong> 18 Oct 2026</div>
-                 <div className="res-detail"><strong>Logement:</strong> Chambre 104</div>
-               </div>
-               <div className="quick-actions-box">
-                 <h4>Actions PMS Rapids</h4>
-                 <button className="btn-qa"><FileText size={14}/> Envoyer Facture PDF</button>
-                 <button className="btn-qa"><ImageIcon size={14}/> Envoyer Plan d'Accès</button>
-               </div>
-            </div>
+          <button className="ui-btn-icon" onClick={buildConversations} title="Actualiser"><RefreshCw size={15}/></button>
+          {setActiveView && (
+            <button className="ui-btn-icon" onClick={() => setActiveView('distribution')} title="Gérer les connexions OTA"><Settings size={15}/></button>
           )}
         </div>
-      ) : (
-        /* Setup / Configuration Panel */
-        <div className="config-layout glass-panel hide-scrollbar">
-          <div className="config-header">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-2xl font-black text-slate-800">Messenger Omnicanal : Hub de Connexion</h3>
-                <p className="text-slate-500 font-medium max-w-2xl mt-2">Centralisez WhatsApp, Messenger, Airbnb et Booking dans une interface unique. L'IA HosFlow réconcilie automatiquement les conversations avec vos réservations.</p>
-              </div>
-              <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl flex flex-col items-end">
-                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Status Global Webhook</span>
-                <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  SYSTÈME ACTIF (200 OK)
-                </div>
-              </div>
+      </div>
+
+      {/* ── NO CONNECTION BANNER ── */}
+      {!hasAnyConnection && (
+        <div className="ui-connect-banner">
+          <div className="ui-connect-banner-left">
+            <Globe size={20} color="#FF385C"/>
+            <div>
+              <strong>Aucune plateforme connectée</strong>
+              <p>Connectez Airbnb, Booking.com, Expedia ou Channex.io pour centraliser tous vos messages ici.</p>
             </div>
           </div>
+          {setActiveView && (
+            <button className="ui-btn-primary" onClick={() => setActiveView('distribution')}>
+              Connecter des plateformes <ChevronRight size={14}/>
+            </button>
+          )}
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div className="space-y-6">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Plateformes Connectées</h4>
-              <div className="channels-grid">
-                {channels.map(channel => (
-                  <div key={channel.id} className="channel-card glass-card hover:shadow-lg transition-shadow">
-                    <div className="channel-top">
-                      <div className="channel-icon" style={{ backgroundColor: channel.color }}>
-                        {channel.id === 'whatsapp' ? 'WA' : channel.id === 'airbnb' ? 'ab' : channel.id === 'booking' ? 'B.' : channel.id.substring(0,2).toUpperCase()}
-                      </div>
-                      <div className={`status-badge ${channel.connected ? 'active' : 'inactive'}`}>
-                        {channel.connected ? 'Connecté' : 'Déconnecté'}
-                      </div>
-                    </div>
-                    <h4>{channel.name}</h4>
-                    <p className="channel-desc">
-                      {channel.type === 'oauth' 
-                        ? 'Auth OAuth 2.0 sécurisée.' 
-                        : channel.type === 'api' ? 'Clé API & Webhook.' : 'Synchro directe OTA.'}
-                    </p>
-                    <div className="channel-action">
-                      <button 
-                        className={channel.connected ? "btn-disconnect" : "btn-connect"}
-                        style={!channel.connected ? { background: channel.color, color: 'white' } : {}}
-                        onClick={() => toggleChannel(channel.id)}
-                      >
-                        {channel.connected ? 'Déconnecter' : <><Plus size={16} /> Connecter</>}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* ── SOURCE FILTER PILLS ── */}
+      {conversations.length > 0 && (
+        <div className="ui-source-bar">
+          <button className={`ui-source-pill ${filterSource === 'all' ? 'active' : ''}`} onClick={() => setFilterSource('all')}>
+            <span>Tous</span>
+            <span className="ui-pill-count">{conversations.length}</span>
+          </button>
+          {sourcesInUse.map(srcId => {
+            const ota = OTA_DEFS.find(o => o.id === srcId);
+            if (!ota) return null;
+            const cnt = conversations.filter(c => c.source === srcId).length;
+            const unread = conversations.filter(c => c.source === srcId).reduce((s, c) => s + (unreadMap[c.id] || 0), 0);
+            return (
+              <button
+                key={srcId}
+                className={`ui-source-pill ${filterSource === srcId ? 'active' : ''}`}
+                style={filterSource === srcId ? { borderColor: ota.color, color: ota.color, background: ota.bg } : {}}
+                onClick={() => setFilterSource(srcId)}
+              >
+                <span>{ota.logo}</span>
+                <span>{ota.name}</span>
+                <span className="ui-pill-count" style={unread > 0 ? { background: ota.color, color: 'white' } : {}}>{unread > 0 ? unread : cnt}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── MAIN LAYOUT ── */}
+      <div className="ui-main">
+
+        {/* ── CONVERSATION LIST ── */}
+        <div className="ui-conv-list">
+          {filteredConvs.length === 0 && (
+            <div className="ui-empty">
+              <MessageSquare size={28} color="#CCCCCC"/>
+              <p>{hasAnyConnection ? 'Aucun message trouvé' : 'Connectez une plateforme pour voir vos messages'}</p>
             </div>
+          )}
+          {filteredConvs.map(conv => {
+            const ota = OTA_DEFS.find(o => o.id === conv.source);
+            const unread = unreadMap[conv.id] || 0;
+            const isActive = conv.id === selectedId;
+            return (
+              <div
+                key={conv.id}
+                className={`ui-conv-item ${isActive ? 'active' : ''} ${unread > 0 ? 'unread' : ''}`}
+                onClick={() => selectConv(conv.id)}
+              >
+                <div className="ui-conv-avatar" style={{ background: ota?.bg || '#F7F7F7', color: ota?.color || '#717171' }}>
+                  {conv.guestName.charAt(0).toUpperCase()}
+                  <span className="ui-conv-source-dot" style={{ background: ota?.color || '#717171' }} title={conv.sourceName}/>
+                </div>
+                <div className="ui-conv-info">
+                  <div className="ui-conv-row1">
+                    <span className="ui-conv-name">{conv.guestName}</span>
+                    <span className="ui-conv-time">{conv.lastTime}</span>
+                  </div>
+                  <div className="ui-conv-row2">
+                    <span className="ui-conv-last">{conv.lastMsg}</span>
+                    {unread > 0 && <span className="ui-unread-dot" style={{ background: ota?.color || '#FF385C' }}>{unread}</span>}
+                  </div>
+                  <div className="ui-conv-row3">
+                    <span className="ui-conv-platform" style={{ color: ota?.color || '#717171' }}>
+                      {ota?.logo} {conv.sourceName}
+                    </span>
+                    <span className="ui-conv-ref">{conv.reservation}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-            <div className="space-y-6">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Configuration de l'IA (Autopilot)</h4>
-              <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-200 space-y-6">
-                <div className="flex items-center justify-between">
+        {/* ── MESSAGE THREAD ── */}
+        <div className="ui-thread">
+          {selectedConv ? (
+            <>
+              {/* Thread header */}
+              <div className="ui-thread-head">
+                <div className="ui-thread-head-left">
+                  <div className="ui-thread-avatar" style={{ background: OTA_DEFS.find(o => o.id === selectedConv.source)?.bg || '#F7F7F7', color: OTA_DEFS.find(o => o.id === selectedConv.source)?.color || '#717171' }}>
+                    {selectedConv.guestName.charAt(0)}
+                  </div>
                   <div>
-                    <div className="font-bold text-slate-800 text-sm">IA Smart-Reply</div>
-                    <p className="text-xs text-slate-500 font-medium">Suggérer des réponses automatiques basées sur le contexte PMS.</p>
-                  </div>
-                  <div className="w-10 h-5 bg-indigo-600 rounded-full relative cursor-pointer">
-                    <div className="absolute top-1 left-6 w-3 h-3 bg-white rounded-full"></div>
+                    <div className="ui-thread-name">{selectedConv.guestName}</div>
+                    <div className="ui-thread-meta">
+                      <span className="ui-platform-tag" style={{ background: OTA_DEFS.find(o => o.id === selectedConv.source)?.bg, color: OTA_DEFS.find(o => o.id === selectedConv.source)?.color }}>
+                        {OTA_DEFS.find(o => o.id === selectedConv.source)?.logo} {selectedConv.sourceName}
+                      </span>
+                      <span className="ui-ref-tag"><CheckCircle2 size={11}/> {selectedConv.reservation}</span>
+                      {selectedConv.checkIn && <span className="ui-date-tag"><Calendar size={11}/> {selectedConv.checkIn} → {selectedConv.checkOut}</span>}
+                    </div>
                   </div>
                 </div>
-
-                <div className="space-y-4">
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase">Ton de la Voix</label>
-                      <select className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none">
-                        <option>Professionnel & Chaleureux</option>
-                        <option>Luxe / Haut de gamme</option>
-                        <option>Décontracté / Friendly</option>
-                      </select>
-                   </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase">Délai avant réponse auto</label>
-                      <input type="range" className="w-full accent-indigo-600" />
-                      <div className="flex justify-between text-[10px] font-bold text-slate-400">
-                        <span>Immédiat</span>
-                        <span>5 min</span>
-                        <span>15 min</span>
-                      </div>
-                   </div>
+                <div className="ui-thread-actions">
+                  <button className="ui-btn-icon" title="Téléphone"><Phone size={15}/></button>
+                  <button className="ui-btn-icon" title="Email"><Mail size={15}/></button>
+                  <button className="ui-btn-icon" onClick={() => setShowContext(v => !v)} title="Fiche séjour">
+                    <Building2 size={15}/>
+                  </button>
                 </div>
+              </div>
 
-                <div className="pt-4 border-t border-slate-200">
-                  <h5 className="text-xs font-bold text-slate-800 mb-3">Réponses Automatiques Actives :</h5>
-                  <div className="space-y-2">
-                    {['Instructions Check-in', 'Code Wi-Fi', 'Parking & Accès', 'Late Check-out Rules'].map(rule => (
-                      <div key={rule} className="flex items-center gap-2 text-xs font-medium text-slate-600">
-                        <CheckCircle2 size={14} className="text-emerald-500" /> {rule}
-                      </div>
+              {/* Messages */}
+              <div className="ui-messages">
+                {selectedThread.map((msg, idx) => (
+                  <motion.div
+                    key={msg.id || idx}
+                    className={`ui-msg ui-msg-${msg.sender}`}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    {msg.isAI && (
+                      <div className="ui-ai-label"><Sparkles size={10}/> Autopilot IA</div>
+                    )}
+                    <div className="ui-msg-bubble">{msg.text}</div>
+                    <div className="ui-msg-time">{msg.time}</div>
+                  </motion.div>
+                ))}
+                <div ref={messagesEndRef}/>
+              </div>
+
+              {/* AI quick replies */}
+              {suggestions.length > 0 && (
+                <div className="ui-suggestions">
+                  <span className="ui-suggestions-label"><Sparkles size={11}/> Suggestions IA</span>
+                  <div className="ui-suggestions-list">
+                    {suggestions.map((s, i) => (
+                      <button key={i} className="ui-suggestion-chip" onClick={() => setInput(s)}>
+                        {s}
+                      </button>
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* Input bar */}
+              <div className="ui-input-bar">
+                <div className="ui-input-wrap">
+                  <textarea
+                    className="ui-input"
+                    placeholder={`Répondre à ${selectedConv.guestName} via ${selectedConv.sourceName}…`}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                    rows={1}
+                  />
+                  <div className="ui-input-actions">
+                    <button className="ui-send-btn" onClick={sendMessage} disabled={!input.trim() || sending}>
+                      {sending ? <Loader2 size={16} className="ui-spin"/> : <Send size={16}/>}
+                    </button>
+                  </div>
+                </div>
+                <div className="ui-input-hint">Entrée pour envoyer · Shift+Entrée pour nouvelle ligne · Envoi via {selectedConv.sourceName}</div>
               </div>
+            </>
+          ) : (
+            <div className="ui-empty-thread">
+              <MessageSquare size={40} color="#EBEBEB"/>
+              <p>Sélectionnez une conversation</p>
+              {!hasAnyConnection && setActiveView && (
+                <button className="ui-btn-primary" style={{ marginTop: 16 }} onClick={() => setActiveView('distribution')}>
+                  Connecter Airbnb / Booking.com <ChevronRight size={14}/>
+                </button>
+              )}
             </div>
-          </div>
+          )}
         </div>
-      )}
+
+        {/* ── CONTEXT SIDEBAR ── */}
+        <AnimatePresence>
+          {selectedConv && showContext && (
+            <motion.div
+              className="ui-context"
+              initial={{ x: 30, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 30, opacity: 0 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 200 }}
+            >
+              <div className="ui-context-head">
+                <span>Fiche Séjour</span>
+                <button className="ui-btn-icon" onClick={() => setShowContext(false)}><X size={14}/></button>
+              </div>
+
+              {/* Guest info */}
+              <div className="ui-ctx-section">
+                <div className="ui-ctx-guest-avatar">{selectedConv.guestName.charAt(0)}</div>
+                <div className="ui-ctx-guest-name">{selectedConv.guestName}</div>
+                <div className="ui-ctx-platform" style={{ background: OTA_DEFS.find(o => o.id === selectedConv.source)?.bg, color: OTA_DEFS.find(o => o.id === selectedConv.source)?.color }}>
+                  {OTA_DEFS.find(o => o.id === selectedConv.source)?.logo} {selectedConv.sourceName}
+                </div>
+              </div>
+
+              {/* Booking details */}
+              <div className="ui-ctx-card">
+                <div className="ui-ctx-row">
+                  <span className="ui-ctx-label"><FileText size={12}/> Réservation</span>
+                  <span className="ui-ctx-val bold">{selectedConv.reservation}</span>
+                </div>
+                {selectedConv.room && (
+                  <div className="ui-ctx-row">
+                    <span className="ui-ctx-label"><Building2 size={12}/> Hébergement</span>
+                    <span className="ui-ctx-val">{selectedConv.room}</span>
+                  </div>
+                )}
+                {selectedConv.checkIn && (
+                  <div className="ui-ctx-row">
+                    <span className="ui-ctx-label"><Calendar size={12}/> Check-in</span>
+                    <span className="ui-ctx-val">{selectedConv.checkIn}</span>
+                  </div>
+                )}
+                {selectedConv.checkOut && (
+                  <div className="ui-ctx-row">
+                    <span className="ui-ctx-label"><Calendar size={12}/> Check-out</span>
+                    <span className="ui-ctx-val">{selectedConv.checkOut}</span>
+                  </div>
+                )}
+                {selectedConv.nights && (
+                  <div className="ui-ctx-row">
+                    <span className="ui-ctx-label"><Clock size={12}/> Durée</span>
+                    <span className="ui-ctx-val">{selectedConv.nights} nuit{selectedConv.nights > 1 ? 's' : ''}</span>
+                  </div>
+                )}
+                {selectedConv.amount && (
+                  <div className="ui-ctx-row">
+                    <span className="ui-ctx-label"><Star size={12}/> Montant</span>
+                    <span className="ui-ctx-val bold coral">{selectedConv.amount}€</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick actions */}
+              <div className="ui-ctx-section">
+                <span className="ui-ctx-section-title">Actions rapides</span>
+              </div>
+              <div className="ui-quick-actions">
+                {[
+                  { icon: Key,       label: 'Envoyer code d\'accès',  action: () => setInput('Votre code d\'accès est : 4829. Bonne arrivée ! 🗝️') },
+                  { icon: Wifi,      label: 'Envoyer infos Wi-Fi',     action: () => setInput('Wi-Fi: "Hova_Guest" | Mot de passe: Hova2026#') },
+                  { icon: FileText,  label: 'Envoyer instructions',    action: () => setInput('Voici les instructions d\'accès et le règlement de la maison…') },
+                  { icon: Calendar,  label: 'Rappel check-out',        action: () => setInput(`Bonjour ! Petit rappel : votre check-out est prévu le ${selectedConv.checkOut}. Merci !`) },
+                ].map(({ icon: Icon, label, action }) => (
+                  <button key={label} className="ui-quick-action-btn" onClick={action}>
+                    <Icon size={13}/> {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* API connection status */}
+              <div className="ui-ctx-footer">
+                {selectedConv.isReal
+                  ? <div className="ui-ctx-live"><span className="ui-dot green"/><span>Message temps réel via Channex</span></div>
+                  : <div className="ui-ctx-live demo"><span className="ui-dot orange"/><span>Simulation — connectez Channex pour données réelles</span></div>
+                }
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
     </div>
   );
 };
