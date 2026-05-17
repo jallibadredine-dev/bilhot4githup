@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 
-async function getStripeCredentials() {
+async function getCredentials() {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY
@@ -8,28 +8,31 @@ async function getStripeCredentials() {
       ? 'depl ' + process.env.WEB_REPL_RENEWAL
       : null;
 
-  if (!hostname || !xReplitToken) {
-    throw new Error('Missing Replit connector env vars. Ensure Stripe integration is connected.');
+  if (!xReplitToken) {
+    throw new Error('X-Replit-Token not found. Run inside Replit.');
   }
 
-  const resp = await fetch(
-    `https://${hostname}/api/v2/connection?include_secrets=true&connector_names=stripe`,
-    {
-      headers: { Accept: 'application/json', X_REPLIT_TOKEN: xReplitToken },
-      signal: AbortSignal.timeout(10_000),
-    }
-  );
+  const url = new URL(`https://${hostname}/api/v2/connection`);
+  url.searchParams.set('include_secrets', 'true');
+  url.searchParams.set('connector_names', 'stripe');
+  url.searchParams.set('environment', 'development');
 
-  if (!resp.ok) throw new Error(`Credentials fetch failed: ${resp.status}`);
+  const response = await fetch(url.toString(), {
+    headers: { 'Accept': 'application/json', 'X-Replit-Token': xReplitToken },
+    signal: AbortSignal.timeout(10_000),
+  });
 
-  const data = await resp.json();
+  const data = await response.json();
   const settings = data.items?.[0]?.settings;
-  if (!settings?.secret_key) throw new Error('Stripe secret_key not found.');
 
-  return { secretKey: settings.secret_key };
+  if (!settings?.secret) {
+    throw new Error('Stripe secret key not found. Connect Stripe in the Integrations tab.');
+  }
+
+  return { secretKey: settings.secret };
 }
 
 export async function getUncachableStripeClient() {
-  const { secretKey } = await getStripeCredentials();
-  return new Stripe(secretKey);
+  const { secretKey } = await getCredentials();
+  return new Stripe(secretKey, { apiVersion: '2025-08-27.basil' });
 }
