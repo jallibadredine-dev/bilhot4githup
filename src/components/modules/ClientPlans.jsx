@@ -1,377 +1,378 @@
-import React, { useState } from 'react';
-import { 
-  Check, X, Shield, Zap, Sparkles, Building, 
-  ChevronRight, Info, Bot, Key, ChartLine, 
-  Gem, Hotel, Headset, Calculator, CreditCard, Lock,
-  ArrowRight, MousePointer2, BadgeCheck, ToggleLeft, ToggleRight, 
-  ShieldCheck, Layout, Globe, MessageCircle, Crown, Ticket,
-  ChevronDown, HelpCircle, Star, Target, Server, Activity, 
-  Database, RefreshCw, Copy, ExternalLink, HardDrive, Smartphone
+import React, { useState, useEffect } from 'react';
+import {
+  Crown, Check, X, Zap, Shield, Globe, Lock,
+  Key, Copy, RefreshCw, CheckCircle2, AlertCircle,
+  ChevronRight, ExternalLink, Sparkles, Building2,
+  CreditCard, Wifi, Star, Ticket, BadgeCheck,
+  ChevronDown, ChevronUp, Clock, Infinity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './ClientPlans.css';
 
-// Ultra-Modern Architectural Building Component
-const ArchitecturalBuilding = ({ rooms }) => {
-  const floors = Math.max(1, Math.min(12, Math.ceil(rooms / 25)));
-  const widthFactor = Math.min(1.4, 0.7 + (rooms / 400));
-  
+/* ─── Constants ─────────────────────────────────────────── */
+const PLANS = [
+  {
+    id: 'starter',
+    tier: 'ESSENTIEL',
+    name: 'Starter',
+    price: 199,
+    period: '/mois',
+    color: '#3B82F6',
+    bg: '#EFF6FF',
+    features: [
+      { text: 'PMS Cloud (jusqu\'à 10 propriétés)',  ok: true },
+      { text: 'Calendrier des réservations',          ok: true },
+      { text: 'Facturation & Taxes',                  ok: true },
+      { text: 'Support par email',                    ok: true },
+      { text: 'Channel Manager',                      ok: false },
+      { text: 'Revenue AI',                           ok: false },
+      { text: 'Serrures connectées',                  ok: false },
+    ],
+  },
+  {
+    id: 'pro',
+    tier: 'PRO',
+    name: 'Intelligence',
+    price: 499,
+    period: '/mois',
+    color: '#FF385C',
+    bg: '#FFF1F3',
+    featured: true,
+    features: [
+      { text: 'PMS Cloud illimité',                   ok: true },
+      { text: 'Channel Manager (Channex)',             ok: true },
+      { text: 'Messagerie OTA unifiée',               ok: true },
+      { text: 'Revenue AI & Yield',                   ok: true },
+      { text: 'Automatisations avancées',              ok: true },
+      { text: 'Support prioritaire',                  ok: true },
+      { text: 'Serrures connectées',                  ok: false },
+    ],
+  },
+  {
+    id: 'lifetime',
+    tier: 'PACK À VIE',
+    name: 'Elite Lifetime',
+    price: 3490,
+    period: 'paiement unique',
+    color: '#D97706',
+    bg: '#FFFBEB',
+    lifetime: true,
+    features: [
+      { text: 'Tout le plan PRO, à vie',              ok: true },
+      { text: 'Code de vérification unique',           ok: true, badge: 'CODE' },
+      { text: 'Licence perpétuelle nominative',        ok: true, badge: 'LICENCE' },
+      { text: 'Channel Manager (configuration req.)',  ok: true, badge: 'NON INTÉGRÉ', warn: true },
+      { text: 'Serrures connectées incluses',          ok: true },
+      { text: 'Mises à jour à vie',                   ok: true },
+      { text: 'Support VIP 24/7',                     ok: true },
+    ],
+  },
+];
+
+/* ─── Sub-components ─────────────────────────────────────── */
+const FeatureRow = ({ feature }) => (
+  <li className="cp-feat">
+    {feature.ok
+      ? <Check size={13} className="cp-feat-ok" />
+      : <X     size={13} className="cp-feat-no" />}
+    <span className={feature.ok ? '' : 'muted'}>{feature.text}</span>
+    {feature.badge && (
+      <span className={`cp-feat-badge ${feature.warn ? 'warn' : feature.badge === 'LICENCE' ? 'gold' : 'blue'}`}>
+        {feature.badge}
+      </span>
+    )}
+  </li>
+);
+
+/* ─── Lifetime activation flow ────────────────────────────── */
+const ActivationModal = ({ onClose }) => {
+  const [step, setStep]       = useState('verify'); // verify | license | done
+  const [code, setCode]       = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [checking, setChecking]   = useState(false);
+  const [licenseKey]          = useState('HF-LIFE-' + Math.random().toString(36).slice(2,6).toUpperCase() + '-' + Math.random().toString(36).slice(2,6).toUpperCase());
+  const [copied, setCopied]   = useState(false);
+
+  const DEMO_CODES = ['HOVA2026', 'ELITE-ACCESS', 'LIFETIME'];
+
+  const handleVerify = () => {
+    if (!code.trim()) { setCodeError('Veuillez saisir votre code d\'activation.'); return; }
+    if (!DEMO_CODES.includes(code.trim().toUpperCase())) {
+      setCodeError('Code invalide. Vérifiez votre email de confirmation.');
+      return;
+    }
+    setCodeError('');
+    setChecking(true);
+    setTimeout(() => { setChecking(false); setStep('license'); }, 1400);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(licenseKey).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
   return (
-    <div className="arch-visualizer">
-      <motion.div 
-        className="arch-structure"
-        animate={{ height: floors * 20, width: 100 * widthFactor }}
-        transition={{ type: 'spring', stiffness: 80, damping: 20 }}
+    <div className="cp-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <motion.div className="cp-modal"
+        initial={{ opacity: 0, y: 28, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 28, scale: 0.97 }}
+        transition={{ duration: 0.22 }}
       >
-        <div className="arch-glass-facade"></div>
-        {[...Array(floors)].map((_, i) => (
-          <div key={i} className="arch-floor">
-            <div className="arch-window"></div>
-            <div className="arch-window"></div>
-            <div className="arch-window"></div>
-            <div className="arch-window"></div>
+        <button className="cp-modal-close" onClick={onClose}><X size={16}/></button>
+
+        {/* ── Step: verify ── */}
+        {step === 'verify' && (
+          <div className="cp-modal-body">
+            <div className="cp-modal-icon amber"><Ticket size={22}/></div>
+            <h2>Activer votre Pack à Vie</h2>
+            <p className="cp-modal-sub">Saisissez le code de vérification reçu après achat. <span className="cp-demo-hint">(Démo : HOVA2026)</span></p>
+
+            <div className={`cp-code-input-wrap ${codeError ? 'error' : ''}`}>
+              <Key size={15} className="cp-input-icon" />
+              <input
+                className="cp-code-input"
+                placeholder="ex. HOVA2026"
+                value={code}
+                onChange={e => { setCode(e.target.value.toUpperCase()); setCodeError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleVerify()}
+              />
+            </div>
+            {codeError && <div className="cp-error-msg"><AlertCircle size={12}/>{codeError}</div>}
+
+            <div className="cp-modal-actions">
+              <button className="cp-modal-btn primary" onClick={handleVerify} disabled={checking}>
+                {checking ? <><RefreshCw size={13} className="spin"/> Vérification…</> : 'Vérifier le code'}
+              </button>
+              <button className="cp-modal-btn ghost" onClick={onClose}>Annuler</button>
+            </div>
+
+            <div className="cp-modal-info">
+              <Shield size={12}/>
+              Code à usage unique · Lié à votre compte HosFlow
+            </div>
           </div>
-        ))}
-        <div className="arch-base"></div>
+        )}
+
+        {/* ── Step: license ── */}
+        {step === 'license' && (
+          <div className="cp-modal-body">
+            <div className="cp-modal-icon green"><BadgeCheck size={22}/></div>
+            <h2>Code vérifié — Votre Licence</h2>
+            <p className="cp-modal-sub">Votre licence perpétuelle est maintenant générée et liée à ce compte.</p>
+
+            <div className="cp-license-box">
+              <div className="cp-license-label"><Key size={11}/>CLEF DE LICENCE</div>
+              <div className="cp-license-key">{licenseKey}</div>
+              <button className="cp-copy-btn" onClick={handleCopy}>
+                {copied ? <><CheckCircle2 size={13}/> Copié</> : <><Copy size={13}/> Copier</>}
+              </button>
+            </div>
+
+            {/* Channel Manager — non intégré */}
+            <div className="cp-channel-warn">
+              <div className="cp-cw-head">
+                <Globe size={15} color="#D97706"/>
+                <span>Channel Manager</span>
+                <span className="cp-badge-warn">NON INTÉGRÉ</span>
+              </div>
+              <p>Inclus dans votre licence mais nécessite une configuration manuelle. Contactez le support pour activer la synchronisation OTA.</p>
+              <div className="cp-cw-steps">
+                <div className="cp-cw-step pending"><Clock size={11}/>Connexion Channex.io en attente</div>
+                <div className="cp-cw-step pending"><Clock size={11}/>Mapping des propriétés à configurer</div>
+                <div className="cp-cw-step pending"><Clock size={11}/>Synchronisation OTA à activer</div>
+              </div>
+              <button className="cp-contact-btn" onClick={() => setStep('done')}>
+                Contacter le support pour configurer <ChevronRight size={12}/>
+              </button>
+            </div>
+
+            <button className="cp-modal-btn primary full" onClick={() => setStep('done')}>
+              Accéder au dashboard <Sparkles size={14}/>
+            </button>
+          </div>
+        )}
+
+        {/* ── Step: done ── */}
+        {step === 'done' && (
+          <div className="cp-modal-body center">
+            <motion.div className="cp-success-icon"
+              initial={{ scale: 0.5 }} animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200 }}
+            >
+              <Crown size={32} color="white"/>
+            </motion.div>
+            <h2>Pack à Vie activé !</h2>
+            <p className="cp-modal-sub">Votre licence Elite est désormais active sur ce compte. Le Channel Manager sera configuré par notre équipe sous 24 h.</p>
+            <div className="cp-success-tags">
+              <span className="cp-stag"><Check size={10}/>Licence enregistrée</span>
+              <span className="cp-stag warn"><Clock size={10}/>Channel Manager en cours</span>
+            </div>
+            <button className="cp-modal-btn primary full" onClick={onClose}>Fermer</button>
+          </div>
+        )}
       </motion.div>
-      <div className="arch-ground-glow"></div>
     </div>
   );
 };
 
+/* ─── Main Component ──────────────────────────────────────── */
 const ClientPlans = ({ pmsMode }) => {
-  const [rooms, setRooms] = useState(30);
-  const [duration, setDuration] = useState({ months: 12, discount: 0.8, label: 'ANNUEL' });
-  const [addOns, setAddOns] = useState({
-    aiMessaging: false, smartLocks: false, channelPlus: false, staffMobility: false
-  });
-  
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [licenceModalOpen, setLicenceModalOpen] = useState(false);
+  const [activateOpen, setActivateOpen] = useState(false);
+  const [activePlan]    = useState('pro');
+  const [annual, setAnnual] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(null);
 
-  // Add-on Config
-  const addOnConfig = {
-    aiMessaging: { name: 'Assistant IA Concierge', price: 49, desc: 'IA Conversationnelle 24/7', icon: <Bot size={16}/> },
-    smartLocks: { name: 'Hub Serrures IOT', price: 29, desc: 'Gestion accès sans clé', icon: <Key size={16}/> },
-    channelPlus: { name: 'Channel Manager Pro+', price: 39, desc: 'Sync ultra-rapide < 1s', icon: <Globe size={16}/> },
-    staffMobility: { name: 'App Staff Illimitée', price: 19, desc: 'Accès mobile pour vos équipes', icon: <Smartphone size={16}/> }
-  };
-
-  const getPrices = () => {
-    let starter = rooms * 3.5;
-    let business = rooms * 5.5;
-    let ultimate = (rooms * 5.5) + 69;
-    let addOnsTotal = Object.keys(addOns).reduce((sum, key) => addOns[key] ? sum + addOnConfig[key].price : sum, 0);
-    
-    if (duration.months === 999) {
-      return {
-        starter: Math.round((starter + addOnsTotal) * 36),
-        business: Math.round((business + addOnsTotal) * 36),
-        ultimate: Math.round((ultimate + addOnsTotal) * 36),
-        lifetime: 1999 + (rooms * 12),
-        suffix: " à vie"
-      };
-    }
-
-    const suffix = duration.months === 1 ? " /mois" : " total";
-    
-    return {
-      starter: Math.round((starter + addOnsTotal) * duration.months * duration.discount),
-      business: Math.round((business + addOnsTotal) * duration.months * duration.discount),
-      ultimate: Math.round((ultimate + addOnsTotal) * duration.months * duration.discount),
-      lifetime: 1999 + (rooms * 12),
-      suffix
-    };
-  };
-
-  const prices = getPrices();
-
-  const handleOpenCheckout = (planName, price, isOneTime = false) => {
-    const activeAddOns = Object.keys(addOns).filter(k => addOns[k]).map(k => addOnConfig[k]);
-    setSelectedPlan({ 
-      name: planName, total: price, rooms, isOneTime,
-      duration: isOneTime ? 'LIFETIME' : duration.label,
-      addOns: isOneTime ? [] : activeAddOns,
-      basePrice: isOneTime ? price : (planName === 'Essentiel' ? rooms * 3.5 : planName === 'Business' ? rooms * 5.5 : (rooms * 5.5) + 69)
-    });
-    setCheckoutOpen(true);
-    setIsSuccess(false);
-    setIsProcessing(false);
-  };
-
-  const processPayment = () => {
-    setIsProcessing(true);
-    setTimeout(() => { setIsProcessing(false); setIsSuccess(true); }, 3500);
-  };
+  const FAQ = [
+    { q: 'Comment fonctionne le Pack à Vie ?', a: 'Vous payez une seule fois et accédez à toutes les fonctionnalités PRO à vie, y compris les mises à jour futures. Le Channel Manager est inclus mais nécessite une configuration initiale avec notre équipe.' },
+    { q: 'Qu\'est-ce que le code de vérification ?', a: 'Après achat du Pack à Vie, vous recevez un code unique par email. Ce code valide l\'authenticité de votre licence et déclenche la génération de votre clef de licence nominative.' },
+    { q: 'Pourquoi le Channel Manager est-il "non intégré" ?', a: 'Pour les licences à vie, le Channel Manager est inclus dans l\'abonnement mais requiert une configuration manuelle avec Channex.io. Notre équipe vous accompagne dans le processus sous 24 h.' },
+    { q: 'Puis-je transférer ma licence ?', a: 'La licence est nominative et liée à votre compte HosFlow. Un transfert est possible sur demande auprès du support, sous réserve de validation d\'identité.' },
+  ];
 
   return (
-    <motion.div className="luxe-portal" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <div className="luxe-mesh-bg"></div>
-      
-      <div className="luxe-content">
-        {/* Navigation */}
-        <nav className="luxe-nav">
-          <div className="luxe-brand">
-            <div className="luxe-logo-box">H</div>
-            <span>HosFlow Antigravity</span>
+    <motion.div className="cp-root" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+
+      {/* ── Header ── */}
+      <div className="cp-header">
+        <div className="cp-header-text">
+          <h1>Abonnement & Licences</h1>
+          <p>Gérez votre plan, activez votre licence ou passez au Pack à Vie.</p>
+        </div>
+        <div className="cp-header-actions">
+          <div className="cp-toggle-annual">
+            <span className={!annual ? 'active' : ''} onClick={() => setAnnual(false)}>Mensuel</span>
+            <span className={annual  ? 'active' : ''} onClick={() => setAnnual(true)}>Annuel <em>-20%</em></span>
           </div>
-          <div className="luxe-nav-links">
-            <button className="active">Pricing</button>
-            <button>Infrastructure</button>
-            <button>API</button>
-          </div>
-          <button className="luxe-btn-licence" onClick={() => setLicenceModalOpen(true)}>Activer Licence</button>
-        </nav>
-
-        <div className="luxe-main-grid">
-          {/* Config Sidebar */}
-          <aside className="luxe-sidebar">
-            <section className="luxe-config-group">
-              <header>
-                <Target size={14} className="text-blue-500" />
-                <h3>Dimensionnement</h3>
-              </header>
-              
-              <div className="luxe-arch-box">
-                <ArchitecturalBuilding rooms={rooms} />
-                <div className="luxe-rooms-counter">
-                  <span className="count">{rooms}</span>
-                  <span className="label">Unités d'Hébergement</span>
-                </div>
-              </div>
-
-              <input 
-                type="range" className="luxe-range" 
-                min="1" max="500" value={rooms} 
-                onChange={(e) => setRooms(parseInt(e.target.value))}
-              />
-              
-              <div className="luxe-select-wrapper">
-                <label className="text-xs font-bold text-slate-500 mb-2 block uppercase">Durée d'abonnement</label>
-                <select 
-                  className="luxe-duration-select"
-                  value={duration.months}
-                  onChange={(e) => {
-                    const m = parseInt(e.target.value);
-                    const discounts = {1:1, 3:0.95, 6:0.90, 12:0.80, 24:0.75, 36:0.70, 999:1};
-                    const labels = {1:'MENSUEL', 3:'TRIMESTRIEL', 6:'SEMESTRIEL', 12:'ANNUEL', 24:'2 ANS', 36:'3 ANS', 999:'À VIE'};
-                    setDuration({ months: m, discount: discounts[m], label: labels[m] });
-                  }}
-                >
-                  <option value={1}>1 Mois (Mensuel)</option>
-                  <option value={3}>3 Mois (-5%)</option>
-                  <option value={6}>6 Mois (-10%)</option>
-                  <option value={12}>1 An (-20%)</option>
-                  <option value={24}>2 Ans (-25%)</option>
-                  <option value={36}>3 Ans (-30%)</option>
-                  <option value={999}>À Vie (Paiement Unique)</option>
-                </select>
-              </div>
-            </section>
-
-            <section className="luxe-config-group">
-              <header>
-                <Sparkles size={14} className="text-amber-500" />
-                <h3>Add-ons Premium</h3>
-              </header>
-              <div className="luxe-addons">
-                {Object.keys(addOnConfig).map(key => (
-                  <div key={key} className={`l-addon ${addOns[key] ? 'active' : ''}`} onClick={() => setAddOns(p => ({ ...p, [key]: !p[key] }))}>
-                    <div className="l-addon-icon">{addOnConfig[key].icon}</div>
-                    <div className="l-addon-details">
-                      <h4>{addOnConfig[key].name}</h4>
-                      <p>{addOnConfig[key].desc}</p>
-                    </div>
-                    <div className="l-addon-check">{addOns[key] ? <BadgeCheck size={18}/> : <div className="dot"></div>}</div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </aside>
-
-          {/* Pricing Stack */}
-          <main className="luxe-cards-stack">
-            <header className="luxe-stack-header">
-              <h1>Liberté & Performance</h1>
-              <p>Une tarification haute précision adaptée à votre établissement.</p>
-            </header>
-
-            <div className="luxe-cards-grid">
-              {/* Card 1 */}
-              <motion.div className="luxe-card" whileHover={{ y: -8 }}>
-                <div className="l-card-type">ESSENTIEL</div>
-                <h3>Starter Pack</h3>
-                <div className="l-card-price">${prices.starter}<span>{prices.suffix}</span></div>
-                <ul className="l-card-features">
-                  <li><Check size={14}/> PMS Cloud Engine</li>
-                  <li><Check size={14}/> Facturation Illimitée</li>
-                  <li><Check size={14}/> Support Standard</li>
-                </ul>
-                <button className="l-card-btn" onClick={() => handleOpenCheckout('Essentiel', prices.starter)}>Choisir</button>
-              </motion.div>
-
-              {/* Card 2 - Featured */}
-              <motion.div className="luxe-card featured" whileHover={{ y: -12 }}>
-                <div className="l-card-badge">RECOMMENDED</div>
-                <div className="l-card-type">PRO</div>
-                <h3>Intelligence</h3>
-                <div className="l-card-price">${prices.business}<span>{prices.suffix}</span></div>
-                <ul className="l-card-features">
-                  <li><Zap size={14}/> Synchro OTA Temps Réel</li>
-                  <li><Zap size={14}/> Booking Engine Premium</li>
-                  <li><Zap size={14}/> Yield Management IA</li>
-                </ul>
-                <button className="l-card-btn gold" onClick={() => handleOpenCheckout('Business', prices.business)}>Activer Business</button>
-              </motion.div>
-
-              {/* Card 3 - One Time */}
-              <motion.div className="luxe-card dark" whileHover={{ y: -8 }}>
-                <div className="l-card-type grey">LIFETIME</div>
-                <h3>Elite License</h3>
-                <div className="l-card-price white">${prices.lifetime}<span>/activation</span></div>
-                <ul className="l-card-features">
-                  <li><Crown size={14} className="text-amber-500"/> Licence Perpétuelle</li>
-                  <li><Crown size={14} className="text-amber-500"/> Updates à vie</li>
-                  <li><Crown size={14} className="text-amber-500"/> Support VIP 24/7</li>
-                </ul>
-                <button className="l-card-btn white" onClick={() => handleOpenCheckout('Elite Lifetime', prices.lifetime, true)}>Acheter Code</button>
-              </motion.div>
-            </div>
-
-            <div className="luxe-security-banner">
-              <ShieldCheck size={18} />
-              <span>Infrastructure certifiée ISO-27001 • Paiements sécurisés par Stripe SSL v3</span>
-            </div>
-          </main>
+          <button className="cp-activate-btn" onClick={() => setActivateOpen(true)}>
+            <Ticket size={14}/> Activer une licence
+          </button>
         </div>
       </div>
 
-      {/* Premium Stripe Checkout Pop-up */}
-      <AnimatePresence>
-        {checkoutOpen && (
-          <div className="luxe-modal-overlay">
-            <motion.div 
-              className="stripe-luxe-modal"
-              initial={{ scale: 0.94, opacity: 0, y: 40 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.94, opacity: 0, y: 40 }}
-            >
-              <button className="luxe-modal-close" onClick={() => setCheckoutOpen(false)}><X size={20}/></button>
-              
-              <div className="stripe-luxe-split">
-                {/* Left Panel: Summary */}
-                <div className="stripe-luxe-summary">
-                  <div className="stripe-luxe-brand">
-                    <div className="dot"></div>
-                    <span>Antigravity Checkout</span>
-                  </div>
+      {/* ── Current plan banner ── */}
+      <div className="cp-current-banner">
+        <div className="cp-cb-left">
+          <Zap size={15} color="#FF385C"/>
+          <span>Plan actif :</span>
+          <strong>PRO Intelligence</strong>
+          <span className="cp-cb-since">depuis le 1 janv. 2026</span>
+        </div>
+        <div className="cp-cb-right">
+          <span className="cp-cb-renew"><Clock size={12}/> Prochain prélèvement : 1 Juin 2026 · <strong>499 MAD</strong></span>
+          <button className="cp-cb-btn">Gérer <ChevronRight size={11}/></button>
+        </div>
+      </div>
 
-                  {isSuccess ? (
-                    <div className="luxe-success-view">
-                      <motion.div 
-                        className="luxe-check-circle"
-                        initial={{ scale: 0.5, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                      >
-                        <Check size={48} className="text-white" />
-                      </motion.div>
-                      <h2>Paiement Réussi</h2>
-                      <p>Votre plan <b>{selectedPlan.name}</b> est maintenant actif.</p>
-                      <button className="luxe-btn-done" onClick={() => setCheckoutOpen(false)}>Accéder au Dashboard</button>
-                    </div>
-                  ) : (
-                    <div className="luxe-order-details">
-                      <div className="luxe-plan-info">
-                        <span className="luxe-label">ABONNEMENT</span>
-                        <h3>{selectedPlan.name}</h3>
-                        <div className="luxe-main-total">${selectedPlan.total}</div>
-                        <p>Facturation {selectedPlan.isOneTime ? 'unique' : duration.label.toLowerCase()}</p>
-                      </div>
+      {/* ── Plans grid ── */}
+      <div className="cp-plans-grid">
+        {PLANS.map(plan => (
+          <motion.div
+            key={plan.id}
+            className={`cp-card ${plan.featured ? 'featured' : ''} ${plan.lifetime ? 'lifetime' : ''} ${activePlan === plan.id ? 'current' : ''}`}
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+          >
+            {plan.featured && <div className="cp-recommended">Recommandé</div>}
+            {plan.lifetime && <div className="cp-lifetime-badge"><Infinity size={11}/> À VIE</div>}
+            {activePlan === plan.id && <div className="cp-active-mark"><Check size={10}/>Plan actuel</div>}
 
-                      <div className="luxe-breakdown">
-                        <div className="l-item">Base ({selectedPlan.rooms} unités) <span>${selectedPlan.basePrice}</span></div>
-                        {selectedPlan.addOns.map((a, i) => (
-                          <div key={i} className="l-item">Add-on: {a.name} <span>+${a.price}</span></div>
-                        ))}
-                      </div>
-
-                      <div className="luxe-footer-info">
-                        <p>Besoin d'aide ? <button className="link">Contactez-nous</button></p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Panel: Payment Form */}
-                {!isSuccess && (
-                  <div className="stripe-luxe-form">
-                    <div className="stripe-header">
-                      <h3>Informations de Paiement</h3>
-                      <div className="stripe-secure"><Lock size={12}/> Secure</div>
-                    </div>
-
-                    <div className="luxe-form-stack">
-                      <div className="l-input-group">
-                        <label>Numéro de Carte</label>
-                        <div className="l-input-wrap">
-                          <CreditCard size={18} className="text-slate-400" />
-                          <input type="text" placeholder="4242 4242 4242 4242" defaultValue="4242 4242 4242 4242" />
-                        </div>
-                      </div>
-                      
-                      <div className="l-input-row">
-                        <div className="l-input-group">
-                          <label>Date d'expiration</label>
-                          <input type="text" placeholder="MM / YY" defaultValue="12 / 28" />
-                        </div>
-                        <div className="l-input-group">
-                          <label>CVC</label>
-                          <input type="text" placeholder="123" defaultValue="123" />
-                        </div>
-                      </div>
-
-                      <div className="l-input-group">
-                        <label>Nom Complet</label>
-                        <input type="text" placeholder="Jean Dupont" />
-                      </div>
-                    </div>
-
-                    <button 
-                      className={`luxe-pay-btn ${isProcessing ? 'processing' : ''}`}
-                      disabled={isProcessing}
-                      onClick={processPayment}
-                    >
-                      {isProcessing ? <div className="luxe-spinner"></div> : `Payer $${selectedPlan.total}`}
-                    </button>
-                    
-                    <div className="luxe-pay-footer">
-                      <p>Paiement traité par <b>Stripe</b>. Vos données bancaires ne sont jamais stockées sur nos serveurs.</p>
-                    </div>
-                  </div>
-                )}
+            <div className="cp-card-top" style={{ '--plan-color': plan.color }}>
+              <div className="cp-plan-tier" style={{ color: plan.color }}>{plan.tier}</div>
+              <div className="cp-plan-name">{plan.name}</div>
+              <div className="cp-plan-price">
+                <span className="amount">
+                  {annual && !plan.lifetime
+                    ? Math.round(plan.price * 0.8)
+                    : plan.price}
+                  <span className="currency">MAD</span>
+                </span>
+                <span className="period">{plan.period}</span>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              {annual && !plan.lifetime && (
+                <div className="cp-annual-save">Économie : {Math.round(plan.price * 0.2 * 12)} MAD/an</div>
+              )}
+            </div>
 
-      {/* Minimal Licence Modal */}
-      <AnimatePresence>
-        {licenceModalOpen && (
-          <div className="luxe-modal-overlay">
-            <motion.div className="licence-luxe-card" initial={{ scale: 0.9 }} animate={{ scale: 1 }}>
-              <button className="luxe-close" onClick={() => setLicenceModalOpen(false)}><X size={16}/></button>
-              <Ticket size={32} className="text-blue-500 mb-4" />
-              <h2>Code d'Activation</h2>
-              <p>Entrez votre clé de licence perpétuelle.</p>
-              <input type="text" placeholder="GH-XXXX-XXXX" />
-              <button className="l-primary-btn">Vérifier & Activer</button>
-            </motion.div>
+            <ul className="cp-feats-list">
+              {plan.features.map((f, i) => <FeatureRow key={i} feature={f} />)}
+            </ul>
+
+            <div className="cp-card-action">
+              {plan.lifetime ? (
+                <button className="cp-btn lifetime-btn" onClick={() => setActivateOpen(true)}>
+                  <Key size={14}/> Activer le Pack à Vie
+                </button>
+              ) : activePlan === plan.id ? (
+                <button className="cp-btn current-btn" disabled>
+                  <Check size={14}/> Plan actuel
+                </button>
+              ) : (
+                <button className="cp-btn" style={{ '--plan-color': plan.color }}>
+                  Choisir ce plan <ChevronRight size={13}/>
+                </button>
+              )}
+            </div>
+
+            {plan.lifetime && (
+              <div className="cp-lifetime-note">
+                <Shield size={11} color="#D97706"/>
+                Paiement unique · Mises à jour à vie · Support VIP
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ── Channel Manager "non intégré" status ── */}
+      <div className="cp-cm-status">
+        <div className="cp-cm-icon"><Globe size={18} color="#D97706"/></div>
+        <div className="cp-cm-info">
+          <div className="cp-cm-title">
+            Channel Manager
+            <span className="cp-badge-warn">NON INTÉGRÉ</span>
           </div>
-        )}
+          <p>Le Channel Manager est inclus dans votre licence mais n'est pas encore synchronisé. Complétez la configuration pour activer la synchronisation OTA en temps réel.</p>
+        </div>
+        <div className="cp-cm-steps-inline">
+          <div className="cp-step pending"><span>1</span>Créer un compte Channex.io</div>
+          <div className="cp-step pending"><span>2</span>Saisir la clé API dans Intégrations</div>
+          <div className="cp-step pending"><span>3</span>Mapper vos propriétés OTA</div>
+        </div>
+        <button className="cp-cm-action" onClick={() => setActivateOpen(true)}>
+          Configurer <ExternalLink size={12}/>
+        </button>
+      </div>
+
+      {/* ── FAQ ── */}
+      <div className="cp-faq">
+        <div className="cp-faq-title">Questions fréquentes</div>
+        {FAQ.map((item, i) => (
+          <div key={i} className={`cp-faq-item ${faqOpen === i ? 'open' : ''}`}>
+            <button className="cp-faq-q" onClick={() => setFaqOpen(faqOpen === i ? null : i)}>
+              {item.q}
+              {faqOpen === i ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+            </button>
+            <AnimatePresence>
+              {faqOpen === i && (
+                <motion.div className="cp-faq-a"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <p>{item.a}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Modal ── */}
+      <AnimatePresence>
+        {activateOpen && <ActivationModal onClose={() => setActivateOpen(false)} />}
       </AnimatePresence>
     </motion.div>
   );

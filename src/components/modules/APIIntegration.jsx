@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Terminal, Globe, Shield, Zap, Copy, Check, 
   Settings, Key, Database, Server, ExternalLink, 
-  Code, Activity, Share2, ArrowRight, Lock
+  Code, Activity, Share2, ArrowRight, Lock, Play
 } from 'lucide-react';
 
 const APIIntegrationPage = () => {
