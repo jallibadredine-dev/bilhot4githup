@@ -24,7 +24,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import './ServicesHub.css';
 
-const ServicesHub = ({ addFolioCharge }) => {
+const ServicesHub = ({ addFolioCharge, roomFolios = {} }) => {
   const [activeTab, setActiveTab] = useState('fnb');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
@@ -152,9 +152,10 @@ const ServicesHub = ({ addFolioCharge }) => {
             const updatedOrder = { ...o, status: nextStatus };
             if (selectedOrder.id === o.id) setSelectedOrder(updatedOrder); // Keep detail pane updated
             
-            // Integration with App global folio
+            // Integration with App global folio — push with department type
             if (nextStatus === 'completed' && chargeToRoom && addFolioCharge) {
-              addFolioCharge(o.room, o.amount, o.items);
+              const typeMap = { fnb: 'F&B', spa: 'Spa', concierge: 'Conciergerie' };
+              addFolioCharge(o.room, o.amount, o.items, typeMap[activeTab] || 'Service');
             }
             
             return updatedOrder;

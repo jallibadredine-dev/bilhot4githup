@@ -1,535 +1,377 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Building2, Layers, DoorOpen, Plus, Trash2, ChevronDown, ChevronRight,
-  Search, Filter, Lock, BatteryMedium, Wifi, WifiOff, AlertTriangle,
-  Settings, MoreVertical, Check, X, Zap, Edit3, Copy, Key,
-  CheckCircle, XCircle, Wrench, Eye, BatteryFull, BatteryLow,
-  Signal, SignalZero, Package, Grid3x3
+  Building2, Layers, Plus, ChevronDown, ChevronRight, Search,
+  Lock, Unlock, Wifi, WifiOff, Key, CheckCircle, XCircle,
+  Wrench, BatteryFull, BatteryMedium, BatteryLow, Package,
+  X, Smartphone, MessageSquare, Mail, UserCheck, LogOut,
+  RefreshCw, Shield, Zap, CreditCard, MoreHorizontal, Grid3x3,
+  DoorOpen, AlertTriangle, Settings, Activity, Star, ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SmartInventory.css';
 
-/* ─── Data Seed ─── */
-const LOCK_PROVIDERS = [
-  { id: 'ttlock', name: 'TTLock', color: '#3B82F6', logo: '🔐' },
-  { id: 'tthotel', name: 'TTHotel', color: '#8B5CF6', logo: '🏨' },
-  { id: 'tuya', name: 'Tuya Smart', color: '#10B981', logo: '🌿' },
-];
-
-const ROOM_TYPES = [
-  { id: 'standard', label: 'Standard', icon: '🛏️' },
-  { id: 'superior', label: 'Supérieure', icon: '⭐' },
-  { id: 'deluxe', label: 'Deluxe', icon: '💎' },
-  { id: 'suite', label: 'Suite', icon: '👑' },
-  { id: 'family', label: 'Familiale', icon: '👨‍👩‍👧' },
-  { id: 'accessible', label: 'Accessible PMR', icon: '♿' },
-];
-
-const STATUS_MAP = {
-  available: { label: 'Disponible', color: '#10B981', bg: '#ECFDF5', icon: <CheckCircle size={14} /> },
-  occupied: { label: 'Occupée', color: '#3B82F6', bg: '#EFF6FF', icon: <DoorOpen size={14} /> },
-  maintenance: { label: 'Maintenance', color: '#F59E0B', bg: '#FFFBEB', icon: <Wrench size={14} /> },
-  blocked: { label: 'Hors service', color: '#EF4444', bg: '#FEF2F2', icon: <XCircle size={14} /> },
+/* ─── CONSTANTS ─────────────────────────────────────────────── */
+const LOCK_PROVIDERS = {
+  ttlock:  { id: 'ttlock',  name: 'TTLock',     color: '#3B82F6', bg: '#EFF6FF', logo: '🔐', brand: 'TT Technology' },
+  tthotel: { id: 'tthotel', name: 'TTHotel',    color: '#8B5CF6', bg: '#F5F3FF', logo: '🏨', brand: 'TT Hotel Group' },
+  tuya:    { id: 'tuya',    name: 'Tuya Smart', color: '#10B981', bg: '#F0FDF4', logo: '🌿', brand: 'Tuya Inc.' },
 };
 
-const generateId = () => Math.random().toString(36).substr(2, 9);
+const LOCK_POOL = {
+  ttlock: [
+    { devId: 'TT-001', name: 'TTLock G2 Pro #001', serial: 'G2P-0001', battery: 85, online: true,  fw: '2.4.1' },
+    { devId: 'TT-002', name: 'TTLock G2 Pro #002', serial: 'G2P-0002', battery: 72, online: true,  fw: '2.4.1' },
+    { devId: 'TT-003', name: 'TTLock G3 #003',     serial: 'G3-0003',  battery: 91, online: false, fw: '3.1.0' },
+    { devId: 'TT-004', name: 'TTLock G2 Pro #004', serial: 'G2P-0004', battery: 67, online: true,  fw: '2.4.1' },
+    { devId: 'TT-005', name: 'TTLock Slim #005',   serial: 'SL-0005',  battery: 44, online: true,  fw: '2.3.8' },
+  ],
+  tthotel: [
+    { devId: 'TTH-001', name: 'TTHotel Pro #001',  serial: 'THP-0001', battery: 78, online: true,  fw: '1.8.3' },
+    { devId: 'TTH-002', name: 'TTHotel Pro #002',  serial: 'THP-0002', battery: 55, online: true,  fw: '1.8.3' },
+    { devId: 'TTH-003', name: 'TTHotel Lite #003', serial: 'THL-0003', battery: 88, online: false, fw: '1.5.2' },
+    { devId: 'TTH-004', name: 'TTHotel Pro #004',  serial: 'THP-0004', battery: 31, online: true,  fw: '1.8.3' },
+  ],
+  tuya: [
+    { devId: 'TY-001', name: 'Tuya Smart Lock #001', serial: 'TY-0001', battery: 15, online: false, fw: '2.0.1' },
+    { devId: 'TY-002', name: 'Tuya Smart Lock #002', serial: 'TY-0002', battery: 92, online: true,  fw: '2.1.0' },
+    { devId: 'TY-003', name: 'Tuya NFC Lock #003',   serial: 'TY-0003', battery: 63, online: true,  fw: '2.1.0' },
+  ],
+};
 
-/* ─── Initial Demo Data ─── */
+const ROOM_TYPES = {
+  standard:   { label: 'Standard',       icon: '🛏️',  short: 'STD' },
+  superior:   { label: 'Supérieure',     icon: '⭐',   short: 'SUP' },
+  deluxe:     { label: 'Deluxe',         icon: '💎',   short: 'DLX' },
+  suite:      { label: 'Suite',          icon: '👑',   short: 'STE' },
+  family:     { label: 'Familiale',      icon: '👨‍👩‍👧',  short: 'FAM' },
+  accessible: { label: 'PMR Accessible', icon: '♿',   short: 'PMR' },
+};
+
+const STATUS_CFG = {
+  available:   { label: 'Disponible',  color: '#15803D', bg: '#DCFCE7', border: '#86EFAC' },
+  occupied:    { label: 'Occupée',     color: '#1D4ED8', bg: '#DBEAFE', border: '#93C5FD' },
+  maintenance: { label: 'Maintenance', color: '#B45309', bg: '#FEF3C7', border: '#FCD34D' },
+  blocked:     { label: 'Hors service',color: '#B91C1C', bg: '#FEE2E2', border: '#FCA5A5' },
+};
+
+const GUEST_MAP = {
+  '102': { name: 'Robert Chen',    checkIn: '2026-05-17', checkOut: '2026-05-20', nights: 3, source: 'Booking.com', phone: '+33 6 11 22 33', email: 'r.chen@mail.com' },
+  '202': { name: 'Marie Laurent',  checkIn: '2026-05-13', checkOut: '2026-05-20', nights: 7, source: 'Direct',      phone: '+33 6 22 33 44', email: 'm.laurent@mail.com' },
+  '304': { name: 'Jean Dupont',    checkIn: '2026-05-15', checkOut: '2026-05-19', nights: 4, source: 'Airbnb',      phone: '+33 6 33 44 55', email: 'j.dupont@mail.com' },
+};
+
+const genId = () => Math.random().toString(36).substr(2, 9);
+const genPin = () => `${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10 + Math.random() * 90)}`;
+
 const createInitialData = () => [{
-  id: generateId(),
-  name: 'Bâtiment Principal',
+  id: genId(), name: 'Bâtiment Principal',
   floors: [
-    {
-      id: generateId(),
-      number: 1,
-      label: 'Rez-de-chaussée',
-      rooms: [
-        { id: generateId(), number: '101', type: 'standard', status: 'available', lock: { provider: 'ttlock', battery: 92, connected: true, lastSync: '2 min' } },
-        { id: generateId(), number: '102', type: 'superior', status: 'occupied', lock: { provider: 'tthotel', battery: 78, connected: true, lastSync: '5 min' } },
-        { id: generateId(), number: '103', type: 'deluxe', status: 'available', lock: null },
-        { id: generateId(), number: '104', type: 'standard', status: 'maintenance', lock: { provider: 'tuya', battery: 15, connected: false, lastSync: '3h' } },
-      ]
-    },
-    {
-      id: generateId(),
-      number: 2,
-      label: 'Premier étage',
-      rooms: [
-        { id: generateId(), number: '201', type: 'suite', status: 'available', lock: { provider: 'ttlock', battery: 100, connected: true, lastSync: '1 min' } },
-        { id: generateId(), number: '202', type: 'deluxe', status: 'occupied', lock: { provider: 'tthotel', battery: 65, connected: true, lastSync: '10 min' } },
-        { id: generateId(), number: '203', type: 'family', status: 'available', lock: { provider: 'ttlock', battery: 88, connected: true, lastSync: '4 min' } },
-      ]
-    }
+    { id: genId(), number: 1, label: 'Rez-de-chaussée', rooms: [
+      { id: genId(), number: '101', type: 'suite',     status: 'available',   lock: { provider: 'ttlock',  devId: 'TT-001', battery: 92, online: true,  locked: true,  pin: null,       lastSync: '2 min' } },
+      { id: genId(), number: '102', type: 'superior',  status: 'occupied',    lock: { provider: 'tthotel', devId: 'TTH-001', battery: 78, online: true,  locked: false, pin: '4829-11',  lastSync: '5 min' } },
+      { id: genId(), number: '103', type: 'deluxe',    status: 'available',   lock: null },
+      { id: genId(), number: '104', type: 'standard',  status: 'maintenance', lock: { provider: 'tuya',    devId: 'TY-001', battery: 15, online: false, locked: true,  pin: null,       lastSync: '3 h' } },
+    ]},
+    { id: genId(), number: 2, label: 'Premier étage', rooms: [
+      { id: genId(), number: '201', type: 'suite',     status: 'available',   lock: { provider: 'ttlock',  devId: 'TT-002', battery: 100, online: true, locked: true,  pin: null,       lastSync: '1 min' } },
+      { id: genId(), number: '202', type: 'deluxe',    status: 'occupied',    lock: { provider: 'tthotel', devId: 'TTH-002', battery: 65, online: true, locked: false, pin: '7341-28',  lastSync: '10 min' } },
+      { id: genId(), number: '203', type: 'family',    status: 'available',   lock: { provider: 'ttlock',  devId: 'TT-003', battery: 88, online: false, locked: true,  pin: null,       lastSync: '4 min' } },
+    ]},
+    { id: genId(), number: 3, label: 'Deuxième étage', rooms: [
+      { id: genId(), number: '304', type: 'suite',     status: 'occupied',    lock: { provider: 'tthotel', devId: 'TTH-003', battery: 88, online: true,  locked: false, pin: '9182-77',  lastSync: '7 min' } },
+      { id: genId(), number: '305', type: 'superior',  status: 'available',   lock: { provider: 'ttlock',  devId: 'TT-004', battery: 67, online: true,  locked: true,  pin: null,       lastSync: '3 min' } },
+      { id: genId(), number: '306', type: 'accessible',status: 'available',   lock: null },
+    ]},
   ]
 }];
 
-const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
-  const [buildings, setBuildings] = useState(createInitialData);
-  const [expandedFloors, setExpandedFloors] = useState({});
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const [showAddBuilding, setShowAddBuilding] = useState(false);
-  const [showBulkCreate, setShowBulkCreate] = useState(null); // floorId
-  const [showLockModal, setShowLockModal] = useState(null); // room
-  const [showCheckoutModal, setShowCheckoutModal] = useState(null); // room details for checkout
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+/* ─── BATTERY ICON ──────────────────────────────────────────── */
+const BattIcon = ({ level, size = 14 }) => {
+  if (level > 60) return <BatteryFull size={size} color="#16A34A"/>;
+  if (level > 25) return <BatteryMedium size={size} color="#D97706"/>;
+  return <BatteryLow size={size} color="#DC2626"/>;
+};
 
-  /* ─── Stats ─── */
+/* ════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════════════════════════════ */
+const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
+  const [buildings,      setBuildings]      = useState(createInitialData);
+  const [expandedFloors, setExpandedFloors] = useState({});
+  const [selectedRoom,   setSelectedRoom]   = useState(null);
+  const [panelTab,       setPanelTab]       = useState('room');
+  const [lockModal,      setLockModal]      = useState(null);  // { room, buildingId, floorId }
+  const [lockProvider,   setLockProvider]   = useState('ttlock');
+  const [checkoutModal,  setCheckoutModal]  = useState(null);
+  const [addBuildingOpen,setAddBuildingOpen]= useState(false);
+  const [newBldName,     setNewBldName]     = useState('');
+  const [newBldFloors,   setNewBldFloors]   = useState(3);
+  const [searchQ,        setSearchQ]        = useState('');
+  const [filterStatus,   setFilterStatus]   = useState('all');
+  const [generating,     setGenerating]     = useState(false);
+
+  /* ── Stats ── */
   const stats = useMemo(() => {
-    let totalRooms = 0, available = 0, occupied = 0, maintenance = 0, connected = 0;
+    let total = 0, available = 0, occupied = 0, maintenance = 0, connected = 0, noLock = 0;
     buildings.forEach(b => b.floors.forEach(f => f.rooms.forEach(r => {
-      totalRooms++;
-      if (r.status === 'available') available++;
-      if (r.status === 'occupied') occupied++;
+      total++;
+      if (r.status === 'available')   available++;
+      if (r.status === 'occupied')    occupied++;
       if (r.status === 'maintenance') maintenance++;
-      if (r.lock?.connected) connected++;
+      if (r.lock?.online) connected++;
+      if (!r.lock)        noLock++;
     })));
-    return { totalRooms, available, occupied, maintenance, connected };
+    return { total, available, occupied, maintenance, connected, noLock };
   }, [buildings]);
 
-  /* ─── Toggle Floor ─── */
-  const toggleFloor = (floorId) => {
-    setExpandedFloors(prev => ({ ...prev, [floorId]: !prev[floorId] }));
+  /* ── Flatten all rooms for quick lookup ── */
+  const allRooms = useMemo(() => {
+    const list = [];
+    buildings.forEach(b => b.floors.forEach(f => f.rooms.forEach(r => {
+      list.push({ ...r, buildingId: b.id, buildingName: b.name, floorId: f.id, floorLabel: f.label });
+    })));
+    return list;
+  }, [buildings]);
+
+  /* ── Used device IDs ── */
+  const usedDevIds = useMemo(() => new Set(allRooms.map(r => r.lock?.devId).filter(Boolean)), [allRooms]);
+
+  /* ── Mutate helpers ── */
+  const updateRoom = (buildingId, floorId, roomId, patch) => {
+    setBuildings(prev => prev.map(b => b.id !== buildingId ? b : {
+      ...b, floors: b.floors.map(f => f.id !== floorId ? f : {
+        ...f, rooms: f.rooms.map(r => r.id !== roomId ? r : { ...r, ...patch })
+      })
+    }));
   };
 
-  /* ─── Add Building ─── */
-  const [newBuildingName, setNewBuildingName] = useState('');
-  const [newBuildingFloors, setNewBuildingFloors] = useState(3);
-
-  const handleAddBuilding = () => {
-    if (!newBuildingName.trim()) return;
-    const floors = [];
-    for (let i = 1; i <= newBuildingFloors; i++) {
-      floors.push({
-        id: generateId(),
-        number: i,
-        label: i === 1 ? 'Rez-de-chaussée' : `Étage ${i - 1}`,
-        rooms: [],
-      });
-    }
-    setBuildings(prev => [...prev, { id: generateId(), name: newBuildingName, floors }]);
-    setNewBuildingName('');
-    setNewBuildingFloors(3);
-    setShowAddBuilding(false);
-  };
-
-  /* ─── Bulk Create Rooms ─── */
-  const [bulkFrom, setBulkFrom] = useState(1);
-  const [bulkTo, setBulkTo] = useState(5);
-  const [bulkType, setBulkType] = useState('standard');
-
-  const handleBulkCreate = (buildingId, floorId) => {
-    const building = buildings.find(b => b.id === buildingId);
-    const floor = building?.floors.find(f => f.id === floorId);
-    if (!floor) return;
-
-    const prefix = floor.number * 100;
-    const newRooms = [];
-    for (let i = bulkFrom; i <= bulkTo; i++) {
-      const roomNumber = String(prefix + i);
-      // Skip if room number already exists
-      if (floor.rooms.some(r => r.number === roomNumber)) continue;
-      newRooms.push({
-        id: generateId(),
-        number: roomNumber,
-        type: bulkType,
-        status: 'available',
-        lock: null,
-      });
-    }
-
-    setBuildings(prev => prev.map(b =>
-      b.id === buildingId
-        ? {
-            ...b,
-            floors: b.floors.map(f =>
-              f.id === floorId ? { ...f, rooms: [...f.rooms, ...newRooms] } : f
-            ),
-          }
-        : b
-    ));
-    setShowBulkCreate(null);
-    setBulkFrom(1);
-    setBulkTo(5);
-    setBulkType('standard');
-  };
-
-  /* ─── Assign Lock ─── */
-  const handleAssignLock = (buildingId, floorId, roomId, providerId) => {
-    setBuildings(prev => prev.map(b =>
-      b.id === buildingId
-        ? {
-            ...b,
-            floors: b.floors.map(f =>
-              f.id === floorId
-                ? {
-                    ...f,
-                    rooms: f.rooms.map(r =>
-                      r.id === roomId
-                        ? {
-                            ...r,
-                            lock: {
-                              provider: providerId,
-                              battery: 100,
-                              connected: true,
-                              lastSync: 'à l\'instant',
-                            },
-                          }
-                        : r
-                    ),
-                  }
-                : f
-            ),
-          }
-        : b
-    ));
-    setShowLockModal(null);
-  };
-
-  /* ─── Change Room Status ─── */
-  const handleStatusChange = (buildingId, floorId, roomId, newStatus) => {
-    setBuildings(prev => prev.map(b =>
-      b.id === buildingId
-        ? {
-            ...b,
-            floors: b.floors.map(f =>
-              f.id === floorId
-                ? {
-                    ...f,
-                    rooms: f.rooms.map(r =>
-                      r.id === roomId ? { ...r, status: newStatus } : r
-                    ),
-                  }
-                : f
-            ),
-          }
-        : b
-    ));
-  };
-
-  /* ─── Checkout Room ─── */
-  const handleCheckout = (buildingId, floorId, roomId, roomNumber) => {
-    // 1. CLEAR FOLIO
-    if (clearFolioCharge) {
-      clearFolioCharge(roomNumber);
-    }
-    // 2. SET TO MAINTENANCE
-    handleStatusChange(buildingId, floorId, roomId, 'maintenance');
-    setShowCheckoutModal(null);
-  };
-
-  /* ─── Delete Room ─── */
-  const handleDeleteRoom = (buildingId, floorId, roomId) => {
-    setBuildings(prev => prev.map(b =>
-      b.id === buildingId
-        ? {
-            ...b,
-            floors: b.floors.map(f =>
-              f.id === floorId
-                ? { ...f, rooms: f.rooms.filter(r => r.id !== roomId) }
-                : f
-            ),
-          }
-        : b
-    ));
-  };
-
-  /* ─── Battery Icon ─── */
-  const BatteryIcon = ({ level }) => {
-    if (level > 60) return <BatteryFull size={14} className="si-battery-good" />;
-    if (level > 25) return <BatteryMedium size={14} className="si-battery-medium" />;
-    return <BatteryLow size={14} className="si-battery-low" />;
-  };
-
-  /* ─── Filter rooms ─── */
-  const filterRooms = (rooms) => {
-    return rooms.filter(r => {
-      const matchSearch = !searchQuery || r.number.includes(searchQuery);
-      const matchStatus = filterStatus === 'all' || r.status === filterStatus;
-      return matchSearch && matchStatus;
+  /* ── Assign lock ── */
+  const handleAssignLock = (device) => {
+    if (!lockModal) return;
+    const { room, buildingId, floorId } = lockModal;
+    updateRoom(buildingId, floorId, room.id, {
+      lock: { provider: lockProvider, devId: device.devId, battery: device.battery, online: device.online, locked: true, pin: null, lastSync: 'à l\'instant' },
+      status: room.status === 'available' ? 'available' : room.status,
     });
+    if (selectedRoom?.id === room.id) {
+      setSelectedRoom(r => ({ ...r, lock: { provider: lockProvider, devId: device.devId, battery: device.battery, online: device.online, locked: true, pin: null, lastSync: 'à l\'instant' } }));
+    }
+    setLockModal(null);
   };
+
+  /* ── Unlink lock ── */
+  const handleUnlinkLock = (buildingId, floorId, roomId) => {
+    updateRoom(buildingId, floorId, roomId, { lock: null });
+    if (selectedRoom?.id === roomId) setSelectedRoom(r => ({ ...r, lock: null }));
+  };
+
+  /* ── Change status ── */
+  const handleStatus = (buildingId, floorId, roomId, status) => {
+    updateRoom(buildingId, floorId, roomId, { status });
+    if (selectedRoom?.id === roomId) setSelectedRoom(r => ({ ...r, status }));
+  };
+
+  /* ── Toggle locked ── */
+  const handleToggleLock = (buildingId, floorId, roomId, locked) => {
+    updateRoom(buildingId, floorId, roomId, { lock: { ...allRooms.find(r => r.id === roomId)?.lock, locked } });
+    if (selectedRoom?.id === roomId) setSelectedRoom(r => ({ ...r, lock: { ...r.lock, locked } }));
+  };
+
+  /* ── Generate PIN ── */
+  const handleGeneratePin = (buildingId, floorId, roomId) => {
+    setGenerating(true);
+    setTimeout(() => {
+      const newPin = genPin();
+      const room = allRooms.find(r => r.id === roomId);
+      updateRoom(buildingId, floorId, roomId, { lock: { ...room.lock, pin: newPin } });
+      if (selectedRoom?.id === roomId) setSelectedRoom(r => ({ ...r, lock: { ...r.lock, pin: newPin } }));
+      setGenerating(false);
+    }, 900);
+  };
+
+  /* ── Checkout ── */
+  const handleCheckout = () => {
+    if (!checkoutModal) return;
+    const { room, buildingId, floorId } = checkoutModal;
+    if (clearFolioCharge) clearFolioCharge(room.number);
+    updateRoom(buildingId, floorId, room.id, { status: 'maintenance', lock: room.lock ? { ...room.lock, locked: true, pin: null } : null });
+    if (selectedRoom?.id === room.id) setSelectedRoom(r => ({ ...r, status: 'maintenance' }));
+    setCheckoutModal(null);
+  };
+
+  /* ── Filter ── */
+  const filterRooms = (rooms) => rooms.filter(r => {
+    const matchSearch = !searchQ || r.number.toLowerCase().includes(searchQ.toLowerCase()) || GUEST_MAP[r.number]?.name.toLowerCase().includes(searchQ.toLowerCase());
+    const matchStatus = filterStatus === 'all' || r.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  /* ── Open room panel ── */
+  const openRoom = (room, buildingId, floorId, buildingName, floorLabel) => {
+    setSelectedRoom({ ...room, buildingId, floorId, buildingName, floorLabel });
+    setPanelTab('room');
+  };
+
+  /* ── Folio total for a room ── */
+  const folioTotal = (roomNum) => roomFolios[roomNum]?.total || 0;
+  const folioCharges = (roomNum) => roomFolios[roomNum]?.charges || [];
 
   return (
-    <div className="si-container">
-      {/* ─── Top Bar ─── */}
+    <div className="si-root">
+
+      {/* ══ TOPBAR ════════════════════════════════════════════ */}
       <div className="si-topbar">
         <div className="si-topbar-left">
           <div className="si-title-block">
-            <div className="si-icon-title">
-              <Package size={24} />
-            </div>
+            <div className="si-title-icon"><Package size={20}/></div>
             <div>
-              <h1 className="si-title">Smart Inventory</h1>
-              <p className="si-subtitle">Configuration hiérarchique des propriétés</p>
+              <h1>Gestion des Chambres</h1>
+              <p>IoT · Serrures connectées · Facturation services</p>
             </div>
           </div>
         </div>
         <div className="si-topbar-right">
-          <div className="si-search-box">
-            <Search size={16} />
-            <input
-              type="text"
-              placeholder="Rechercher une chambre..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="si-search-wrap">
+            <Search size={15} color="#94A3B8"/>
+            <input placeholder="Chambre ou client…" value={searchQ} onChange={e => setSearchQ(e.target.value)}/>
           </div>
-          <select className="si-filter-select" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+          <select className="si-filter-sel" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="all">Tous les statuts</option>
-            <option value="available">Disponible</option>
-            <option value="occupied">Occupée</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="blocked">Hors service</option>
+            {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
-          <button className="si-btn-primary" onClick={() => setShowAddBuilding(true)}>
-            <Plus size={16} />
-            <span>Ajouter Bâtiment</span>
+          <button className="si-btn-primary" onClick={() => setAddBuildingOpen(true)}>
+            <Plus size={15}/> Ajouter bâtiment
           </button>
         </div>
       </div>
 
-      {/* ─── Stats Cards ─── */}
+      {/* ══ STATS ROW ═════════════════════════════════════════ */}
       <div className="si-stats-row">
-        <div className="si-stat-card">
-          <div className="si-stat-icon" style={{ background: '#EFF6FF', color: '#3B82F6' }}><Layers size={20} /></div>
-          <div className="si-stat-info">
-            <span className="si-stat-value">{stats.totalRooms}</span>
-            <span className="si-stat-label">Total Chambres</span>
+        {[
+          { label: 'Total chambres', value: stats.total,       icon: <Layers size={18}/>,      bg: '#EFF6FF', col: '#2563EB' },
+          { label: 'Disponibles',    value: stats.available,   icon: <CheckCircle size={18}/>, bg: '#DCFCE7', col: '#16A34A' },
+          { label: 'Occupées',       value: stats.occupied,    icon: <DoorOpen size={18}/>,    bg: '#DBEAFE', col: '#1D4ED8' },
+          { label: 'Maintenance',    value: stats.maintenance, icon: <Wrench size={18}/>,      bg: '#FEF3C7', col: '#B45309' },
+          { label: 'Serrures online',value: stats.connected,   icon: <Wifi size={18}/>,        bg: '#F0FDF4', col: '#15803D' },
+          { label: 'Sans serrure',   value: stats.noLock,      icon: <Lock size={18}/>,        bg: '#FFF1F2', col: '#E11D48' },
+        ].map(s => (
+          <div className="si-stat-card" key={s.label}>
+            <div className="si-stat-icon" style={{ background: s.bg, color: s.col }}>{s.icon}</div>
+            <div>
+              <span className="si-stat-val">{s.value}</span>
+              <span className="si-stat-lbl">{s.label}</span>
+            </div>
           </div>
-        </div>
-        <div className="si-stat-card">
-          <div className="si-stat-icon" style={{ background: '#ECFDF5', color: '#10B981' }}><CheckCircle size={20} /></div>
-          <div className="si-stat-info">
-            <span className="si-stat-value">{stats.available}</span>
-            <span className="si-stat-label">Disponibles</span>
-          </div>
-        </div>
-        <div className="si-stat-card">
-          <div className="si-stat-icon" style={{ background: '#EFF6FF', color: '#3B82F6' }}><DoorOpen size={20} /></div>
-          <div className="si-stat-info">
-            <span className="si-stat-value">{stats.occupied}</span>
-            <span className="si-stat-label">Occupées</span>
-          </div>
-        </div>
-        <div className="si-stat-card">
-          <div className="si-stat-icon" style={{ background: '#FFFBEB', color: '#F59E0B' }}><Wrench size={20} /></div>
-          <div className="si-stat-info">
-            <span className="si-stat-value">{stats.maintenance}</span>
-            <span className="si-stat-label">Maintenance</span>
-          </div>
-        </div>
-        <div className="si-stat-card">
-          <div className="si-stat-icon" style={{ background: '#F0FDF4', color: '#22C55E' }}><Wifi size={20} /></div>
-          <div className="si-stat-info">
-            <span className="si-stat-value">{stats.connected}</span>
-            <span className="si-stat-label">Serrures IoT</span>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* ─── Buildings ─── */}
-      <div className="si-buildings-list">
-        {buildings.map((building) => (
-          <div key={building.id} className="si-building-card">
-            <div className="si-building-header">
-              <div className="si-building-title">
-                <Building2 size={22} className="si-building-icon" />
-                <h2>{building.name}</h2>
-                <span className="si-badge-count">{building.floors.reduce((acc, f) => acc + f.rooms.length, 0)} chambres</span>
-              </div>
-              <div className="si-building-actions">
-                <button className="si-btn-ghost" title="Paramètres"><Settings size={16} /></button>
-              </div>
-            </div>
+      {/* ══ MAIN CONTENT ══════════════════════════════════════ */}
+      <div className={`si-content ${selectedRoom ? 'panel-open' : ''}`}>
 
-            {/* ─── Floors Accordion ─── */}
-            <div className="si-floors-list">
-              {building.floors.map((floor) => {
-                const isExpanded = expandedFloors[floor.id] !== false; // default open
-                const filteredRooms = filterRooms(floor.rooms);
+        {/* ─── Buildings / Floors / Rooms ─── */}
+        <div className="si-rooms-col">
+          {buildings.map(building => (
+            <div className="si-building" key={building.id}>
+              <div className="si-building-header">
+                <Building2 size={18} color="#2563EB"/>
+                <span className="si-building-name">{building.name}</span>
+                <span className="si-building-count">{building.floors.reduce((s, f) => s + f.rooms.length, 0)} ch.</span>
+              </div>
+
+              {building.floors.map(floor => {
+                const isOpen = expandedFloors[floor.id] !== false;
+                const fRooms = filterRooms(floor.rooms);
 
                 return (
-                  <div key={floor.id} className="si-floor-section">
-                    <div className="si-floor-header" onClick={() => toggleFloor(floor.id)}>
+                  <div className="si-floor" key={floor.id}>
+                    <div className="si-floor-header" onClick={() => setExpandedFloors(p => ({ ...p, [floor.id]: !isOpen }))}>
                       <div className="si-floor-left">
-                        {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                        <span className="si-floor-label">
-                          {floor.label || `Étage ${floor.number}`}
-                        </span>
-                        <span className="si-floor-count">{floor.rooms.length} ch.</span>
+                        {isOpen ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
+                        <span>{floor.label}</span>
+                        <span className="si-floor-chip">{floor.rooms.length}</span>
                       </div>
-                      <div className="si-floor-right" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          className="si-btn-bulk"
-                          onClick={() => setShowBulkCreate({ buildingId: building.id, floorId: floor.id })}
-                        >
-                          <Grid3x3 size={14} />
-                          <span>Bulk Create</span>
-                        </button>
-                        <button
-                          className="si-btn-add-room"
-                          onClick={() => {
-                            const prefix = floor.number * 100;
-                            const nextNum = floor.rooms.length + 1;
-                            const roomNumber = String(prefix + nextNum);
-                            setBuildings(prev => prev.map(b =>
-                              b.id === building.id
-                                ? {
-                                    ...b,
-                                    floors: b.floors.map(f =>
-                                      f.id === floor.id
-                                        ? {
-                                            ...f,
-                                            rooms: [...f.rooms, {
-                                              id: generateId(),
-                                              number: roomNumber,
-                                              type: 'standard',
-                                              status: 'available',
-                                              lock: null,
-                                            }],
-                                          }
-                                        : f
-                                    ),
-                                  }
-                                : b
-                            ));
-                          }}
-                        >
-                          <Plus size={14} />
-                        </button>
+                      <div className="si-floor-actions" onClick={e => e.stopPropagation()}>
+                        <button className="si-floor-add" onClick={() => {
+                          const num = String(floor.number * 100 + floor.rooms.length + 1);
+                          setBuildings(prev => prev.map(b => b.id === building.id ? { ...b, floors: b.floors.map(f => f.id === floor.id ? { ...f, rooms: [...f.rooms, { id: genId(), number: num, type: 'standard', status: 'available', lock: null }] } : f) } : b));
+                        }}><Plus size={13}/> Chambre</button>
                       </div>
                     </div>
 
                     <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          className="si-rooms-grid"
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.25 }}
-                        >
-                          {filteredRooms.length === 0 ? (
-                            <div className="si-empty-floor">
-                              <DoorOpen size={32} strokeWidth={1} />
-                              <p>Aucune chambre — Utilisez <strong>Bulk Create</strong> pour en ajouter</p>
-                            </div>
-                          ) : (
-                            filteredRooms.map((room) => {
-                              const statusInfo = STATUS_MAP[room.status];
-                              const roomType = ROOM_TYPES.find(t => t.id === room.type);
-                              const lockProvider = LOCK_PROVIDERS.find(l => l.id === room.lock?.provider);
-                              const isSelected = selectedRoom?.id === room.id;
+                      {isOpen && fRooms.length > 0 && (
+                        <motion.div className="si-rooms-grid" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+                          {fRooms.map(room => {
+                            const sCfg  = STATUS_CFG[room.status] || STATUS_CFG.available;
+                            const rType = ROOM_TYPES[room.type] || ROOM_TYPES.standard;
+                            const prov  = room.lock ? LOCK_PROVIDERS[room.lock.provider] : null;
+                            const dev   = room.lock ? LOCK_POOL[room.lock.provider]?.find(d => d.devId === room.lock.devId) : null;
+                            const guest = GUEST_MAP[room.number];
+                            const folio = folioTotal(room.number);
+                            const isActive = selectedRoom?.id === room.id;
 
-                              return (
-                                <motion.div
-                                  key={room.id}
-                                  className={`si-room-card ${isSelected ? 'selected' : ''}`}
-                                  layout
-                                  initial={{ opacity: 0, scale: 0.9 }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  exit={{ opacity: 0, scale: 0.9 }}
-                                  onClick={() => setSelectedRoom(isSelected ? null : { ...room, buildingId: building.id, floorId: floor.id })}
-                                >
-                                  {/* Room Header */}
-                                  <div className="si-room-top">
-                                    <div className="si-room-number-wrap">
-                                      <span className="si-room-number">{room.number}</span>
-                                      <span className="si-room-type">{roomType?.icon} {roomType?.label}</span>
-                                      {roomFolios[room.number] && roomFolios[room.number].total > 0 && (
-                                        <span className="si-folio-badge">
-                                          Folio: €{roomFolios[room.number].total.toFixed(2)}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div
-                                      className="si-room-status"
-                                      style={{ background: statusInfo.bg, color: statusInfo.color }}
-                                    >
-                                      {statusInfo.icon}
-                                      <span>{statusInfo.label}</span>
+                            return (
+                              <motion.div
+                                key={room.id}
+                                className={`si-room-card ${isActive ? 'active' : ''} status-${room.status}`}
+                                layout
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                onClick={() => openRoom(room, building.id, floor.id, building.name, floor.label)}
+                                style={{ borderTopColor: sCfg.border }}
+                              >
+                                {/* Card top: number + type + status */}
+                                <div className="si-card-top">
+                                  <div className="si-card-num-wrap">
+                                    <span className="si-card-num">{room.number}</span>
+                                    <span className="si-card-type">{rType.icon} {rType.short}</span>
+                                  </div>
+                                  <span className="si-card-status" style={{ background: sCfg.bg, color: sCfg.color }}>
+                                    {sCfg.label}
+                                  </span>
+                                </div>
+
+                                {/* Lock widget */}
+                                {room.lock ? (
+                                  <div className="si-card-lock">
+                                    <span className="si-card-lock-prov" style={{ color: prov?.color }}>
+                                      {prov?.logo} {dev?.name || prov?.name}
+                                    </span>
+                                    <div className="si-card-lock-right">
+                                      <BattIcon level={room.lock.battery} size={12}/>
+                                      <span className={`si-card-lock-bat ${room.lock.battery < 20 ? 'crit' : ''}`}>{room.lock.battery}%</span>
+                                      {room.lock.online
+                                        ? <span className="si-dot online" title="En ligne"/>
+                                        : <span className="si-dot offline" title="Hors ligne"/>
+                                      }
                                     </div>
                                   </div>
+                                ) : (
+                                  <button className="si-card-nolock" onClick={e => { e.stopPropagation(); setLockModal({ room, buildingId: building.id, floorId: floor.id }); }}>
+                                    <Lock size={12}/> Connecter serrure
+                                  </button>
+                                )}
 
-                                  {/* Lock Info */}
-                                  <div className="si-room-lock-row">
-                                    {room.lock ? (
-                                      <>
-                                        <div className="si-lock-badge" style={{ borderColor: lockProvider?.color + '40', background: lockProvider?.color + '10' }}>
-                                          <span className="si-lock-logo">{lockProvider?.logo}</span>
-                                          <span className="si-lock-name" style={{ color: lockProvider?.color }}>{lockProvider?.name}</span>
-                                        </div>
-                                        <div className="si-lock-indicators">
-                                          <div className="si-indicator" title={`Batterie: ${room.lock.battery}%`}>
-                                            <BatteryIcon level={room.lock.battery} />
-                                            <span>{room.lock.battery}%</span>
-                                          </div>
-                                          <div className={`si-indicator ${room.lock.connected ? 'connected' : 'disconnected'}`} title={room.lock.connected ? 'Connecté' : 'Déconnecté'}>
-                                            {room.lock.connected ? <Wifi size={14} /> : <WifiOff size={14} />}
-                                          </div>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <button
-                                        className="si-btn-connect-lock"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setShowLockModal({ room, buildingId: building.id, floorId: floor.id });
-                                        }}
-                                      >
-                                        <Lock size={14} />
-                                        <span>Connecter serrure</span>
-                                      </button>
-                                    )}
-                                  </div>
+                                {/* Guest + folio */}
+                                <div className="si-card-bottom">
+                                  <span className="si-card-guest">
+                                    {guest ? <><UserCheck size={11}/> {guest.name}</> : '— Libre —'}
+                                  </span>
+                                  {folio > 0 && (
+                                    <span className="si-card-folio-badge">
+                                      <CreditCard size={10}/>
+                                      {folio.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                                    </span>
+                                  )}
+                                </div>
 
-                                  {/* Quick Actions */}
-                                  <div className="si-room-actions" onClick={(e) => e.stopPropagation()}>
-                                    <select
-                                      className="si-status-select"
-                                      value={room.status}
-                                      onChange={(e) => handleStatusChange(building.id, floor.id, room.id, e.target.value)}
-                                    >
-                                      {Object.entries(STATUS_MAP).map(([key, val]) => (
-                                        <option key={key} value={key}>{val.label}</option>
-                                      ))}
-                                    </select>
-                                    
-                                    {roomFolios[room.number] && roomFolios[room.number].total > 0 && (
-                                      <button
-                                        className="si-btn-folio-checkout"
-                                        title="Payer Folio & Checkout"
-                                        onClick={(e) => {
-                                           e.stopPropagation();
-                                           setShowCheckoutModal({ room, buildingId: building.id, floorId: floor.id, folio: roomFolios[room.number] });
-                                        }}
-                                      >
-                                        Payer €{roomFolios[room.number].total.toFixed(2)}
-                                      </button>
-                                    )}
-
-                                    {room.lock ? (
-                                      <button
-                                        className="si-btn-icon si-btn-lock-settings"
-                                        title="Paramètres serrure"
-                                        onClick={() => setShowLockModal({ room, buildingId: building.id, floorId: floor.id })}
-                                      >
-                                        <Key size={14} />
-                                      </button>
-                                    ) : null}
-                                    <button
-                                      className="si-btn-icon si-btn-delete"
-                                      title="Supprimer"
-                                      onClick={() => handleDeleteRoom(building.id, floor.id, room.id)}
-                                    >
-                                      <Trash2 size={14} />
-                                    </button>
-                                  </div>
-                                </motion.div>
-                              );
-                            })
-                          )}
+                                {/* PIN indicator */}
+                                {room.lock?.pin && (
+                                  <div className="si-card-pin"><Key size={10}/> {room.lock.pin}</div>
+                                )}
+                              </motion.div>
+                            );
+                          })}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -537,201 +379,326 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                 );
               })}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* ═══════ MODALS ═══════ */}
+        {/* ══ ROOM DETAIL PANEL ═════════════════════════════ */}
+        <AnimatePresence>
+          {selectedRoom && (() => {
+            const sCfg  = STATUS_CFG[selectedRoom.status] || STATUS_CFG.available;
+            const rType = ROOM_TYPES[selectedRoom.type] || ROOM_TYPES.standard;
+            const prov  = selectedRoom.lock ? LOCK_PROVIDERS[selectedRoom.lock.provider] : null;
+            const dev   = selectedRoom.lock ? LOCK_POOL[selectedRoom.lock.provider]?.find(d => d.devId === selectedRoom.lock.devId) : null;
+            const guest = GUEST_MAP[selectedRoom.number];
+            const fTotal   = folioTotal(selectedRoom.number);
+            const fCharges = folioCharges(selectedRoom.number);
 
-      {/* ─── Add Building Modal ─── */}
-      <AnimatePresence>
-        {showAddBuilding && (
-          <motion.div className="si-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAddBuilding(false)}>
-            <motion.div className="si-modal" initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }} onClick={(e) => e.stopPropagation()}>
-              <div className="si-modal-header">
-                <Building2 size={22} />
-                <h3>Nouveau Bâtiment</h3>
-                <button className="si-modal-close" onClick={() => setShowAddBuilding(false)}><X size={18} /></button>
-              </div>
-              <div className="si-modal-body">
-                <div className="si-form-group">
-                  <label>Nom du bâtiment</label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Résidence Les Oliviers"
-                    value={newBuildingName}
-                    onChange={(e) => setNewBuildingName(e.target.value)}
-                    autoFocus
-                  />
-                </div>
-                <div className="si-form-group">
-                  <label>Nombre d'étages</label>
-                  <div className="si-number-input">
-                    <button onClick={() => setNewBuildingFloors(Math.max(1, newBuildingFloors - 1))}>−</button>
-                    <span>{newBuildingFloors}</span>
-                    <button onClick={() => setNewBuildingFloors(newBuildingFloors + 1)}>+</button>
-                  </div>
-                </div>
-              </div>
-              <div className="si-modal-footer">
-                <button className="si-btn-secondary" onClick={() => setShowAddBuilding(false)}>Annuler</button>
-                <button className="si-btn-primary" onClick={handleAddBuilding} disabled={!newBuildingName.trim()}>
-                  <Plus size={16} />
-                  <span>Créer le bâtiment</span>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── Bulk Create Modal ─── */}
-      <AnimatePresence>
-        {showBulkCreate && (
-          <motion.div className="si-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBulkCreate(null)}>
-            <motion.div className="si-modal" initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }} onClick={(e) => e.stopPropagation()}>
-              <div className="si-modal-header">
-                <Grid3x3 size={22} />
-                <h3>Création en Masse</h3>
-                <button className="si-modal-close" onClick={() => setShowBulkCreate(null)}><X size={18} /></button>
-              </div>
-              <div className="si-modal-body">
-                <p className="si-modal-hint">Génération automatique avec préfixe d'étage intelligent.</p>
-                <div className="si-form-row">
-                  <div className="si-form-group">
-                    <label>De la chambre n°</label>
-                    <input type="number" value={bulkFrom} onChange={(e) => setBulkFrom(Number(e.target.value))} min={1} />
-                  </div>
-                  <div className="si-form-group">
-                    <label>À la chambre n°</label>
-                    <input type="number" value={bulkTo} onChange={(e) => setBulkTo(Number(e.target.value))} min={bulkFrom} />
-                  </div>
-                </div>
-                <div className="si-form-group">
-                  <label>Type de chambre</label>
-                  <select value={bulkType} onChange={(e) => setBulkType(e.target.value)}>
-                    {ROOM_TYPES.map(t => (
-                      <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="si-preview-badge">
-                  <Zap size={14} />
-                  <span>{bulkTo - bulkFrom + 1} chambres seront créées</span>
-                </div>
-              </div>
-              <div className="si-modal-footer">
-                <button className="si-btn-secondary" onClick={() => setShowBulkCreate(null)}>Annuler</button>
-                <button className="si-btn-primary" onClick={() => handleBulkCreate(showBulkCreate.buildingId, showBulkCreate.floorId)}>
-                  <Zap size={16} />
-                  <span>Générer {bulkTo - bulkFrom + 1} chambres</span>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── Lock Assignment Modal ─── */}
-      <AnimatePresence>
-        {showLockModal && (
-          <motion.div className="si-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLockModal(null)}>
-            <motion.div className="si-modal si-modal-lock" initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }} onClick={(e) => e.stopPropagation()}>
-              <div className="si-modal-header">
-                <Lock size={22} />
-                <h3>Connectivité Serrure — Ch. {showLockModal.room.number}</h3>
-                <button className="si-modal-close" onClick={() => setShowLockModal(null)}><X size={18} /></button>
-              </div>
-              <div className="si-modal-body">
-                <p className="si-modal-hint">Sélectionnez le fournisseur de serrure intelligente à associer.</p>
-                <div className="si-lock-providers-grid">
-                  {LOCK_PROVIDERS.map((provider) => {
-                    const isActive = showLockModal.room.lock?.provider === provider.id;
-                    return (
-                      <button
-                        key={provider.id}
-                        className={`si-lock-provider-card ${isActive ? 'active' : ''}`}
-                        style={{ '--provider-color': provider.color }}
-                        onClick={() => handleAssignLock(
-                          showLockModal.buildingId,
-                          showLockModal.floorId,
-                          showLockModal.room.id,
-                          provider.id
-                        )}
-                      >
-                        <span className="si-provider-logo">{provider.logo}</span>
-                        <span className="si-provider-name">{provider.name}</span>
-                        {isActive && <CheckCircle size={18} className="si-check-active" />}
-                      </button>
-                    );
-                  })}
-                </div>
-                {showLockModal.room.lock && (
-                  <div className="si-lock-status-detail">
-                    <h4>État actuel</h4>
-                    <div className="si-lock-detail-grid">
-                      <div className="si-lock-detail-item">
-                        <BatteryIcon level={showLockModal.room.lock.battery} />
-                        <span>Batterie : {showLockModal.room.lock.battery}%</span>
-                      </div>
-                      <div className="si-lock-detail-item">
-                        {showLockModal.room.lock.connected ? <Wifi size={16} className="si-connected" /> : <WifiOff size={16} className="si-disconnected" />}
-                        <span>{showLockModal.room.lock.connected ? 'Connecté' : 'Déconnecté'}</span>
-                      </div>
-                      <div className="si-lock-detail-item">
-                        <Signal size={16} />
-                        <span>Dernière sync: {showLockModal.room.lock.lastSync}</span>
-                      </div>
+            return (
+              <motion.div
+                className="si-panel"
+                key="panel"
+                initial={{ x: 40, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 40, opacity: 0 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+              >
+                {/* Panel header */}
+                <div className="si-panel-head" style={{ borderTop: `3px solid ${sCfg.border}` }}>
+                  <div className="si-panel-head-left">
+                    <span className="si-panel-roomnum">Chambre {selectedRoom.number}</span>
+                    <div className="si-panel-meta">
+                      <span className="si-panel-type">{rType.icon} {rType.label}</span>
+                      <span className="si-panel-status" style={{ background: sCfg.bg, color: sCfg.color }}>{sCfg.label}</span>
                     </div>
                   </div>
-                )}
+                  <button className="si-close-btn" onClick={() => setSelectedRoom(null)}><X size={17}/></button>
+                </div>
+
+                {/* Tabs */}
+                <div className="si-panel-tabs">
+                  {[['room','Chambre'],['lock','Serrure IoT'],['folio','Folio']].map(([k,l]) => (
+                    <button key={k} className={panelTab === k ? 'active' : ''} onClick={() => setPanelTab(k)}>
+                      {k === 'folio' && fTotal > 0 && <span className="si-tab-badge">{fTotal.toFixed(0)}€</span>}
+                      {l}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Panel body */}
+                <div className="si-panel-body">
+
+                  {/* ─── TAB: CHAMBRE ─── */}
+                  {panelTab === 'room' && (
+                    <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="si-tab-pane">
+                      <div className="si-info-grid">
+                        <InfoBlock label="Chambre" value={`${selectedRoom.number} — ${rType.label}`}/>
+                        <InfoBlock label="Étage" value={`${selectedRoom.floorLabel} (${selectedRoom.buildingName})`}/>
+                        <InfoBlock label="Statut" value={sCfg.label} valueColor={sCfg.color}/>
+                        <InfoBlock label="Type de lit" value="Lit double King"/>
+                        {guest ? (
+                          <>
+                            <InfoBlock label="Client" value={guest.name}/>
+                            <InfoBlock label="Check-in" value={guest.checkIn + ' · 14h00'}/>
+                            <InfoBlock label="Check-out" value={guest.checkOut + ' · 11h00'}/>
+                            <InfoBlock label="Nuits" value={guest.nights + ' nuits'}/>
+                            <InfoBlock label="Canal" value={guest.source}/>
+                          </>
+                        ) : (
+                          <InfoBlock label="Client" value="— Chambre libre —"/>
+                        )}
+                      </div>
+                      {guest && (
+                        <div className="si-contact-row">
+                          <a href={`tel:${guest.phone}`} className="si-contact-chip"><Smartphone size={12}/>{guest.phone}</a>
+                          <a href={`mailto:${guest.email}`} className="si-contact-chip"><Mail size={12}/>{guest.email}</a>
+                        </div>
+                      )}
+                      <div className="si-status-change">
+                        <label>Changer le statut</label>
+                        <div className="si-status-pills">
+                          {Object.entries(STATUS_CFG).map(([k, v]) => (
+                            <button key={k}
+                              className={`si-status-pill ${selectedRoom.status === k ? 'active' : ''}`}
+                              style={selectedRoom.status === k ? { background: v.bg, color: v.color, borderColor: v.border } : {}}
+                              onClick={() => handleStatus(selectedRoom.buildingId, selectedRoom.floorId, selectedRoom.id, k)}
+                            >{v.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ─── TAB: SERRURE IoT ─── */}
+                  {panelTab === 'lock' && (
+                    <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="si-tab-pane">
+                      {selectedRoom.lock ? (
+                        <>
+                          {/* Device info */}
+                          <div className="si-lock-card" style={{ borderColor: prov?.color + '40', background: prov?.bg }}>
+                            <div className="si-lock-card-top">
+                              <span className="si-lock-prov-logo">{prov?.logo}</span>
+                              <div>
+                                <span className="si-lock-dev-name">{dev?.name || prov?.name}</span>
+                                <span className="si-lock-dev-serial">{dev?.serial} · FW {dev?.fw || '—'}</span>
+                              </div>
+                              <div className={`si-lock-online-badge ${selectedRoom.lock.online ? 'on' : 'off'}`}>
+                                {selectedRoom.lock.online ? <Wifi size={11}/> : <WifiOff size={11}/>}
+                                {selectedRoom.lock.online ? 'En ligne' : 'Hors ligne'}
+                              </div>
+                            </div>
+                            <div className="si-batt-row">
+                              <BattIcon level={selectedRoom.lock.battery} size={16}/>
+                              <div className="si-batt-bar-track">
+                                <div className="si-batt-bar-fill"
+                                  style={{ width: `${selectedRoom.lock.battery}%`,
+                                           background: selectedRoom.lock.battery < 20 ? '#EF4444' : selectedRoom.lock.battery < 40 ? '#F59E0B' : '#16A34A' }}/>
+                              </div>
+                              <span className="si-batt-pct">{selectedRoom.lock.battery}%</span>
+                              <span className="si-batt-sync">Sync: {selectedRoom.lock.lastSync}</span>
+                            </div>
+                          </div>
+
+                          {/* Lock/Unlock control */}
+                          <div className="si-lock-controls">
+                            <button
+                              className={`si-lock-toggle ${selectedRoom.lock.locked ? 'locked' : 'unlocked'}`}
+                              onClick={() => handleToggleLock(selectedRoom.buildingId, selectedRoom.floorId, selectedRoom.id, !selectedRoom.lock.locked)}
+                            >
+                              {selectedRoom.lock.locked ? <><Lock size={16}/> Verrouillée</> : <><Unlock size={16}/> Déverrouillée</>}
+                            </button>
+                            <button
+                              className={`si-gen-pin-btn ${generating ? 'loading' : ''}`}
+                              onClick={() => handleGeneratePin(selectedRoom.buildingId, selectedRoom.floorId, selectedRoom.id)}
+                              disabled={generating}
+                            >
+                              {generating ? <><RefreshCw size={14} className="spin-icon"/> Génération…</> : <><Key size={14}/> Générer PIN</>}
+                            </button>
+                          </div>
+
+                          {/* PIN display */}
+                          {selectedRoom.lock.pin && (
+                            <div className="si-pin-display">
+                              <span className="si-pin-label"><Key size={12}/> Code PIN actuel</span>
+                              <span className="si-pin-value">{selectedRoom.lock.pin}</span>
+                            </div>
+                          )}
+
+                          {/* Send PIN */}
+                          {selectedRoom.lock.pin && guest && (
+                            <div className="si-send-row">
+                              <span className="si-send-label">Envoyer à {guest.name}</span>
+                              <div className="si-send-btns">
+                                <button className="si-send-btn"><MessageSquare size={12}/> WhatsApp</button>
+                                <button className="si-send-btn">📱 SMS</button>
+                                <button className="si-send-btn"><Mail size={12}/> Email</button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Unlink */}
+                          <button className="si-unlink-btn"
+                            onClick={() => handleUnlinkLock(selectedRoom.buildingId, selectedRoom.floorId, selectedRoom.id)}>
+                            <X size={13}/> Délier cette serrure
+                          </button>
+                        </>
+                      ) : (
+                        <div className="si-no-lock">
+                          <Lock size={36} color="#CBD5E1" strokeWidth={1.5}/>
+                          <span>Aucune serrure connectée</span>
+                          <button className="si-btn-primary" onClick={() => setLockModal({ room: selectedRoom, buildingId: selectedRoom.buildingId, floorId: selectedRoom.floorId })}>
+                            <Plus size={14}/> Connecter une serrure IoT
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* ─── TAB: FOLIO ─── */}
+                  {panelTab === 'folio' && (
+                    <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="si-tab-pane">
+                      {fCharges.length > 0 ? (
+                        <>
+                          <div className="si-folio-list">
+                            {fCharges.map((c, i) => (
+                              <div className="si-folio-charge" key={i}>
+                                <span className="si-folio-type-badge" style={{ background: c.type === 'F&B' ? '#FEF3C7' : c.type === 'Spa' ? '#F5F3FF' : '#F0F9FF', color: c.type === 'F&B' ? '#B45309' : c.type === 'Spa' ? '#6D28D9' : '#0369A1' }}>
+                                  {c.type}
+                                </span>
+                                <div className="si-folio-charge-info">
+                                  <span className="si-folio-items">{c.items}</span>
+                                  <span className="si-folio-time">{c.time || '—'}</span>
+                                </div>
+                                <span className="si-folio-amount">{c.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="si-folio-total-row">
+                            <span>Total à facturer</span>
+                            <strong>{fTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong>
+                          </div>
+                          <button className="si-checkout-btn"
+                            onClick={() => setCheckoutModal({ room: selectedRoom, buildingId: selectedRoom.buildingId, floorId: selectedRoom.floorId })}>
+                            <LogOut size={15}/> Checkout & Facturer — {fTotal.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
+                          </button>
+                        </>
+                      ) : (
+                        <div className="si-no-folio">
+                          <CreditCard size={36} color="#CBD5E1" strokeWidth={1.5}/>
+                          <span>Aucune consommation enregistrée</span>
+                          <p>Les services commandés via le Hub de Services apparaîtront ici automatiquement.</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                </div>
+              </motion.div>
+            );
+          })()}
+        </AnimatePresence>
+      </div>
+
+      {/* ══ LOCK MODAL ════════════════════════════════════════ */}
+      <AnimatePresence>
+        {lockModal && (
+          <div className="si-modal-overlay" onClick={() => setLockModal(null)}>
+            <motion.div className="si-modal" initial={{opacity:0,scale:0.96}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.96}} onClick={e => e.stopPropagation()}>
+              <div className="si-modal-head">
+                <div>
+                  <h2>Connecter une serrure IoT</h2>
+                  <p>Chambre {lockModal.room.number} — Sélectionnez le fournisseur et l'appareil</p>
+                </div>
+                <button className="si-close-btn" onClick={() => setLockModal(null)}><X size={17}/></button>
               </div>
-              <div className="si-modal-footer">
-                <button className="si-btn-secondary" onClick={() => setShowLockModal(null)}>Fermer</button>
+
+              {/* Provider tabs */}
+              <div className="si-modal-prov-tabs">
+                {Object.values(LOCK_PROVIDERS).map(p => (
+                  <button key={p.id} className={`si-prov-tab ${lockProvider === p.id ? 'active' : ''}`}
+                    style={lockProvider === p.id ? { background: p.bg, borderColor: p.color, color: p.color } : {}}
+                    onClick={() => setLockProvider(p.id)}>
+                    <span className="si-prov-logo">{p.logo}</span>
+                    <span>{p.name}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Device list */}
+              <div className="si-device-list">
+                {LOCK_POOL[lockProvider]?.map(device => {
+                  const isUsed = usedDevIds.has(device.devId);
+                  return (
+                    <div key={device.devId} className={`si-device-row ${isUsed ? 'used' : ''}`}>
+                      <div className="si-device-info">
+                        <span className="si-device-name">{device.name}</span>
+                        <span className="si-device-serial">{device.serial} · FW {device.fw}</span>
+                      </div>
+                      <div className="si-device-stats">
+                        <BattIcon level={device.battery} size={13}/>
+                        <span className={device.battery < 20 ? 'text-red' : ''}>{device.battery}%</span>
+                        {device.online ? <span className="si-dot online"/> : <span className="si-dot offline"/>}
+                        <span>{device.online ? 'En ligne' : 'Hors ligne'}</span>
+                      </div>
+                      <button
+                        className={`si-link-btn ${isUsed ? 'disabled' : ''}`}
+                        disabled={isUsed}
+                        onClick={() => !isUsed && handleAssignLock(device)}
+                      >
+                        {isUsed ? '✓ Assignée' : 'Lier'}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         )}
+      </AnimatePresence>
 
-      {/* ─── Checkout FOLIO Modal ─── */}
-      {showCheckoutModal && (
-          <motion.div className="si-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowCheckoutModal(null)}>
-            <motion.div className="si-modal" initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }} onClick={(e) => e.stopPropagation()}>
-              <div className="si-modal-header" style={{ background: '#FFF1F2' }}>
-                <Zap size={22} color="#E11D48" />
-                <h3 style={{ color: '#E11D48' }}>Paiement Folio & Checkout - Ch. {showCheckoutModal.room.number}</h3>
-                <button className="si-modal-close" onClick={() => setShowCheckoutModal(null)}><X size={18} /></button>
+      {/* ══ CHECKOUT CONFIRM ══════════════════════════════════ */}
+      <AnimatePresence>
+        {checkoutModal && (
+          <div className="si-modal-overlay" onClick={() => setCheckoutModal(null)}>
+            <motion.div className="si-modal si-modal-sm" initial={{opacity:0,scale:0.96}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.96}} onClick={e => e.stopPropagation()}>
+              <div className="si-modal-head">
+                <div>
+                  <h2>Checkout Chambre {checkoutModal.room.number}</h2>
+                  <p>Cette action règle le folio et met la chambre en maintenance</p>
+                </div>
+                <button className="si-close-btn" onClick={() => setCheckoutModal(null)}><X size={17}/></button>
               </div>
-              <div className="si-modal-body">
-                <p style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                  Vous êtes sur le point d'encaisser le folio de la chambre et de réaliser le checkout. La chambre passera automatiquement en mode <strong>Maintenance</strong> pour être nettoyée par la gouvernante.
-                </p>
-                <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '1rem', border: '1px solid #E2E8F0', marginBottom: '1rem' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ fontWeight: 600, color: '#475569' }}>Consommations</span>
-                      <span style={{ fontWeight: 800 }}>€{showCheckoutModal.folio.total.toFixed(2)}</span>
-                   </div>
-                   <div style={{ fontSize: '0.8rem', color: '#94A3B8' }}>{showCheckoutModal.folio.items}</div>
+              <div className="si-checkout-summary">
+                <div className="si-checkout-line">
+                  <span>Folio total</span>
+                  <strong>{folioTotal(checkoutModal.room.number).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €</strong>
+                </div>
+                <div className="si-checkout-line">
+                  <span>Serrure</span>
+                  <strong>PIN révoqué au départ</strong>
+                </div>
+                <div className="si-checkout-line">
+                  <span>Nouveau statut</span>
+                  <strong>Maintenance (nettoyage)</strong>
                 </div>
               </div>
-              <div className="si-modal-footer">
-                <button className="si-btn-secondary" onClick={() => setShowCheckoutModal(null)}>Annuler</button>
-                <button 
-                  className="si-btn-primary" 
-                  style={{ background: '#E11D48', borderColor: '#E11D48' }}
-                  onClick={() => handleCheckout(showCheckoutModal.buildingId, showCheckoutModal.floorId, showCheckoutModal.room.id, showCheckoutModal.room.number)}
-                >
-                  <CheckCircle size={16} />
-                  <span>Encaisser et libérer la chambre</span>
-                </button>
+              <div className="si-modal-foot">
+                <button className="si-btn-ghost" onClick={() => setCheckoutModal(null)}>Annuler</button>
+                <button className="si-btn-danger" onClick={handleCheckout}><LogOut size={14}/> Confirmer Checkout</button>
               </div>
             </motion.div>
-          </motion.div>
-      )}
-
+          </div>
+        )}
       </AnimatePresence>
     </div>
   );
 };
+
+/* ─── InfoBlock sub-component ─── */
+const InfoBlock = ({ label, value, valueColor }) => (
+  <div className="si-info-block">
+    <span className="si-info-label">{label}</span>
+    <span className="si-info-value" style={valueColor ? { color: valueColor, fontWeight: 700 } : {}}>{value}</span>
+  </div>
+);
 
 export default SmartInventory;

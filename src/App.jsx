@@ -91,18 +91,38 @@ function App() {
   }, []);
 
   // Folio State: shared between ServicesHub and SmartInventory
+  // Each room stores an array of charges with type + timestamp for billing
   const [roomFolios, setRoomFolios] = useState({
-     '102': { total: 124.00, items: 'Champagne Moët, Fruits' }
+    '102': {
+      total: 124.00,
+      charges: [
+        { id: 1, type: 'F&B', items: 'Champagne Moët, Fruits de saison', amount: 124.00, time: '09:45' }
+      ]
+    },
+    '304': {
+      total: 48.00,
+      charges: [
+        { id: 2, type: 'F&B', items: 'Cocktail x2, Club Sandwich', amount: 48.00, time: '12:15' }
+      ]
+    }
   });
 
-  const addFolioCharge = (room, amount, items) => {
+  // type = 'F&B' | 'Spa' | 'Conciergerie' | 'Service'
+  const addFolioCharge = (room, amount, items, type = 'Service') => {
     setRoomFolios(prev => {
-      const current = prev[room] || { total: 0, items: '' };
+      const current = prev[room] || { total: 0, charges: [] };
+      const newCharge = {
+        id: Date.now(),
+        type,
+        items,
+        amount,
+        time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      };
       return {
         ...prev,
         [room]: {
           total: current.total + amount,
-          items: current.items ? `${current.items} | ${items}` : items
+          charges: [...current.charges, newCharge],
         }
       };
     });
@@ -164,7 +184,7 @@ function App() {
       case 'unified-inbox':
         return <UnifiedInbox pmsMode={pmsMode} setActiveView={setActiveView} />;
       case 'services-hub':
-        return <ServicesHub addFolioCharge={addFolioCharge} />;
+        return <ServicesHub addFolioCharge={addFolioCharge} roomFolios={roomFolios} />;
       case 'billing-engine':
         return <BillingEngine />;
       case 'system-admin':
