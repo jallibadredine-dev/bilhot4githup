@@ -239,7 +239,13 @@ function App() {
     return (
       <Suspense fallback={<LoadingFallback />}>
         <LandingPage onLogin={(mode) => {
-            setPmsMode(mode);
+            if (mode === 'demo') {
+              setPmsMode('pro');
+              setCurrentUser({ id: 'demo', email: 'demo@hova.app', user_metadata: { full_name: 'Mode Démo' } });
+              setIsAuthenticated(true);
+            } else {
+              setPmsMode(mode);
+            }
         }} />
       </Suspense>
     );

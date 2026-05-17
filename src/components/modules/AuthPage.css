@@ -338,6 +338,51 @@
   100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
 }
 
+/* Demo access button */
+.btn-demo-access {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: linear-gradient(135deg, #FF385C 0%, #E61E4D 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 14px rgba(255, 56, 92, 0.35);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+.btn-demo-access::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+.btn-demo-access:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 56, 92, 0.45);
+}
+.btn-demo-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  display: block;
+  margin-bottom: 2px;
+}
+.btn-demo-sub {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.85;
+  display: block;
+}
+
 /* Google button */
 .btn-google {
   width: 100%;
