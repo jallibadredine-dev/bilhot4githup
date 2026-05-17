@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Lock, Unlock, Key, RefreshCcw, Search, Plus, ShieldCheck,
-  Wifi, WifiOff, Battery, BatteryLow, BatteryFull, BatteryMedium,
+  Lock, Unlock, Key, RefreshCcw, Search, Plus,
+  Wifi, WifiOff, Battery, BatteryLow,
   History, Settings, X, Check, AlertTriangle, Building2,
-  BarChart3, User, LayoutGrid, List, CalendarDays, Clock,
-  Eye, EyeOff, RefreshCw, Copy, Shield, ChevronDown,
-  Link2, LinkSlash, Zap, Activity, Power, Signal
+  User, LayoutGrid, List,
+  Eye, EyeOff, RefreshCw, Copy, Shield,
+  Link2, Unlink, Signal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ttlockAPI } from '../../lib/ttlock';
@@ -69,8 +69,8 @@ const genPin = () => Math.floor(100000 + Math.random() * 900000).toString();
    BATTERY ICON
 ════════════════════════════════════════════════════════════ */
 const BattIcon = ({ level, size = 14 }) => {
-  if (level > 60) return <BatteryFull size={size} color="#16A34A"/>;
-  if (level > 25) return <BatteryMedium size={size} color="#D97706"/>;
+  if (level > 60) return <Battery size={size} color="#16A34A"/>;
+  if (level > 25) return <Battery size={size} color="#D97706"/>;
   return <BatteryLow size={size} color="#DC2626"/>;
 };
 
@@ -386,7 +386,7 @@ const SmartLockHub = () => {
               {roomInfo ? (
                 <span className="slh-room-chip"><Building2 size={10}/> {room} · {roomInfo.label}</span>
               ) : (
-                <span className="slh-no-room"><LinkSlash size={10}/> Non assignée</span>
+                <span className="slh-no-room"><Unlink size={10}/> Non assignée</span>
               )}
               <span className={`slh-lock-state ${lock.locked ? 'locked' : 'unlocked'}`}>
                 {lock.locked ? <><Lock size={11}/> Verr.</> : <><Unlock size={11}/> Ouv.</>}
@@ -668,12 +668,12 @@ const SmartLockHub = () => {
                             {roomInfo && <span className="slh-assigned-room-name">{roomInfo.label} · {roomInfo.floor}</span>}
                           </div>
                           <button className="slh-unassign-btn" onClick={() => assignRoom(selectedLock.id, null)}>
-                            <LinkSlash size={13}/> Délier
+                            <Unlink size={13}/> Délier
                           </button>
                         </div>
                       ) : (
                         <div className="slh-no-room-card">
-                          <LinkSlash size={28} color="#CBD5E1" strokeWidth={1.5}/>
+                          <Unlink size={28} color="#CBD5E1" strokeWidth={1.5}/>
                           <span>Serrure non assignée à une chambre</span>
                         </div>
                       )}
