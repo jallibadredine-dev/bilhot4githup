@@ -243,6 +243,11 @@ function App() {
               setPmsMode('pro');
               setCurrentUser({ id: 'demo', email: 'demo@hova.app', user_metadata: { full_name: 'Mode Démo' } });
               setIsAuthenticated(true);
+            } else if (mode === 'super-admin') {
+              setPmsMode('pro');
+              setCurrentUser({ id: 'sa-local', email: 'admin@hova.app', user_metadata: { full_name: 'Super Admin' } });
+              setIsAuthenticated(true);
+              setActiveView('super-admin');
             } else {
               setPmsMode(mode);
             }

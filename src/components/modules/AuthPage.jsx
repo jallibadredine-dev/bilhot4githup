@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowRight, X, Eye, EyeOff, User, Mail, Lock, Check, AlertCircle } from 'lucide-react';
+import { ArrowRight, X, Eye, EyeOff, User, Mail, Lock, Check, AlertCircle, Shield, ChevronRight, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import './AuthPage.css';
+
+/* ── Test credentials (visible to users for testing) ─── */
+const TEST_USER = { email: 'test@hova.app', password: 'TestHova2026!', name: 'Testeur Hova' };
+const ADMIN_PIN  = 'HOVA2026';
 
 const AuthPage = ({ onLogin, onClose }) => {
   const [mode, setMode] = useState('register');
@@ -11,6 +15,12 @@ const AuthPage = ({ onLogin, onClose }) => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [authError, setAuthError] = useState(null);
+
+  const [adminMode, setAdminMode] = useState(false);
+  const [adminPin, setAdminPin] = useState('');
+  const [adminPinErr, setAdminPinErr] = useState('');
+  const [adminPinVisible, setAdminPinVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const validate = () => {
     const e = {};
@@ -29,17 +39,15 @@ const AuthPage = ({ onLogin, onClose }) => {
     setIsLoading(true);
     try {
       if (mode === 'register') {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
-          options: {
-            data: { full_name: form.name }
-          }
+          options: { data: { full_name: form.name } }
         });
         if (error) throw error;
         onLogin('pro');
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email: form.email,
           password: form.password
         });
@@ -66,9 +74,7 @@ const AuthPage = ({ onLogin, onClose }) => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: window.location.origin
-        }
+        options: { redirectTo: window.location.origin }
       });
       if (error) throw error;
     } catch (err) {
@@ -81,6 +87,27 @@ const AuthPage = ({ onLogin, onClose }) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
     if (authError) setAuthError(null);
+  };
+
+  const fillTestProfile = () => {
+    setMode('login');
+    setForm({ name: TEST_USER.name, email: TEST_USER.email, password: TEST_USER.password });
+    setErrors({});
+    setAuthError(null);
+  };
+
+  const handleAdminAccess = () => {
+    if (adminPin.trim().toUpperCase() === ADMIN_PIN) {
+      onLogin('super-admin');
+    } else {
+      setAdminPinErr('Code incorrect.');
+    }
+  };
+
+  const copyTestCreds = () => {
+    navigator.clipboard.writeText(`Email: ${TEST_USER.email}\nMot de passe: ${TEST_USER.password}`).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (isLoading) {
@@ -171,6 +198,19 @@ const AuthPage = ({ onLogin, onClose }) => {
                 </motion.div>
               )}
 
+              {/* Test profile quick-fill (login mode only) */}
+              {mode === 'login' && (
+                <div className="auth-test-profile">
+                  <div className="atp-left">
+                    <span className="atp-dot"></span>
+                    <span>Profil de test disponible</span>
+                  </div>
+                  <button type="button" className="atp-fill-btn" onClick={fillTestProfile}>
+                    Remplir <ChevronRight size={11}/>
+                  </button>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="auth-form" noValidate>
                 {mode === 'register' && (
                   <div className={`auth-field ${errors.name ? 'has-error' : ''}`}>
@@ -238,6 +278,7 @@ const AuthPage = ({ onLogin, onClose }) => {
 
               <div className="auth-divider"><span>ou</span></div>
 
+              {/* ── Accès instantané Démo ── */}
               <button
                 className="btn-demo-access"
                 type="button"
@@ -248,8 +289,67 @@ const AuthPage = ({ onLogin, onClose }) => {
                 <span className="btn-demo-sub">Sans compte · Toutes les fonctions</span>
               </button>
 
+              {/* ── Espace Super Admin ── */}
+              <AnimatePresence>
+                {!adminMode ? (
+                  <motion.button
+                    key="admin-btn"
+                    className="btn-admin-access"
+                    type="button"
+                    onClick={() => setAdminMode(true)}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <Shield size={13} />
+                    Espace Super Admin
+                    <span className="btn-admin-sub">Accès restreint à l'administration</span>
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="admin-form"
+                    className="admin-pin-section"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="admin-pin-header">
+                      <Shield size={13} />
+                      <span>Authentification Administrateur</span>
+                      <button
+                        className="admin-close"
+                        onClick={() => { setAdminMode(false); setAdminPin(''); setAdminPinErr(''); }}
+                      >
+                        <X size={12}/>
+                      </button>
+                    </div>
+                    <div className={`admin-pin-wrap ${adminPinErr ? 'error' : ''}`}>
+                      <Lock size={13} className="admin-pin-icon"/>
+                      <input
+                        type={adminPinVisible ? 'text' : 'password'}
+                        placeholder="Code d'accès admin"
+                        value={adminPin}
+                        onChange={e => { setAdminPin(e.target.value); setAdminPinErr(''); }}
+                        onKeyDown={e => e.key === 'Enter' && handleAdminAccess()}
+                        autoFocus
+                      />
+                      <button type="button" className="admin-eye" onClick={() => setAdminPinVisible(v => !v)}>
+                        {adminPinVisible ? <EyeOff size={12}/> : <Eye size={12}/>}
+                      </button>
+                    </div>
+                    {adminPinErr && <div className="admin-pin-error"><AlertCircle size={11}/>{adminPinErr}</div>}
+                    <button className="admin-verify-btn" onClick={handleAdminAccess}>
+                      Accéder au panneau admin <ChevronRight size={13}/>
+                    </button>
+                    <div className="admin-pin-hint">Code par défaut : <strong>HOVA2026</strong></div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="auth-divider"><span>ou</span></div>
 
+              {/* ── Google ── */}
               <button className="btn-google" onClick={handleGoogleLogin} type="button">
                 <svg width="18" height="18" viewBox="0 0 18 18">
                   <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
@@ -259,6 +359,24 @@ const AuthPage = ({ onLogin, onClose }) => {
                 </svg>
                 Continuer avec Google
               </button>
+
+              {/* ── Test profile box (register mode) ── */}
+              {mode === 'register' && (
+                <div className="auth-test-box">
+                  <div className="atb-head">
+                    <span className="atb-dot"></span>
+                    Profil de test pré-configuré
+                    <button className="atb-copy" onClick={copyTestCreds}>
+                      {copied ? <><Check size={10}/>Copié</> : <><Copy size={10}/>Copier</>}
+                    </button>
+                  </div>
+                  <div className="atb-row"><span>Email</span><code>{TEST_USER.email}</code></div>
+                  <div className="atb-row"><span>Mot de passe</span><code>{TEST_USER.password}</code></div>
+                  <button className="atb-use-btn" type="button" onClick={fillTestProfile}>
+                    Utiliser ce profil (connexion rapide)
+                  </button>
+                </div>
+              )}
 
               {mode === 'register' && (
                 <p className="auth-legal">

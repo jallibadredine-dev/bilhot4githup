@@ -3,11 +3,12 @@ import {
   LayoutDashboard, Users, CreditCard, Globe, HeadphonesIcon,
   Shield, TrendingUp, TrendingDown, Server, Zap, RefreshCw,
   AlertTriangle, CheckCircle, XCircle, Search, Filter,
-  ChevronDown, MoreHorizontal, Plus, Lock, Unlock, Eye,
+  ChevronDown, MoreHorizontal, Plus, Lock, Unlock, Eye, EyeOff,
   Wifi, WifiOff, Activity, Settings, Bell, ArrowUpRight,
   Building2, Home, MessageSquare, Key, Package, BarChart3,
   CheckCheck, Clock, LogOut, Database, Layers, Star,
-  ShieldAlert, UserPlus, FileText, Share2, Terminal
+  ShieldAlert, UserPlus, FileText, Share2, Terminal,
+  ToggleLeft, ToggleRight, Copy, Mail, Wallet, UserCheck, Crown
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
@@ -206,7 +207,52 @@ export default function SuperAdmin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [saveStatus, setSaveStatus] = useState('idle'); // idle | saving | success
+  const [saveStatus, setSaveStatus] = useState('idle');
+  const [stripeMode, setStripeMode] = useState(() => localStorage.getItem('sa_stripe_mode') || 'test');
+  const [stripeTestPk, setStripeTestPk] = useState(() => localStorage.getItem('sa_stripe_test_pk') || '');
+  const [stripeLivePk, setStripeLivePk] = useState(() => localStorage.getItem('sa_stripe_live_pk') || '');
+  const [stripeShowPk, setStripeShowPk] = useState(false);
+  const [stripeSaved, setStripeSaved] = useState(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '', plan: 'starter', role: 'user' });
+  const [userCreateStatus, setUserCreateStatus] = useState('idle');
+  const [userCreateError, setUserCreateError] = useState('');
+  const [createdUsers, setCreatedUsers] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('sa_created_users') || '[]'); } catch { return []; }
+  });
+
+  const saveStripeConfig = () => {
+    localStorage.setItem('sa_stripe_mode', stripeMode);
+    localStorage.setItem('sa_stripe_test_pk', stripeTestPk);
+    localStorage.setItem('sa_stripe_live_pk', stripeLivePk);
+    setStripeSaved(true);
+    setTimeout(() => setStripeSaved(false), 2000);
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUser.email || !newUser.name) { setUserCreateError('Nom et email requis.'); return; }
+    setUserCreateStatus('loading');
+    setUserCreateError('');
+    const tempPassword = 'Hova' + Math.random().toString(36).slice(2, 8).toUpperCase() + '!';
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      const { error } = await supabase.auth.signUp({
+        email: newUser.email,
+        password: tempPassword,
+        options: { data: { full_name: newUser.name } }
+      });
+      if (error) throw error;
+      const created = { ...newUser, password: tempPassword, createdAt: new Date().toISOString() };
+      const updated = [...createdUsers, created];
+      setCreatedUsers(updated);
+      localStorage.setItem('sa_created_users', JSON.stringify(updated));
+      setNewUser({ name: '', email: '', plan: 'starter', role: 'user' });
+      setUserCreateStatus('success');
+      setTimeout(() => setUserCreateStatus('idle'), 3000);
+    } catch (err) {
+      setUserCreateStatus('idle');
+      setUserCreateError(err.message || 'Erreur lors de la création.');
+    }
+  };
 
   const filteredTenants = useMemo(() => {
     let list = TENANTS;
@@ -255,6 +301,10 @@ export default function SuperAdmin() {
     { section: 'SURVEILLANCE FINANCIÈRE', items: [
       { id: 'billing', label: 'Paiements & Facturation', icon: <CreditCard size={18} /> },
       { id: 'plan-builder', label: 'Abonnements & Offres', icon: <Layers size={18} /> },
+      { id: 'stripe-config', label: 'Configuration Stripe', icon: <Wallet size={18} /> },
+    ]},
+    { section: 'UTILISATEURS & ACCÈS', items: [
+      { id: 'users', label: 'Utilisateurs & Profils', icon: <UserCheck size={18} /> },
     ]},
     { section: 'LICENCES & CLIENTS', items: [
       { id: 'mms-hot', label: 'Management PMS Hôte', icon: <Home size={18} />, hidden: mode === 'pro' },
@@ -704,6 +754,248 @@ export default function SuperAdmin() {
              </div>
           </div>
         );
+      case 'stripe-config':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            {/* Mode toggle */}
+            <div className="sa-card mb-4">
+              <div className="sa-card-header">
+                <h3><Wallet size={16} style={{ display:'inline', marginRight:6 }}/>Passerelle de Paiement Stripe</h3>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span className={`plan-pill ${stripeMode === 'test' ? 'silver' : 'gold'}`}>
+                    {stripeMode === 'test' ? 'MODE TEST' : 'MODE LIVE'}
+                  </span>
+                </div>
+              </div>
+              <div style={{ padding:'0 0 16px' }}>
+                <div className="sa-section-label" style={{ marginBottom:12 }}>Environnement actif</div>
+                <div style={{ display:'flex', gap:8, marginBottom:20 }}>
+                  <button
+                    className={`white-action-btn sa-clickable ${stripeMode === 'test' ? 'primary-cobalt' : ''}`}
+                    style={{ flex:1 }}
+                    onClick={() => setStripeMode('test')}
+                  >
+                    {stripeMode === 'test' ? <CheckCircle size={14}/> : <ToggleLeft size={14}/>}
+                    Stripe TEST
+                  </button>
+                  <button
+                    className={`white-action-btn sa-clickable ${stripeMode === 'live' ? 'primary-cobalt' : ''}`}
+                    style={{ flex:1 }}
+                    onClick={() => setStripeMode('live')}
+                  >
+                    {stripeMode === 'live' ? <CheckCircle size={14}/> : <ToggleRight size={14}/>}
+                    Stripe LIVE
+                  </button>
+                </div>
+
+                {stripeMode === 'test' && (
+                  <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:10, padding:'12px 14px', marginBottom:16, display:'flex', gap:8, fontSize:'0.78rem', color:'#92400E' }}>
+                    <AlertTriangle size={14} style={{ flexShrink:0, marginTop:1 }}/>
+                    <span>Mode TEST actif — aucun vrai paiement ne sera débité. Utilisez la carte test <strong>4242 4242 4242 4242</strong> · exp : <strong>12/28</strong> · CVC : <strong>123</strong></span>
+                  </div>
+                )}
+                {stripeMode === 'live' && (
+                  <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:10, padding:'12px 14px', marginBottom:16, display:'flex', gap:8, fontSize:'0.78rem', color:'#991B1B' }}>
+                    <Shield size={14} style={{ flexShrink:0, marginTop:1 }}/>
+                    <span>Mode LIVE actif — les paiements réels seront traités. Vérifiez votre configuration avant de sauvegarder.</span>
+                  </div>
+                )}
+
+                <div className="config-group">
+                  <label>Clé Publique (Publishable Key) — {stripeMode === 'test' ? 'pk_test_...' : 'pk_live_...'}</label>
+                  <div className="input-with-eye">
+                    <input
+                      type={stripeShowPk ? 'text' : 'password'}
+                      className="sa-modern-input"
+                      placeholder={stripeMode === 'test' ? 'pk_test_51...' : 'pk_live_51...'}
+                      value={stripeMode === 'test' ? stripeTestPk : stripeLivePk}
+                      onChange={e => stripeMode === 'test' ? setStripeTestPk(e.target.value) : setStripeLivePk(e.target.value)}
+                    />
+                    <button type="button" onClick={() => setStripeShowPk(v => !v)} style={{ background:'none', border:'none', cursor:'pointer', color:'#94A3B8' }}>
+                      {stripeShowPk ? <EyeOff size={15}/> : <Eye size={15}/>}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="config-group mt-4">
+                  <label>Clé Secrète (Secret Key) — Backend uniquement</label>
+                  <div className="config-input-fake" style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ flex:1, color:'#94A3B8' }}>{stripeMode === 'test' ? 'sk_test_••••••••••••••••••••' : 'sk_live_••••••••••••••••••••'}</span>
+                    <span style={{ background:'#FEF3C7', color:'#B45309', border:'1px solid #FDE68A', borderRadius:6, padding:'2px 8px', fontSize:'0.68rem', fontWeight:700 }}>BACKEND ONLY</span>
+                  </div>
+                  <div style={{ fontSize:'0.7rem', color:'#94A3B8', marginTop:4 }}>⚠️ La clé secrète ne doit jamais être exposée côté client. À configurer dans votre backend sécurisé.</div>
+                </div>
+
+                <div className="config-group mt-4">
+                  <label>Webhook Endpoint URL</label>
+                  <input type="text" className="sa-modern-input" placeholder="https://api.votreserveur.com/stripe/webhook" />
+                  <div style={{ fontSize:'0.7rem', color:'#94A3B8', marginTop:4 }}>Configurez ce webhook dans votre Dashboard Stripe → Developers → Webhooks</div>
+                </div>
+
+                <div style={{ display:'flex', justifyContent:'flex-end', marginTop:20 }}>
+                  <button className={`sa-btn primary-cobalt sa-clickable ${stripeSaved ? '' : ''}`} onClick={saveStripeConfig}>
+                    {stripeSaved ? <><CheckCircle size={14}/> Configuration sauvegardée</> : <><Database size={14}/> Sauvegarder la configuration</>}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Test cards reference */}
+            <div className="sa-card">
+              <div className="sa-card-header"><h3>Cartes de Test Stripe</h3></div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(240px,1fr))', gap:10, padding:'8px 0 4px' }}>
+                {[
+                  { name: 'Visa (succès)', num: '4242 4242 4242 4242', color: '#3B82F6' },
+                  { name: 'Mastercard (succès)', num: '5555 5555 5555 4444', color: '#10B981' },
+                  { name: 'Refus (fonds insuf.)', num: '4000 0000 0000 9995', color: '#EF4444' },
+                  { name: '3DS requis', num: '4000 0025 0000 3155', color: '#F59E0B' },
+                ].map(card => (
+                  <div key={card.num} style={{ border:'1px solid #E2E8F0', borderRadius:10, padding:'12px 14px' }}>
+                    <div style={{ fontSize:'0.7rem', fontWeight:800, color:card.color, marginBottom:6 }}>{card.name}</div>
+                    <code style={{ fontSize:'0.85rem', fontWeight:700, letterSpacing:'0.08em' }}>{card.num}</code>
+                    <div style={{ fontSize:'0.7rem', color:'#94A3B8', marginTop:4 }}>Exp: 12/28 · CVC: 123</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'users':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="sa-content-placeholder">
+            {/* Supabase + Google Auth info */}
+            <div className="sa-card mb-4">
+              <div className="sa-card-header">
+                <h3>Authentification Supabase & Google OAuth</h3>
+                <span className="plan-pill gold">Supabase Auth</span>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, padding:'4px 0 12px' }}>
+                <div style={{ border:'1px solid #D1FAE5', borderRadius:10, padding:'14px', background:'#F0FDF4' }}>
+                  <div style={{ fontWeight:800, fontSize:'0.82rem', marginBottom:6, display:'flex', alignItems:'center', gap:6 }}>
+                    <CheckCircle size={14} color="#10B981"/>Email / Mot de passe
+                  </div>
+                  <div style={{ fontSize:'0.74rem', color:'#374151' }}>Inscription et connexion par email configurées et opérationnelles via Supabase Auth.</div>
+                </div>
+                <div style={{ border:'1px solid #BFDBFE', borderRadius:10, padding:'14px', background:'#EFF6FF' }}>
+                  <div style={{ fontWeight:800, fontSize:'0.82rem', marginBottom:6, display:'flex', alignItems:'center', gap:6 }}>
+                    <svg width="14" height="14" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707a5.41 5.41 0 0 1 0-3.414V4.961H.957a8.992 8.992 0 0 0 0 8.078l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.582C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 3.166 6.656 3.58 9 3.58z"/></svg>
+                    Google OAuth
+                  </div>
+                  <div style={{ fontSize:'0.74rem', color:'#1E40AF' }}>Bouton Google intégré dans AuthPage. Requiert la configuration de Google OAuth dans le Dashboard Supabase.</div>
+                </div>
+              </div>
+              <div style={{ background:'#F8FAFC', borderRadius:10, padding:'12px 14px', fontSize:'0.76rem', color:'#475569' }}>
+                <div style={{ fontWeight:700, marginBottom:8 }}>Pour activer Google OAuth :</div>
+                <ol style={{ paddingLeft:16, margin:0, display:'flex', flexDirection:'column', gap:4 }}>
+                  <li>Allez sur <strong>console.cloud.google.com</strong> → Créer un projet OAuth</li>
+                  <li>Copiez Client ID et Secret dans <strong>Supabase Dashboard → Auth → Providers → Google</strong></li>
+                  <li>Ajoutez l'URL de redirection : <code style={{ background:'#E2E8F0', padding:'1px 5px', borderRadius:4 }}>{window.location.origin}</code></li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Create new user */}
+            <div className="sa-card mb-4">
+              <div className="sa-card-header">
+                <h3>Créer un Nouveau Profil Utilisateur</h3>
+                <button className="white-action-btn primary-cobalt sa-clickable" onClick={handleCreateUser} disabled={userCreateStatus === 'loading'}>
+                  {userCreateStatus === 'loading' ? <><RefreshCw size={14} className="animate-spin"/> Création...</> :
+                   userCreateStatus === 'success' ? <><CheckCircle size={14}/> Créé !</> :
+                   <><UserPlus size={14}/> Créer le compte</>}
+                </button>
+              </div>
+              {userCreateError && (
+                <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'8px 12px', fontSize:'0.76rem', color:'#991B1B', marginBottom:12, display:'flex', gap:6 }}>
+                  <AlertTriangle size={13}/>{userCreateError}
+                </div>
+              )}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, padding:'8px 0' }}>
+                <div className="config-group">
+                  <label>Nom complet</label>
+                  <input type="text" className="sa-modern-input" placeholder="Marie Dupont" value={newUser.name} onChange={e => setNewUser(p => ({...p, name: e.target.value}))} />
+                </div>
+                <div className="config-group">
+                  <label>Adresse email</label>
+                  <input type="email" className="sa-modern-input" placeholder="marie@hotel.com" value={newUser.email} onChange={e => setNewUser(p => ({...p, email: e.target.value}))} />
+                </div>
+                <div className="config-group">
+                  <label>Plan d'accès</label>
+                  <select className="sa-modern-select" value={newUser.plan} onChange={e => setNewUser(p => ({...p, plan: e.target.value}))}>
+                    <option value="starter">Starter (Essai)</option>
+                    <option value="pro">PRO Intelligence</option>
+                    <option value="lifetime">Pack à Vie</option>
+                    <option value="admin">Administrateur</option>
+                  </select>
+                </div>
+                <div className="config-group">
+                  <label>Rôle système</label>
+                  <select className="sa-modern-select" value={newUser.role} onChange={e => setNewUser(p => ({...p, role: e.target.value}))}>
+                    <option value="user">Utilisateur standard</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Administrateur</option>
+                  </select>
+                </div>
+              </div>
+              <div className="config-notice mt-2">
+                <Shield size={13}/>
+                <span>Un mot de passe temporaire sécurisé sera généré automatiquement et affiché dans le tableau ci-dessous.</span>
+              </div>
+            </div>
+
+            {/* Test profile */}
+            <div className="sa-card mb-4">
+              <div className="sa-card-header">
+                <h3>Profil de Test Pré-configuré</h3>
+                <span className="plan-pill silver">TEST</span>
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, padding:'4px 0 8px' }}>
+                {[
+                  { label:'Email', value:'test@hova.app' },
+                  { label:'Mot de passe', value:'TestHova2026!' },
+                  { label:'Rôle', value:'Utilisateur PRO' },
+                ].map(f => (
+                  <div key={f.label} style={{ border:'1px solid #E2E8F0', borderRadius:9, padding:'10px 12px' }}>
+                    <div style={{ fontSize:'0.68rem', fontWeight:700, color:'#94A3B8', marginBottom:4, textTransform:'uppercase' }}>{f.label}</div>
+                    <code style={{ fontSize:'0.82rem', fontWeight:700, color:'#0F172A' }}>{f.value}</code>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize:'0.74rem', color:'#64748B', marginTop:4 }}>Ce compte de test est disponible sur la page de connexion via le bouton "Remplir avec le profil de test". L'email doit d'abord être inscrit via Inscription → bouton profil test.</div>
+            </div>
+
+            {/* Created users history */}
+            {createdUsers.length > 0 && (
+              <div className="sa-card">
+                <div className="sa-card-header">
+                  <h3>Comptes Créés ({createdUsers.length})</h3>
+                  <button className="white-action-btn sa-clickable" onClick={() => { setCreatedUsers([]); localStorage.removeItem('sa_created_users'); }}>Effacer l'historique</button>
+                </div>
+                <div className="sa-table-wrap">
+                  <table className="sa-modern-table">
+                    <thead>
+                      <tr>
+                        <th>NOM</th><th>EMAIL</th><th>MOT DE PASSE TEMP.</th><th>PLAN</th><th>CRÉÉ LE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {createdUsers.map((u, i) => (
+                        <tr key={i}>
+                          <td className="font-bold">{u.name}</td>
+                          <td>{u.email}</td>
+                          <td><code style={{ background:'#F1F5F9', padding:'2px 6px', borderRadius:4, fontSize:'0.8rem' }}>{u.password}</code></td>
+                          <td><span className={`plan-pill ${u.plan === 'pro' ? 'gold' : u.plan === 'lifetime' ? 'enterprise' : 'silver'}`}>{u.plan}</span></td>
+                          <td className="text-slate-500">{new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        );
+
       default: return <div className="sa-card">En cours de développement...</div>;
     }
   };
