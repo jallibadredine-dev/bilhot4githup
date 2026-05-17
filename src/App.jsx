@@ -58,6 +58,7 @@ function App() {
   const [isLanding, setIsLanding] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
   const [pmsMode, setPmsMode] = useState('pro');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -66,6 +67,7 @@ function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
+        setCurrentUser(session.user);
       }
       setSessionChecked(true);
     });
@@ -73,8 +75,10 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         setIsAuthenticated(true);
+        setCurrentUser(session.user);
       } else {
         setIsAuthenticated(false);
+        setCurrentUser(null);
       }
     });
 
@@ -241,6 +245,7 @@ function App() {
             pmsMode={pmsMode}
             setPmsMode={setPmsMode}
             setActiveView={setActiveView}
+            currentUser={currentUser}
             onLogout={() => {
               setIsAuthenticated(false);
               setActiveView('dashboard');

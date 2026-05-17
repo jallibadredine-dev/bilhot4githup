@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Search, RotateCcw, ChevronDown, Download, Save, Grid, List, Calendar, Filter, Shield, LogOut } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, RotateCcw, ChevronDown, Download, Save, Grid, List, Calendar, Filter, Shield, LogOut, Settings, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
 import './TopHeader.css';
 
 const StatPill = ({ label, count, type = 'default' }) => (
@@ -10,11 +11,47 @@ const StatPill = ({ label, count, type = 'default' }) => (
   </div>
 );
 
-const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout }) => {
+const UserAvatar = ({ name, email }) => {
+  const initials = name
+    ? name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : email?.[0]?.toUpperCase() ?? 'U';
+
+  const colors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
+  const colorIndex = (name || email || '').charCodeAt(0) % colors.length;
+  const bg = colors[colorIndex];
+
+  return (
+    <div className="user-avatar" style={{ background: bg }}>
+      {initials}
+    </div>
+  );
+};
+
+const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }) => {
   const [loggingOut, setLoggingOut] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const displayName = currentUser?.user_metadata?.full_name
+    || currentUser?.user_metadata?.name
+    || currentUser?.email?.split('@')[0]
+    || 'Utilisateur';
+
+  const email = currentUser?.email || '';
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     setLoggingOut(true);
+    setDropdownOpen(false);
     await supabase.auth.signOut();
     if (onLogout) onLogout();
   };
@@ -23,7 +60,7 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout }) => {
     <header className="topheader-premium">
       {/* ─── MAIN TOOLBAR ─── */}
       <div className="toolbar-main">
-        
+
         {/* Left Section: Context & Filters */}
         <div className="toolbar-left">
           <div className="context-group">
@@ -61,8 +98,6 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout }) => {
 
         {/* Right Section: Global Modes & Actions */}
         <div className="toolbar-right">
-          {/* Mode Switcher removed */}
-
           <div className="global-actions">
             <button className="btn-premium secondary police-btn" onClick={() => setActiveView('police')}>
               <Shield size={16} />
@@ -76,15 +111,67 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout }) => {
               <Save size={16} />
               <span>Save Changes</span>
             </button>
-            <button
-              className="btn-premium logout-btn"
-              onClick={handleLogout}
-              disabled={loggingOut}
-              title="Se déconnecter"
-            >
-              <LogOut size={16} />
-              <span>{loggingOut ? '...' : 'Déconnexion'}</span>
-            </button>
+
+            {/* User Profile */}
+            {currentUser && (
+              <div className="user-profile-wrapper" ref={dropdownRef}>
+                <button
+                  className={`user-profile-btn ${dropdownOpen ? 'open' : ''}`}
+                  onClick={() => setDropdownOpen(v => !v)}
+                >
+                  <UserAvatar name={displayName} email={email} />
+                  <div className="user-profile-info">
+                    <span className="user-profile-name">{displayName}</span>
+                    <span className="user-profile-email">{email}</span>
+                  </div>
+                  <ChevronDown size={14} className={`profile-chevron ${dropdownOpen ? 'rotated' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {dropdownOpen && (
+                    <motion.div
+                      className="user-dropdown"
+                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                    >
+                      <div className="user-dropdown-header">
+                        <UserAvatar name={displayName} email={email} />
+                        <div>
+                          <p className="dropdown-name">{displayName}</p>
+                          <p className="dropdown-email">{email}</p>
+                        </div>
+                      </div>
+                      <div className="user-dropdown-divider" />
+                      <button
+                        className="user-dropdown-item"
+                        onClick={() => { setActiveView('settings'); setDropdownOpen(false); }}
+                      >
+                        <Settings size={15} />
+                        <span>Paramètres</span>
+                      </button>
+                      <button
+                        className="user-dropdown-item"
+                        onClick={() => { setActiveView('system-admin'); setDropdownOpen(false); }}
+                      >
+                        <User size={15} />
+                        <span>Mon compte</span>
+                      </button>
+                      <div className="user-dropdown-divider" />
+                      <button
+                        className="user-dropdown-item logout-item"
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                      >
+                        <LogOut size={15} />
+                        <span>{loggingOut ? 'Déconnexion...' : 'Se déconnecter'}</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </div>
         </div>
       </div>
