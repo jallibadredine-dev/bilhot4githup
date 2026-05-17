@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 import { supabase } from './lib/supabase';
+import { LayoutDashboard, Monitor, MessageSquare, UserCheck, Menu } from 'lucide-react';
 import { getCheckinTokenFromURL } from './lib/checkin';
 
 // Core Layout & Common Components (Eager Load)
@@ -252,9 +253,10 @@ function App() {
         activeView={activeView} 
         setActiveView={(view) => {
           setActiveView(view);
-          setIsMobileMenuOpen(false); // Auto-close on selection on mobile
+          setIsMobileMenuOpen(false);
         }} 
         pmsMode={pmsMode}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
 
       <main className="app-main-content">
@@ -297,6 +299,44 @@ function App() {
       
       {/* Global AI Assistant */}
       <OracleAssistant />
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="mobile-bottom-nav" aria-label="Navigation mobile">
+        <button
+          className={activeView === 'dashboard' ? 'active' : ''}
+          onClick={() => setActiveView('dashboard')}
+        >
+          <LayoutDashboard size={22} />
+          <span>Dashboard</span>
+        </button>
+        <button
+          className={activeView === 'frontdesk' ? 'active' : ''}
+          onClick={() => setActiveView('frontdesk')}
+        >
+          <Monitor size={22} />
+          <span>Planning</span>
+        </button>
+        <button
+          className={activeView === 'checkin-manager' ? 'active' : ''}
+          onClick={() => setActiveView('checkin-manager')}
+        >
+          <UserCheck size={22} />
+          <span>Check-in</span>
+        </button>
+        <button
+          className={activeView === 'unified-inbox' ? 'active' : ''}
+          onClick={() => setActiveView('unified-inbox')}
+        >
+          <MessageSquare size={22} />
+          <span>Inbox</span>
+        </button>
+        <button
+          onClick={() => setIsMobileMenuOpen(true)}
+        >
+          <Menu size={22} />
+          <span>Menu</span>
+        </button>
+      </nav>
     </div>
   );
 }

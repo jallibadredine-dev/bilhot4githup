@@ -19,6 +19,7 @@ const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCo
       style={itemStyle}
       aria-label={`Navigate to ${label}`}
       aria-current={isActive ? 'page' : undefined}
+      title={label}
     >
       <Icon size={18} style={color ? { color } : {}} />
       <span style={isBold ? { fontWeight: 'inherit' } : {}}>{label}</span>
@@ -27,7 +28,7 @@ const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCo
   );
 };
 
-const Sidebar = ({ activeView, setActiveView, pmsMode }) => {
+const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
   return (
     <nav className="sidebar-container hide-scrollbar" aria-label="Main Navigation">
       {/* Logo Area */}
@@ -37,7 +38,7 @@ const Sidebar = ({ activeView, setActiveView, pmsMode }) => {
 
         <button
           className="mobile-sidebar-close"
-          onClick={() => setActiveView(activeView)} 
+          onClick={onClose}
           aria-label="Close sidebar"
         >
           <XCircle size={24} />

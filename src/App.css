@@ -2,7 +2,7 @@
   display: flex;
   height: 100vh;
   width: 100vw;
-  background: #f1f5f9; /* Slate 100 for better contrast */
+  background: #f1f5f9;
   color: var(--text-primary);
   padding: 12px;
   gap: 12px;
@@ -20,6 +20,7 @@
   flex-direction: column;
   z-index: 10;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  flex-shrink: 0;
 }
 
 /* ─── MAIN CONTENT AREA FRAMING ─── */
@@ -30,6 +31,7 @@
   gap: 12px;
   overflow: hidden;
   background: transparent;
+  min-width: 0;
 }
 
 /* Top Header Framing */
@@ -43,6 +45,7 @@
   padding: 0 1.5rem;
   z-index: 5;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  flex-shrink: 0;
 }
 
 /* Dynamic Content Grid Framing */
@@ -52,6 +55,7 @@
   gap: 12px;
   overflow: hidden;
   border-radius: 16px;
+  min-height: 0;
 }
 
 .app-panel {
@@ -64,59 +68,40 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* 2. Task List Panel (Center-Left) */
-.app-task-list {
-  width: 320px;
-}
+.app-task-list { width: 320px; }
+.app-timeline  { flex: 1; }
+.app-activity-panel { width: 300px; }
 
-/* 3. Timeline View Panel (Center-Right) */
-.app-timeline {
-  flex: 1;
-}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* 4. Activity Side Panel (Far Right) */
-.app-activity-panel {
-  width: 300px;
-}
-
-/* Global utility for hiding scrollbars on main panes if we want them ultra clean */
-.hide-scrollbar::-webkit-scrollbar {
+/* ─── MOBILE BOTTOM NAVIGATION ─── */
+.mobile-bottom-nav {
   display: none;
 }
-.hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
 
-/* ─── Responsive App Layout ─── */
-
+/* ─── Responsive: Tablet 1024px ─── */
 @media (max-width: 1200px) {
-  .app-task-list, .app-activity-panel {
-    width: 260px;
-  }
+  .app-task-list, .app-activity-panel { width: 260px; }
 }
 
 @media (max-width: 1024px) {
-  /* Tablet / iPad Landscape Layout */
   .app-sidebar {
-    width: 84px;
+    width: 72px;
     transition: width 0.3s ease;
   }
-  .app-task-list, .app-activity-panel {
-    display: none; /* Hide side panels on tablets to focus on timeline */
-  }
-  .app-header {
-    padding: 0 1.5rem;
-  }
+  .app-task-list, .app-activity-panel { display: none; }
+  .app-header { padding: 0 1rem; }
 }
 
+/* ─── Responsive: Mobile 768px ─── */
 @media (max-width: 768px) {
-  /* Mobile Layout */
   .app-container {
     padding: 0;
     gap: 0;
     position: relative;
     overflow: hidden;
+    flex-direction: column;
   }
 
   .app-sidebar {
@@ -127,9 +112,9 @@
     width: 280px;
     height: 100%;
     z-index: 1001;
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 20px 0 50px rgba(0,0,0,0.5);
-    background: var(--bg-surface);
+    transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 20px 0 60px rgba(0,0,0,0.2);
+    background: white;
     border-radius: 0;
   }
 
@@ -140,25 +125,36 @@
   .sidebar-mobile-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     z-index: 1000;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 
   .app-main-content {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     padding: 0;
     gap: 0;
+    flex: 1;
   }
 
   .app-header {
-    height: 64px;
+    height: 60px;
     padding: 0 1rem;
     border-radius: 0;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border-light);
+    background: white;
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
     flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
 
   .mobile-hamburger {
@@ -166,17 +162,19 @@
     flex-direction: column;
     gap: 5px;
     cursor: pointer;
-    margin-right: 1rem;
+    margin-right: 0.75rem;
     padding: 8px;
     background: transparent;
     border: none;
     outline: none;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-hamburger .bar {
     width: 22px;
     height: 2px;
-    background: var(--text-primary);
+    background: #334155;
     border-radius: 4px;
     transition: background 0.2s;
   }
@@ -190,21 +188,71 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 1rem;
+    padding: 0;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
   }
 
   .app-full-module {
     padding: 0;
-    min-height: calc(100vh - 64px);
+    min-height: calc(100dvh - 60px - 64px);
   }
 
   .app-panel {
     border-radius: var(--radius-lg);
   }
+
+  /* ─── Mobile Bottom Nav ─── */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: white;
+    border-top: 1px solid #e2e8f0;
+    z-index: 998;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+  }
+
+  .mobile-bottom-nav button {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #94a3b8;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 8px 4px;
+    border-radius: 0;
+    transition: color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+    min-width: 0;
+    text-transform: uppercase;
+  }
+
+  .mobile-bottom-nav button:active {
+    background: #f1f5f9;
+  }
+
+  .mobile-bottom-nav button.active {
+    color: #2563eb;
+  }
+
+  .mobile-bottom-nav button.active svg {
+    filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.3));
+  }
 }
 
 @media (min-width: 769px) {
-  .mobile-hamburger {
-    display: none;
-  }
+  .mobile-hamburger { display: none; }
+  .mobile-bottom-nav { display: none !important; }
 }
