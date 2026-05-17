@@ -635,13 +635,16 @@
    TIMELINE CARD
 ═══════════════════════════════════════════════════════════ */
 .db-timeline-card {
-  min-height: 380px;
+  min-height: 560px;
+  height: 560px;
 }
 
 .db-timeline-embed {
-  height: 340px;
+  height: 100%;
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ═══════════════════════════════════════════════════════════

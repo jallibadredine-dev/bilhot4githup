@@ -8,7 +8,7 @@ import {
   CalendarDays, Bot
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import TimelineView from '../views/TimelineView';
+import PlanningCalendar from './PlanningCalendar';
 import './ModularDashboard.css';
 
 const now = new Date();
@@ -352,18 +352,8 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
           ROW 3 — TIMELINE
       ══════════════════════════════════════════════════ */}
       <div className="db-card db-timeline-card">
-        <div className="db-card-header">
-          <div className="db-card-title">
-            <CalendarDays size={16} color="#2563EB"/>
-            <span>Planning des Réservations — Live</span>
-            <PulseDot/>
-          </div>
-          <button className="db-card-action" onClick={() => nav('frontdesk')}>
-            Vue complète <ChevronRight size={14}/>
-          </button>
-        </div>
         <div className="db-timeline-embed">
-          <TimelineView/>
+          <PlanningCalendar/>
         </div>
       </div>
 
