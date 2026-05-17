@@ -876,3 +876,89 @@
   transition: opacity 0.12s;
 }
 .sh-cred-share-btn:hover { opacity: 0.88; }
+
+/* ════════════════════════════════════════════════════════════
+   MODAL — PASSWORD PREVIEW BOX (step 1)
+════════════════════════════════════════════════════════════ */
+.sh-pwd-preview {
+  border: 2px solid #FECACA;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FFF1F2 0%, #FFF8F8 100%);
+}
+
+.sh-pwd-preview-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px 6px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #FF385C;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.sh-pwd-preview-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #FFFFFF;
+  border-top: 1px solid #FECACA;
+  border-bottom: 1px solid #FECACA;
+}
+
+.sh-pwd-preview-code {
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #FF385C;
+  letter-spacing: 0.08em;
+  flex: 1;
+}
+
+.sh-pwd-preview-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sh-pwd-copy-btn,
+.sh-pwd-regen-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1.5px solid transparent;
+  transition: all 0.15s;
+}
+
+.sh-pwd-copy-btn {
+  background: #FF385C;
+  color: #FFFFFF;
+  border-color: #FF385C;
+}
+.sh-pwd-copy-btn:hover { opacity: 0.88; }
+.sh-pwd-copy-btn.copied { background: #10B981; border-color: #10B981; }
+
+.sh-pwd-regen-btn {
+  background: #FFFFFF;
+  color: #888888;
+  border-color: #E8E8E8;
+}
+.sh-pwd-regen-btn:hover { border-color: #CCCCCC; color: #444444; }
+
+.sh-pwd-preview-hint {
+  font-size: 0.70rem;
+  color: #AA6666;
+  margin: 0;
+  padding: 7px 14px;
+  line-height: 1.45;
+}

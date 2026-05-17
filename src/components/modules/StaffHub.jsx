@@ -114,9 +114,11 @@ const StaffHub = () => {
   const [addingNote,     setAddingNote]     = useState(false);
   const [notifConfig,    setNotifConfig]    = useState(() => getStaffNotifConfig());
   const [notifLog,       setNotifLog]       = useState(() => getStaffNotifLog());
-  const [sendResult,     setSendResult]     = useState(null);   // null | { email, sms, whatsapp, tempPassword }
+  const [sendResult,     setSendResult]     = useState(null);
   const [configSaved,    setConfigSaved]    = useState(false);
   const [testSending,    setTestSending]    = useState({ email: false, sms: false });
+  const [modalPassword,  setModalPassword]  = useState(() => generateTempPassword());
+  const [pwdCopied,      setPwdCopied]      = useState(false);
 
   /* ── Persist to localStorage ── */
   useEffect(() => { localStorage.setItem('sh_staff', JSON.stringify(staffList)); }, [staffList]);
@@ -139,7 +141,7 @@ const StaffHub = () => {
   const handleConfirmAdd = async () => {
     setSending(true);
     setSendResult(null);
-    const tempPassword = generateTempPassword();
+    const tempPassword = modalPassword;
     const roleLabel = ROLE_DEFS[newStaff.role]?.label || newStaff.role;
     const id = `STF-${String(staffList.length + 1).padStart(3,'0')}`;
     const created = {
@@ -859,7 +861,7 @@ const StaffHub = () => {
             >
               <div className="sh-modal-head">
                 <h2>{addStep === 4 ? 'Invitation envoyée !' : 'Nouveau Collaborateur'}</h2>
-                <button className="sh-btn-icon" onClick={() => { setIsAddOpen(false); setAddStep(1); setSendResult(null); setNewStaff(newStaffDefault()); }}><X size={18}/></button>
+                <button className="sh-btn-icon" onClick={() => { setIsAddOpen(false); setAddStep(1); setSendResult(null); setNewStaff(newStaffDefault()); setModalPassword(generateTempPassword()); setPwdCopied(false); }}><X size={18}/></button>
               </div>
 
               {/* Step indicator — hidden on step 4 */}
@@ -902,12 +904,36 @@ const StaffHub = () => {
                       <label>WhatsApp (si différent du téléphone)</label>
                       <input type="tel" placeholder="+212 6 00 00 00" value={newStaff.whatsapp} onChange={e => setNewStaff(p=>({...p,whatsapp:e.target.value}))}/>
                     </div>
-                    <div className="sh-info-box">
-                      <Sparkles size={14} color="#7C3AED"/>
-                      <div>
-                        <strong>Envoi automatique des accès</strong>
-                        <p>Un mot de passe temporaire sécurisé sera généré et envoyé par Email (EmailJS), SMS (Twilio) et/ou WhatsApp selon votre configuration Notifications.</p>
+                    {/* Password preview box */}
+                    <div className="sh-pwd-preview">
+                      <div className="sh-pwd-preview-head">
+                        <Lock size={13} color="#FF385C"/>
+                        <span>Mot de passe temporaire généré</span>
                       </div>
+                      <div className="sh-pwd-preview-body">
+                        <code className="sh-pwd-preview-code">{modalPassword}</code>
+                        <div className="sh-pwd-preview-actions">
+                          <button
+                            className={`sh-pwd-copy-btn ${pwdCopied ? 'copied' : ''}`}
+                            onClick={() => {
+                              navigator.clipboard.writeText(modalPassword);
+                              setPwdCopied(true);
+                              setTimeout(() => setPwdCopied(false), 1800);
+                            }}
+                          >
+                            {pwdCopied ? <><CheckCircle2 size={12}/> Copié !</> : <><Copy size={12}/> Copier</>}
+                          </button>
+                          <button
+                            className="sh-pwd-regen-btn"
+                            onClick={() => { setModalPassword(generateTempPassword()); setPwdCopied(false); }}
+                          >
+                            <RefreshCw size={12}/> Nouveau
+                          </button>
+                        </div>
+                      </div>
+                      <p className="sh-pwd-preview-hint">
+                        Copiez ce mot de passe maintenant et partagez-le avec le membre — il sera aussi envoyé par email/SMS si configuré.
+                      </p>
                     </div>
                   </motion.div>
                 )}
@@ -1045,7 +1071,7 @@ const StaffHub = () => {
                     </button>
                   )}
                   {addStep === 4 && (
-                    <button className="sh-btn-primary" onClick={() => { setIsAddOpen(false); setAddStep(1); setSendResult(null); setNewStaff(newStaffDefault()); }}>
+                    <button className="sh-btn-primary" onClick={() => { setIsAddOpen(false); setAddStep(1); setSendResult(null); setNewStaff(newStaffDefault()); setModalPassword(generateTempPassword()); setPwdCopied(false); }}>
                       <Check size={14}/> Terminé
                     </button>
                   )}
