@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, ClipboardCheck, Activity, Settings, Moon, Key, Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database, ShieldCheck, CreditCard, Bot, Building2, Star, XCircle, UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code, Workflow } from 'lucide-react';
+import { LayoutDashboard, Calendar, ClipboardCheck, Activity, Settings, Moon, Key, Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database, ShieldCheck, CreditCard, Bot, Building2, Star, XCircle, UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code, Workflow, ClipboardList } from 'lucide-react';
 import './Sidebar.css';
 
 const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCount, color, isBold, extraStyle }) => {
@@ -67,6 +67,7 @@ const Sidebar = ({ activeView, setActiveView, pmsMode }) => {
             <SidebarItem id="inventory" icon={Layers} label="Gestion Inventaire" activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="services-hub" icon={UtensilsCrossed} label="Hub de Services (F&B)" activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="housekeeping" icon={ClipboardCheck} label="Housekeeping" activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="checkin-manager" icon={ClipboardList} label="Check-in Digital" color="#10B981" activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="guests" icon={Users} label="Gestion Clients (CRM)" activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="unified-inbox" icon={MessageSquare} label="Inbox Omnicanale" alertCount={2} color="#3B82F6" activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="reputation" icon={Star} label="E-Réputation & Avis" color="#FCD34D" activeView={activeView} setActiveView={setActiveView} />

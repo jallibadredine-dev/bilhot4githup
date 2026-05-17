@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 import { supabase } from './lib/supabase';
+import { getCheckinTokenFromURL } from './lib/checkin';
 
 // Core Layout & Common Components (Eager Load)
 import Sidebar from './components/layout/Sidebar';
@@ -43,6 +44,8 @@ const ReputationManager = lazy(() => import('./components/modules/ReputationMana
 const SettingsDashboard = lazy(() => import('./components/modules/SettingsDashboard'));
 const AffiliateSystem = lazy(() => import('./components/modules/AffiliateSystem'));
 const AutomationHub = lazy(() => import('./components/modules/AutomationHub'));
+const CheckinManager = lazy(() => import('./components/modules/CheckinManager'));
+const GuestCheckinPage = lazy(() => import('./components/modules/GuestCheckinPage'));
 const MoroccanPoliceForm = lazy(() => import('./components/modules/MoroccanPoliceForm'));
 const APIDocumentation = lazy(() => import('./components/modules/APIDocumentation'));
 const APIIntegration = lazy(() => import('./components/modules/APIIntegration'));
@@ -142,6 +145,8 @@ function App() {
         return <WebsiteBuilder />;
       case 'automation-hub':
         return <AutomationHub />;
+      case 'checkin-manager':
+        return <CheckinManager />;
       case 'automation-workflow':
         return <WorkflowBuilder />;
       case 'frontdesk':
@@ -193,6 +198,16 @@ function App() {
         return <ModularDashboard pmsMode="pro" onModuleSelect={setActiveView} />;
     }
   };
+
+  // ── Guest check-in page — bypasses auth entirely ──────────────────────
+  const checkinToken = getCheckinTokenFromURL();
+  if (checkinToken) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <GuestCheckinPage token={checkinToken} />
+      </Suspense>
+    );
+  }
 
   if (!sessionChecked) {
     return <LoadingFallback />;
