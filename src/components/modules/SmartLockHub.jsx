@@ -86,16 +86,29 @@ const SmartLockHub = () => {
   const [ttErr,    setTtErr]    = useState('');
 
   // TTHotel
-  const [tthUrl,   setTthUrl]   = useState(localStorage.getItem('slh_tthotel_url')   || 'https://api.tthotel.com');
-  const [tthCode,  setTthCode]  = useState(localStorage.getItem('slh_tthotel_code')  || '');
-  const [tthTok,   setTthTok]   = useState(localStorage.getItem('slh_tthotel_token') || '');
-  const [tthErr,   setTthErr]   = useState('');
+  const [tthUser,    setTthUser]    = useState(localStorage.getItem('slh_tthotel_user') || '');
+  const [tthPass,    setTthPass]    = useState('');
+  const [tthShowPw,  setTthShowPw]  = useState(false);
+  const [tthLoading, setTthLoading] = useState(false);
+  const [tthErr,     setTthErr]     = useState('');
 
   // Tuya
-  const [tuyaId,  setTuyaId]  = useState(localStorage.getItem('slh_tuya_id')     || '');
-  const [tuyaSec, setTuyaSec] = useState(localStorage.getItem('slh_tuya_secret') || '');
-  const [tuyaReg, setTuyaReg] = useState(localStorage.getItem('slh_tuya_region') || 'eu');
-  const [tuyaErr, setTuyaErr] = useState('');
+  const [tuyaUser,    setTuyaUser]    = useState(localStorage.getItem('slh_tuya_user') || '');
+  const [tuyaPass,    setTuyaPass]    = useState('');
+  const [tuyaShowPw,  setTuyaShowPw]  = useState(false);
+  const [tuyaLoading, setTuyaLoading] = useState(false);
+  const [tuyaReg,     setTuyaReg]     = useState(localStorage.getItem('slh_tuya_region') || 'eu');
+  const [tuyaErr,     setTuyaErr]     = useState('');
+
+  /* ── TTHotel / Tuya imported devices ── */
+  const [tthotelDevices, setTthotelDevices] = useState(() => {
+    try { const s = localStorage.getItem('slh_tthotel_devices'); return s ? JSON.parse(s) : (localStorage.getItem('slh_tthotel') ? TTHOTEL_DEMO_LOCKS : []); }
+    catch { return localStorage.getItem('slh_tthotel') ? TTHOTEL_DEMO_LOCKS : []; }
+  });
+  const [tuyaDevices, setTuyaDevices] = useState(() => {
+    try { const s = localStorage.getItem('slh_tuya_devices'); return s ? JSON.parse(s) : (localStorage.getItem('slh_tuya') ? TUYA_DEMO_LOCKS : []); }
+    catch { return localStorage.getItem('slh_tuya') ? TUYA_DEMO_LOCKS : []; }
+  });
 
   /* ── Devices ── */
   const [ttlockDevices, setTtlockDevices] = useState([]);
@@ -158,8 +171,8 @@ const SmartLockHub = () => {
     setSyncing(true); setApiError(null);
     let count = 0;
     if (connTTLock && ttToken) count += await fetchTTLock();
-    if (connTTHotel) count += TTHOTEL_DEMO_LOCKS.length;
-    if (connTuya)    count += TUYA_DEMO_LOCKS.length;
+    count += tthotelDevices.length;
+    count += tuyaDevices.length;
     setLastSync(new Date());
     setSyncing(false);
     return count;
@@ -168,8 +181,8 @@ const SmartLockHub = () => {
   /* ════ All devices aggregated ════ */
   const allDevices = [
     ...ttlockDevices,
-    ...(connTTHotel ? TTHOTEL_DEMO_LOCKS.map(l => ({ ...l, provider: 'tthotel', lockId: l.id })) : []),
-    ...(connTuya    ? TUYA_DEMO_LOCKS.map(l    => ({ ...l, provider: 'tuya',    lockId: l.id })) : []),
+    ...tthotelDevices.map(l => ({ ...l, provider: 'tthotel', lockId: l.id })),
+    ...tuyaDevices.map(l    => ({ ...l, provider: 'tuya',    lockId: l.id })),
   ];
 
   const filtered = allDevices.filter(l => {
@@ -277,33 +290,46 @@ const SmartLockHub = () => {
     finally { setTtLoading(false); }
   };
 
-  const connectTTHotel = (e) => {
-    e.preventDefault(); setTthErr('');
-    if (!tthTok || !tthCode) { setTthErr('Token et code hôtel requis'); return; }
-    localStorage.setItem('slh_tthotel', '1');
-    localStorage.setItem('slh_tthotel_url', tthUrl);
-    localStorage.setItem('slh_tthotel_code', tthCode);
-    localStorage.setItem('slh_tthotel_token', tthTok);
-    setConnTTHotel(true);
-    const initAssign = { ...assignments, 'TTH-001': '102', 'TTH-002': '202', 'TTH-003': '304' };
-    setAssignments(initAssign);
-    localStorage.setItem('slh_assignments', JSON.stringify(initAssign));
+  const connectTTHotel = async (e) => {
+    e.preventDefault(); setTthErr(''); setTthLoading(true);
+    try {
+      if (!tthUser || !tthPass) throw new Error('Email et mot de passe requis');
+      await new Promise(r => setTimeout(r, 1500)); // simulate API handshake
+      const devices = TTHOTEL_DEMO_LOCKS;
+      localStorage.setItem('slh_tthotel', '1');
+      localStorage.setItem('slh_tthotel_user', tthUser);
+      localStorage.setItem('slh_tthotel_devices', JSON.stringify(devices));
+      setTthotelDevices(devices);
+      setConnTTHotel(true);
+      setTthPass('');
+      const initAssign = { ...assignments, 'TTH-001': '102', 'TTH-002': '202', 'TTH-003': '304' };
+      setAssignments(initAssign);
+      localStorage.setItem('slh_assignments', JSON.stringify(initAssign));
+    } catch (err) { setTthErr(err.message); }
+    finally { setTthLoading(false); }
   };
 
-  const connectTuya = (e) => {
-    e.preventDefault(); setTuyaErr('');
-    if (!tuyaId || !tuyaSec) { setTuyaErr('Client ID et Secret requis'); return; }
-    localStorage.setItem('slh_tuya', '1');
-    localStorage.setItem('slh_tuya_id', tuyaId);
-    localStorage.setItem('slh_tuya_secret', tuyaSec);
-    localStorage.setItem('slh_tuya_region', tuyaReg);
-    setConnTuya(true);
+  const connectTuya = async (e) => {
+    e.preventDefault(); setTuyaErr(''); setTuyaLoading(true);
+    try {
+      if (!tuyaUser || !tuyaPass) throw new Error('Email et mot de passe requis');
+      await new Promise(r => setTimeout(r, 1700)); // simulate OAuth
+      const devices = TUYA_DEMO_LOCKS;
+      localStorage.setItem('slh_tuya', '1');
+      localStorage.setItem('slh_tuya_user', tuyaUser);
+      localStorage.setItem('slh_tuya_region', tuyaReg);
+      localStorage.setItem('slh_tuya_devices', JSON.stringify(devices));
+      setTuyaDevices(devices);
+      setConnTuya(true);
+      setTuyaPass('');
+    } catch (err) { setTuyaErr(err.message); }
+    finally { setTuyaLoading(false); }
   };
 
   const disconnect = (prov) => {
     if (prov === 'ttlock')  { localStorage.removeItem('ttlock_token'); localStorage.removeItem('ttlock_user'); setTtToken(''); setTtlockDevices([]); setConnTTLock(false); }
-    if (prov === 'tthotel') { localStorage.removeItem('slh_tthotel');  setConnTTHotel(false); }
-    if (prov === 'tuya')    { localStorage.removeItem('slh_tuya');     setConnTuya(false); }
+    if (prov === 'tthotel') { ['slh_tthotel','slh_tthotel_user','slh_tthotel_devices'].forEach(k => localStorage.removeItem(k)); setTthotelDevices([]); setConnTTHotel(false); }
+    if (prov === 'tuya')    { ['slh_tuya','slh_tuya_user','slh_tuya_devices'].forEach(k => localStorage.removeItem(k)); setTuyaDevices([]); setConnTuya(false); }
     if (selectedLock?.provider === prov) setSelectedLock(null);
   };
 
@@ -384,27 +410,28 @@ const SmartLockHub = () => {
             {connTTHotel ? (
               <div className="slh-setup-connected-info">
                 <Wifi size={14} color="#16A34A"/>
-                <span>Hôtel <strong>{tthCode || localStorage.getItem('slh_tthotel_code')}</strong></span>
-                <span className="slh-setup-dev-count">5 appareils</span>
+                <span>Connecté en tant que <strong>{tthUser || localStorage.getItem('slh_tthotel_user')}</strong></span>
+                <span className="slh-setup-dev-count">{tthotelDevices.length} appareil{tthotelDevices.length !== 1 ? 's' : ''} importé{tthotelDevices.length !== 1 ? 's' : ''}</span>
                 <button className="slh-setup-disconnect" onClick={() => disconnect('tthotel')}><Unlink size={12}/> Déconnecter</button>
               </div>
             ) : (
               <form onSubmit={connectTTHotel} className="slh-setup-form">
                 {tthErr && <div className="slh-setup-err"><AlertTriangle size={13}/> {tthErr}</div>}
                 <div className="slh-sf-group">
-                  <label>API Endpoint TTHotel</label>
-                  <div className="slh-sf-input"><Shield size={13}/><input type="url" value={tthUrl} onChange={e => setTthUrl(e.target.value)} placeholder="https://api.tthotel.com" required/></div>
+                  <label>Email / Identifiant TTHotel</label>
+                  <div className="slh-sf-input"><User size={13}/><input type="text" value={tthUser} onChange={e => setTthUser(e.target.value)} placeholder="votre@email.com" required/></div>
                 </div>
                 <div className="slh-sf-group">
-                  <label>Code Hôtel</label>
-                  <div className="slh-sf-input"><Building2 size={13}/><input type="text" value={tthCode} onChange={e => setTthCode(e.target.value)} placeholder="HTL-XXXX" required/></div>
+                  <label>Mot de passe de l'application</label>
+                  <div className="slh-sf-input">
+                    <Lock size={13}/>
+                    <input type={tthShowPw ? 'text' : 'password'} value={tthPass} onChange={e => setTthPass(e.target.value)} placeholder="••••••••" required/>
+                    <button type="button" className="slh-sf-eye" onClick={() => setTthShowPw(v => !v)}>{tthShowPw ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
+                  </div>
                 </div>
-                <div className="slh-sf-group">
-                  <label>Access Token</label>
-                  <div className="slh-sf-input"><Key size={13}/><input type="password" value={tthTok} onChange={e => setTthTok(e.target.value)} placeholder="eyJhbGci…" required/></div>
-                </div>
-                <button type="submit" className="slh-sf-submit" style={{ background: '#7C3AED' }}>
-                  <Wifi size={13}/> Connecter TTHotel
+                <div className="slh-sf-hint"><Shield size={11}/> Connexion sécurisée — identifiants de votre compte TTHotel</div>
+                <button type="submit" className="slh-sf-submit" style={{ background: '#7C3AED' }} disabled={tthLoading}>
+                  {tthLoading ? <><RefreshCcw size={13} className="slh-spin"/> Connexion & import…</> : <><Wifi size={13}/> Connecter et importer les appareils</>}
                 </button>
               </form>
             )}
@@ -424,20 +451,24 @@ const SmartLockHub = () => {
             {connTuya ? (
               <div className="slh-setup-connected-info">
                 <Wifi size={14} color="#16A34A"/>
-                <span>Client ID <strong>{tuyaId?.slice(0,8) || localStorage.getItem('slh_tuya_id')?.slice(0,8)}…</strong></span>
-                <span className="slh-setup-dev-count">4 appareils</span>
+                <span>Connecté en tant que <strong>{tuyaUser || localStorage.getItem('slh_tuya_user')}</strong></span>
+                <span className="slh-setup-dev-count">{tuyaDevices.length} appareil{tuyaDevices.length !== 1 ? 's' : ''} importé{tuyaDevices.length !== 1 ? 's' : ''}</span>
                 <button className="slh-setup-disconnect" onClick={() => disconnect('tuya')}><Unlink size={12}/> Déconnecter</button>
               </div>
             ) : (
               <form onSubmit={connectTuya} className="slh-setup-form">
                 {tuyaErr && <div className="slh-setup-err"><AlertTriangle size={13}/> {tuyaErr}</div>}
                 <div className="slh-sf-group">
-                  <label>Client ID (Access ID)</label>
-                  <div className="slh-sf-input"><Key size={13}/><input type="text" value={tuyaId} onChange={e => setTuyaId(e.target.value)} placeholder="xxxxxxxxxxxxxxxx" required/></div>
+                  <label>Email / Compte Tuya Smart</label>
+                  <div className="slh-sf-input"><User size={13}/><input type="text" value={tuyaUser} onChange={e => setTuyaUser(e.target.value)} placeholder="votre@email.com" required/></div>
                 </div>
                 <div className="slh-sf-group">
-                  <label>Client Secret</label>
-                  <div className="slh-sf-input"><Shield size={13}/><input type="password" value={tuyaSec} onChange={e => setTuyaSec(e.target.value)} placeholder="••••••••••••••••" required/></div>
+                  <label>Mot de passe de l'application</label>
+                  <div className="slh-sf-input">
+                    <Lock size={13}/>
+                    <input type={tuyaShowPw ? 'text' : 'password'} value={tuyaPass} onChange={e => setTuyaPass(e.target.value)} placeholder="••••••••" required/>
+                    <button type="button" className="slh-sf-eye" onClick={() => setTuyaShowPw(v => !v)}>{tuyaShowPw ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
+                  </div>
                 </div>
                 <div className="slh-sf-group">
                   <label>Région Cloud</label>
@@ -448,8 +479,9 @@ const SmartLockHub = () => {
                     <option value="in">Inde (in.iot.tuya.com)</option>
                   </select>
                 </div>
-                <button type="submit" className="slh-sf-submit" style={{ background: '#059669' }}>
-                  <Wifi size={13}/> Connecter Tuya Smart
+                <div className="slh-sf-hint"><Shield size={11}/> Identifiants de votre compte Tuya Smart (application mobile)</div>
+                <button type="submit" className="slh-sf-submit" style={{ background: '#059669' }} disabled={tuyaLoading}>
+                  {tuyaLoading ? <><RefreshCcw size={13} className="slh-spin"/> Connexion & import…</> : <><Wifi size={13}/> Connecter et importer les appareils</>}
                 </button>
               </form>
             )}
