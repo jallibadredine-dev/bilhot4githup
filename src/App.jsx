@@ -209,6 +209,16 @@ function App() {
     );
   }
 
+  // ── Demo mode — ?demo in URL bypasses auth ────────────────────────────
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('demo') && !isAuthenticated) {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <AuthPage onLogin={(mode) => { setPmsMode(mode); setIsAuthenticated(true); }} />
+      </Suspense>
+    );
+  }
+
   if (!sessionChecked) {
     return <LoadingFallback />;
   }
