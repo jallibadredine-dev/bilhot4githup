@@ -5,9 +5,16 @@ import {
   Trash2, ChevronLeft, MoreVertical, Lock, Globe, Sparkles,
   Eye, EyeOff, Smartphone, CheckCircle2, AlertCircle, RefreshCw,
   Settings, Loader2, Building2, Key, Wifi, BedDouble, LogOut,
-  ChevronRight, Bell, UserCheck, Home, Wrench, Utensils
+  ChevronRight, Bell, UserCheck, Home, Wrench, Utensils,
+  Send, MessageCircle, ToggleLeft, ToggleRight, TestTube2,
+  Copy, ExternalLink, CheckCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  sendStaffInvite, generateTempPassword,
+  getStaffNotifConfig, saveStaffNotifConfig,
+  getStaffNotifLog, DEFAULT_STAFF_SMS, clearStaffNotifLog,
+} from '../../lib/staffNotifications';
 import './StaffHub.css';
 
 /* ─── ROLE DEFINITIONS ─────────────────────────────────────── */
@@ -105,6 +112,11 @@ const StaffHub = () => {
   const [searchQ,        setSearchQ]        = useState('');
   const [noteInput,      setNoteInput]      = useState('');
   const [addingNote,     setAddingNote]     = useState(false);
+  const [notifConfig,    setNotifConfig]    = useState(() => getStaffNotifConfig());
+  const [notifLog,       setNotifLog]       = useState(() => getStaffNotifLog());
+  const [sendResult,     setSendResult]     = useState(null);   // null | { email, sms, whatsapp, tempPassword }
+  const [configSaved,    setConfigSaved]    = useState(false);
+  const [testSending,    setTestSending]    = useState({ email: false, sms: false });
 
   /* ── Persist to localStorage ── */
   useEffect(() => { localStorage.setItem('sh_staff', JSON.stringify(staffList)); }, [staffList]);
@@ -116,24 +128,35 @@ const StaffHub = () => {
     setNewStaff(prev => ({ ...prev, role: roleId, permissions: { ...def.modules } }));
   };
 
-  /* ── Add staff confirm ── */
-  const handleConfirmAdd = () => {
+  /* ── Save notif config ── */
+  const handleSaveNotifConfig = () => {
+    saveStaffNotifConfig(notifConfig);
+    setConfigSaved(true);
+    setTimeout(() => setConfigSaved(false), 2000);
+  };
+
+  /* ── Add staff confirm + send invite ── */
+  const handleConfirmAdd = async () => {
     setSending(true);
-    setTimeout(() => {
-      const id = `STF-${String(staffList.length + 1).padStart(3,'0')}`;
-      setStaffList(prev => [{
-        id, name: newStaff.name || 'Nouveau Membre',
-        email: newStaff.email, phone: newStaff.phone, whatsapp: newStaff.whatsapp,
-        role: newStaff.role, status: 'offline',
-        joined: new Date().toISOString().slice(0,10), nps: 0,
-        notes: [{ date: new Date().toLocaleDateString('fr-FR'), author: 'System', text: 'Compte créé. Invitation envoyée.' }],
-        customPermissions: newStaff.permissions,
-      }, ...prev]);
-      setSending(false);
-      setIsAddOpen(false);
-      setAddStep(1);
-      setNewStaff(newStaffDefault());
-    }, 1200);
+    setSendResult(null);
+    const tempPassword = generateTempPassword();
+    const roleLabel = ROLE_DEFS[newStaff.role]?.label || newStaff.role;
+    const id = `STF-${String(staffList.length + 1).padStart(3,'0')}`;
+    const created = {
+      id, name: newStaff.name || 'Nouveau Membre',
+      email: newStaff.email, phone: newStaff.phone, whatsapp: newStaff.whatsapp,
+      role: newStaff.role, roleLabel, status: 'offline',
+      joined: new Date().toISOString().slice(0,10), nps: 0,
+      notes: [{ date: new Date().toLocaleDateString('fr-FR'), author: 'System', text: `Compte créé. Mot de passe provisoire : ${tempPassword}` }],
+      customPermissions: newStaff.permissions,
+    };
+    setStaffList(prev => [created, ...prev]);
+
+    const result = await sendStaffInvite({ ...newStaff, roleLabel }, tempPassword);
+    setNotifLog(getStaffNotifLog());
+    setSendResult({ ...result, staffName: newStaff.name, staffEmail: newStaff.email, staffPhone: newStaff.phone });
+    setSending(false);
+    setAddStep(4); // show results step
   };
 
   /* ── Update cleaning task status ── */
@@ -218,9 +241,10 @@ const StaffHub = () => {
       {/* ── TABS ── */}
       <div className="sh-tabs-bar">
         {[
-          { id:'team',         label:'Équipe',          count: staffList.length },
-          { id:'housekeeping', label:'Tableau Ménage',   count: pending > 0 ? pending : null, urgent: pending > 0 },
-          { id:'permissions',  label:'Matrice Accès',    count: null },
+          { id:'team',          label:'Équipe',           count: staffList.length },
+          { id:'housekeeping',  label:'Tableau Ménage',   count: pending > 0 ? pending : null, urgent: pending > 0 },
+          { id:'permissions',   label:'Matrice Accès',    count: null },
+          { id:'notifications', label:'Notifications',    count: null },
         ].map(tab => (
           <button
             key={tab.id}
@@ -463,6 +487,180 @@ const StaffHub = () => {
         </div>
       )}
 
+      {/* ════════════ TAB: NOTIFICATIONS CONFIG ════════════ */}
+      {activeTab === 'notifications' && (
+        <div className="sh-notif-page">
+
+          {/* ── Email config ── */}
+          <div className="sh-notif-card">
+            <div className="sh-notif-card-head">
+              <div className="sh-notif-card-title">
+                <div className="sh-notif-icon" style={{background:'#EFF6FF', color:'#3B82F6'}}><Mail size={16}/></div>
+                <div>
+                  <strong>Email — EmailJS</strong>
+                  <span>Envoi d'email depuis le navigateur, sans serveur</span>
+                </div>
+              </div>
+              <div
+                className={`sh-toggle ${notifConfig.emailEnabled ? 'on' : ''}`}
+                onClick={() => setNotifConfig(p => ({ ...p, emailEnabled: !p.emailEnabled }))}
+              >
+                <div className="sh-toggle-knob"/>
+              </div>
+            </div>
+            {notifConfig.emailEnabled && (
+              <div className="sh-notif-fields">
+                <div className="sh-notif-hint">
+                  <ExternalLink size={12}/>
+                  <a href="https://www.emailjs.com" target="_blank" rel="noreferrer">Créez un compte EmailJS</a>
+                  {' '}→ Service → Template → Clé publique. Variables disponibles :
+                  {' '}<code>{'{{staff_name}}'}</code> <code>{'{{temp_password}}'}</code> <code>{'{{role_name}}'}</code> <code>{'{{login_url}}'}</code>
+                </div>
+                <div className="sh-notif-row">
+                  <div className="sh-notif-field">
+                    <label>Service ID *</label>
+                    <input placeholder="service_xxxxxxx" value={notifConfig.ejsServiceId||''} onChange={e=>setNotifConfig(p=>({...p,ejsServiceId:e.target.value}))}/>
+                  </div>
+                  <div className="sh-notif-field">
+                    <label>Template ID *</label>
+                    <input placeholder="template_xxxxxxx" value={notifConfig.ejsTemplateId||''} onChange={e=>setNotifConfig(p=>({...p,ejsTemplateId:e.target.value}))}/>
+                  </div>
+                </div>
+                <div className="sh-notif-row">
+                  <div className="sh-notif-field">
+                    <label>Clé Publique *</label>
+                    <input placeholder="xxxxxxxxxxxxxxxx" value={notifConfig.ejsPublicKey||''} onChange={e=>setNotifConfig(p=>({...p,ejsPublicKey:e.target.value}))}/>
+                  </div>
+                  <div className="sh-notif-field">
+                    <label>Nom expéditeur</label>
+                    <input placeholder="Hova PMS" value={notifConfig.fromName||''} onChange={e=>setNotifConfig(p=>({...p,fromName:e.target.value}))}/>
+                  </div>
+                </div>
+                <div className="sh-notif-field">
+                  <label>Nom de la propriété (variable <code>{'{{property_name}}'}</code>)</label>
+                  <input placeholder="Hôtel Riad Marrakech" value={notifConfig.propertyName||''} onChange={e=>setNotifConfig(p=>({...p,propertyName:e.target.value}))}/>
+                </div>
+                <div className="sh-notif-field">
+                  <label>Objet de l'email</label>
+                  <input placeholder="Vos accès {{property_name}} — Bienvenue {{staff_name}} !" value={notifConfig.emailSubject||''} onChange={e=>setNotifConfig(p=>({...p,emailSubject:e.target.value}))}/>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── SMS config (Twilio) ── */}
+          <div className="sh-notif-card">
+            <div className="sh-notif-card-head">
+              <div className="sh-notif-card-title">
+                <div className="sh-notif-icon" style={{background:'#FFF1F2', color:'#FF385C'}}><MessageCircle size={16}/></div>
+                <div>
+                  <strong>SMS — Twilio</strong>
+                  <span>Envoi SMS direct via l'API Twilio REST</span>
+                </div>
+              </div>
+              <div
+                className={`sh-toggle ${notifConfig.smsEnabled ? 'on' : ''}`}
+                onClick={() => setNotifConfig(p => ({ ...p, smsEnabled: !p.smsEnabled }))}
+              >
+                <div className="sh-toggle-knob"/>
+              </div>
+            </div>
+            {notifConfig.smsEnabled && (
+              <div className="sh-notif-fields">
+                <div className="sh-notif-hint">
+                  <ExternalLink size={12}/>
+                  <a href="https://console.twilio.com" target="_blank" rel="noreferrer">Console Twilio</a>
+                  {' '}→ Account Info (Account SID + Auth Token) + Numéro d'envoi (Twilio Phone Number)
+                </div>
+                <div className="sh-notif-row">
+                  <div className="sh-notif-field">
+                    <label>Account SID *</label>
+                    <input placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value={notifConfig.twilioSid||''} onChange={e=>setNotifConfig(p=>({...p,twilioSid:e.target.value}))}/>
+                  </div>
+                  <div className="sh-notif-field">
+                    <label>Auth Token *</label>
+                    <input type="password" placeholder="••••••••••••••••••••••••••••••••" value={notifConfig.twilioToken||''} onChange={e=>setNotifConfig(p=>({...p,twilioToken:e.target.value}))}/>
+                  </div>
+                </div>
+                <div className="sh-notif-row">
+                  <div className="sh-notif-field">
+                    <label>Numéro Twilio (From) *</label>
+                    <input placeholder="+33600000000" value={notifConfig.twilioFrom||''} onChange={e=>setNotifConfig(p=>({...p,twilioFrom:e.target.value}))}/>
+                  </div>
+                  <div style={{flex:1}}/>
+                </div>
+                <div className="sh-notif-field">
+                  <label>Template SMS (variables : <code>{'{{staff_name}}'}</code> <code>{'{{temp_password}}'}</code> <code>{'{{role_name}}'}</code> <code>{'{{login_url}}'}</code>)</label>
+                  <textarea
+                    className="sh-notif-textarea"
+                    rows={5}
+                    placeholder={DEFAULT_STAFF_SMS}
+                    value={notifConfig.smsTemplate||''}
+                    onChange={e=>setNotifConfig(p=>({...p,smsTemplate:e.target.value}))}
+                  />
+                  <button className="sh-notif-reset-tpl" onClick={()=>setNotifConfig(p=>({...p,smsTemplate:''}))}>
+                    Remettre le template par défaut
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── WhatsApp fallback ── */}
+          <div className="sh-notif-card">
+            <div className="sh-notif-card-head">
+              <div className="sh-notif-card-title">
+                <div className="sh-notif-icon" style={{background:'#ECFDF5', color:'#10B981'}}>💬</div>
+                <div>
+                  <strong>WhatsApp (lien direct)</strong>
+                  <span>Ouvre WhatsApp avec le message pré-rempli — aucune configuration requise</span>
+                </div>
+              </div>
+              <div
+                className={`sh-toggle ${notifConfig.whatsappEnabled !== false ? 'on' : ''}`}
+                onClick={() => setNotifConfig(p => ({ ...p, whatsappEnabled: !(p.whatsappEnabled !== false) }))}
+              >
+                <div className="sh-toggle-knob"/>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Save button ── */}
+          <div className="sh-notif-save-row">
+            <button className="sh-btn-primary" onClick={handleSaveNotifConfig}>
+              {configSaved ? <><CheckCheck size={15}/> Sauvegardé</> : <><Check size={15}/> Sauvegarder la configuration</>}
+            </button>
+          </div>
+
+          {/* ── Recent log ── */}
+          {notifLog.length > 0 && (
+            <div className="sh-notif-log">
+              <div className="sh-notif-log-head">
+                <strong>Historique des envois</strong>
+                <button className="sh-notif-reset-tpl" onClick={() => { clearStaffNotifLog(); setNotifLog([]); }}>Effacer</button>
+              </div>
+              {notifLog.map(entry => (
+                <div key={entry.id} className={`sh-notif-log-entry ${entry.status}`}>
+                  <span className="sh-notif-log-icon">
+                    {entry.channel === 'email' ? '✉️' : entry.channel === 'sms' ? '📱' : '💬'}
+                  </span>
+                  <div className="sh-notif-log-info">
+                    <strong>{entry.name}</strong> → {entry.to}
+                    {entry.role && <span className="sh-notif-log-role"> · {entry.role}</span>}
+                  </div>
+                  <span className={`sh-notif-log-status ${entry.status}`}>
+                    {entry.status === 'sent' ? '✓ Envoyé' : '✗ Erreur'}
+                  </span>
+                  <span className="sh-notif-log-time">
+                    {entry.sentAt ? new Date(entry.sentAt).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ════════════ STAFF DETAIL PANEL ════════════ */}
       <AnimatePresence>
         {selectedStaff && (
@@ -599,22 +797,24 @@ const StaffHub = () => {
               exit={{ scale:0.95, opacity:0 }}
             >
               <div className="sh-modal-head">
-                <h2>Nouveau Collaborateur</h2>
-                <button className="sh-btn-icon" onClick={() => setIsAddOpen(false)}><X size={18}/></button>
+                <h2>{addStep === 4 ? 'Invitation envoyée !' : 'Nouveau Collaborateur'}</h2>
+                <button className="sh-btn-icon" onClick={() => { setIsAddOpen(false); setAddStep(1); setSendResult(null); setNewStaff(newStaffDefault()); }}><X size={18}/></button>
               </div>
 
-              {/* Step indicator */}
-              <div className="sh-steps">
-                {['Identité', 'Rôle', 'Permissions'].map((label, idx) => (
-                  <React.Fragment key={label}>
-                    <div className={`sh-step ${addStep > idx + 1 ? 'done' : ''} ${addStep === idx + 1 ? 'active' : ''}`}>
-                      <div className="sh-step-num">{addStep > idx + 1 ? <Check size={12}/> : idx + 1}</div>
-                      <span>{label}</span>
-                    </div>
-                    {idx < 2 && <div className={`sh-step-line ${addStep > idx + 1 ? 'done' : ''}`}/>}
-                  </React.Fragment>
-                ))}
-              </div>
+              {/* Step indicator — hidden on step 4 */}
+              {addStep < 4 && (
+                <div className="sh-steps">
+                  {['Identité', 'Rôle', 'Permissions'].map((label, idx) => (
+                    <React.Fragment key={label}>
+                      <div className={`sh-step ${addStep > idx + 1 ? 'done' : ''} ${addStep === idx + 1 ? 'active' : ''}`}>
+                        <div className="sh-step-num">{addStep > idx + 1 ? <Check size={12}/> : idx + 1}</div>
+                        <span>{label}</span>
+                      </div>
+                      {idx < 2 && <div className={`sh-step-line ${addStep > idx + 1 ? 'done' : ''}`}/>}
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
 
               <div className="sh-modal-body">
 
@@ -633,19 +833,19 @@ const StaffHub = () => {
                         <input type="email" placeholder="jean@hotel.com" value={newStaff.email} onChange={e => setNewStaff(p=>({...p,email:e.target.value}))}/>
                       </div>
                       <div className="sh-form-group">
-                        <label>Téléphone</label>
+                        <label>Téléphone / SMS</label>
                         <input type="tel" placeholder="+212 6 00 00 00" value={newStaff.phone} onChange={e => setNewStaff(p=>({...p,phone:e.target.value}))}/>
                       </div>
                     </div>
                     <div className="sh-form-group">
-                      <label>WhatsApp (notifications automatiques)</label>
+                      <label>WhatsApp (si différent du téléphone)</label>
                       <input type="tel" placeholder="+212 6 00 00 00" value={newStaff.whatsapp} onChange={e => setNewStaff(p=>({...p,whatsapp:e.target.value}))}/>
                     </div>
                     <div className="sh-info-box">
                       <Sparkles size={14} color="#7C3AED"/>
                       <div>
-                        <strong>Invitation automatique</strong>
-                        <p>Un mot de passe temporaire sécurisé sera généré et envoyé par email et WhatsApp.</p>
+                        <strong>Envoi automatique des accès</strong>
+                        <p>Un mot de passe temporaire sécurisé sera généré et envoyé par Email (EmailJS), SMS (Twilio) et/ou WhatsApp selon votre configuration Notifications.</p>
                       </div>
                     </div>
                   </motion.div>
@@ -697,22 +897,97 @@ const StaffHub = () => {
                     </div>
                   </motion.div>
                 )}
+
+                {/* STEP 4: Send result */}
+                {addStep === 4 && sendResult && (
+                  <motion.div className="sh-step-content" initial={{scale:0.96,opacity:0}} animate={{scale:1,opacity:1}}>
+                    <div className="sh-send-success-hero">
+                      <div className="sh-send-success-icon"><CheckCircle2 size={36} color="#10B981"/></div>
+                      <h3>{sendResult.staffName} a été ajouté(e) !</h3>
+                      <p>Mot de passe temporaire généré :</p>
+                      <div className="sh-send-password">
+                        <code>{sendResult.tempPassword}</code>
+                        <button className="sh-btn-copy" onClick={() => navigator.clipboard.writeText(sendResult.tempPassword)}>
+                          <Copy size={13}/> Copier
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="sh-send-channels">
+                      {/* Email result */}
+                      <div className={`sh-send-channel ${sendResult.email?.success ? 'ok' : sendResult.email?.skipped ? 'skip' : 'err'}`}>
+                        <div className="sh-send-ch-icon">✉️</div>
+                        <div className="sh-send-ch-info">
+                          <strong>Email</strong>
+                          <span>{sendResult.staffEmail || '—'}</span>
+                        </div>
+                        <div className="sh-send-ch-status">
+                          {sendResult.email?.success  && <span className="sh-ch-ok"><CheckCircle2 size={14}/> Envoyé</span>}
+                          {sendResult.email?.skipped  && <span className="sh-ch-skip">Non activé</span>}
+                          {sendResult.email?.error    && <span className="sh-ch-err"><AlertCircle size={14}/> {sendResult.email.reason}</span>}
+                        </div>
+                      </div>
+
+                      {/* SMS result */}
+                      <div className={`sh-send-channel ${sendResult.sms?.success ? 'ok' : sendResult.sms?.skipped ? 'skip' : 'err'}`}>
+                        <div className="sh-send-ch-icon">📱</div>
+                        <div className="sh-send-ch-info">
+                          <strong>SMS (Twilio)</strong>
+                          <span>{sendResult.staffPhone || '—'}</span>
+                        </div>
+                        <div className="sh-send-ch-status">
+                          {sendResult.sms?.success  && <span className="sh-ch-ok"><CheckCircle2 size={14}/> Envoyé</span>}
+                          {sendResult.sms?.skipped  && <span className="sh-ch-skip">Non activé</span>}
+                          {sendResult.sms?.error    && <span className="sh-ch-err"><AlertCircle size={14}/> {sendResult.sms.reason}</span>}
+                        </div>
+                      </div>
+
+                      {/* WhatsApp fallback */}
+                      {sendResult.whatsapp && (
+                        <div className="sh-send-channel ok">
+                          <div className="sh-send-ch-icon">💬</div>
+                          <div className="sh-send-ch-info">
+                            <strong>WhatsApp</strong>
+                            <span>Lien prêt à envoyer</span>
+                          </div>
+                          <a className="sh-ch-wa-link" href={sendResult.whatsapp} target="_blank" rel="noreferrer">
+                            <ExternalLink size={13}/> Ouvrir
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {(sendResult.email?.error || sendResult.sms?.error) && (
+                      <div className="sh-send-config-hint">
+                        <Settings size={13}/>
+                        <span>Configurez Email/SMS dans l'onglet <strong>Notifications</strong> pour activer l'envoi automatique.</span>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
               </div>
 
               <div className="sh-modal-footer">
                 <div>
-                  {addStep > 1 && <button className="sh-btn-secondary" onClick={() => setAddStep(p=>p-1)}>Précédent</button>}
+                  {addStep > 1 && addStep < 4 && <button className="sh-btn-secondary" onClick={() => setAddStep(p=>p-1)}>Précédent</button>}
                 </div>
                 <div style={{display:'flex',gap:8,alignItems:'center'}}>
                   {!newStaff.name.trim() && addStep === 1 && <span style={{fontSize:'0.72rem',color:'#AAAAAA'}}>Remplissez le nom complet</span>}
-                  {addStep < 3
-                    ? <button className="sh-btn-primary" onClick={() => setAddStep(p=>p+1)} disabled={addStep===1 && !newStaff.name.trim()}>
-                        Étape suivante <ChevronRight size={14}/>
-                      </button>
-                    : <button className="sh-btn-invite" onClick={handleConfirmAdd} disabled={sending}>
-                        {sending ? <><Loader2 size={14} className="sh-spin"/> Envoi…</> : <><Mail size={14}/> Confirmer & Inviter</>}
-                      </button>
-                  }
+                  {addStep < 3 && (
+                    <button className="sh-btn-primary" onClick={() => setAddStep(p=>p+1)} disabled={addStep===1 && !newStaff.name.trim()}>
+                      Étape suivante <ChevronRight size={14}/>
+                    </button>
+                  )}
+                  {addStep === 3 && (
+                    <button className="sh-btn-invite" onClick={handleConfirmAdd} disabled={sending}>
+                      {sending ? <><Loader2 size={14} className="sh-spin"/> Envoi en cours…</> : <><Send size={14}/> Confirmer & Envoyer les accès</>}
+                    </button>
+                  )}
+                  {addStep === 4 && (
+                    <button className="sh-btn-primary" onClick={() => { setIsAddOpen(false); setAddStep(1); setSendResult(null); setNewStaff(newStaffDefault()); }}>
+                      <Check size={14}/> Terminé
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
