@@ -1,5 +1,6 @@
-import React from 'react';
-import { Search, RotateCcw, ChevronDown, Download, Save, Grid, List, Calendar, Filter, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, RotateCcw, ChevronDown, Download, Save, Grid, List, Calendar, Filter, Shield, LogOut } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import './TopHeader.css';
 
 const StatPill = ({ label, count, type = 'default' }) => (
@@ -9,7 +10,15 @@ const StatPill = ({ label, count, type = 'default' }) => (
   </div>
 );
 
-const TopHeader = ({ pmsMode, setPmsMode, setActiveView }) => {
+const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout }) => {
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await supabase.auth.signOut();
+    if (onLogout) onLogout();
+  };
+
   return (
     <header className="topheader-premium">
       {/* ─── MAIN TOOLBAR ─── */}
@@ -66,6 +75,15 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView }) => {
             <button className="btn-premium primary save-btn">
               <Save size={16} />
               <span>Save Changes</span>
+            </button>
+            <button
+              className="btn-premium logout-btn"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              title="Se déconnecter"
+            >
+              <LogOut size={16} />
+              <span>{loggingOut ? '...' : 'Déconnexion'}</span>
             </button>
           </div>
         </div>

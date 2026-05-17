@@ -237,7 +237,15 @@ function App() {
              <div className="bar" />
              <div className="bar" />
           </button>
-          <TopHeader pmsMode={pmsMode} setPmsMode={setPmsMode} setActiveView={setActiveView} />
+          <TopHeader
+            pmsMode={pmsMode}
+            setPmsMode={setPmsMode}
+            setActiveView={setActiveView}
+            onLogout={() => {
+              setIsAuthenticated(false);
+              setActiveView('dashboard');
+            }}
+          />
         </header>
 
         {/* Dynamic Content Wrapped in Suspense */}

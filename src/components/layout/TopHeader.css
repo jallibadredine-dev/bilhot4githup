@@ -215,6 +215,24 @@
   transform: translateY(-1px);
 }
 
+.btn-premium.logout-btn {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.btn-premium.logout-btn:hover {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  transform: translateY(-1px);
+}
+
+.btn-premium.logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ─── SECONDARY BAR ─── */
 .toolbar-secondary {
   display: flex;
