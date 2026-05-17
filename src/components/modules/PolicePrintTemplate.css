@@ -1,127 +1,183 @@
-.police-print-form {
+/* ═══════════════════════════════════════════════════
+   POLICE PRINT TEMPLATE — Fiche individuelle DGSN
+   Screen preview + @media print
+═══════════════════════════════════════════════════ */
+
+.ppt-wrapper {
+  display: none;
+}
+
+.pf-print-preview-body .ppt-wrapper {
+  display: block;
+  background: #e8e8e8;
+  padding: 32px;
+  min-height: 100%;
+}
+
+.ppt-doc {
+  background: white;
   width: 210mm;
   min-height: 297mm;
-  padding: 20mm;
-  margin: auto;
-  background: white;
-  color: black;
-  font-family: 'Times New Roman', serif;
-  display: none; /* Hidden by default in UI */
+  margin: 0 auto;
+  padding: 18mm 20mm 16mm;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.18);
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 11pt;
+  color: #000;
+  box-sizing: border-box;
 }
 
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .police-print-form, .police-print-form * {
-    visibility: visible;
-  }
-  .police-print-form {
-    display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-  @page {
-    size: A4;
-    margin: 0;
-  }
+/* ── HEADER ───────────────────────────────────── */
+.ppt-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 10px;
 }
 
-.print-header {
+.ppt-header-left { flex-shrink: 0; }
+
+.ppt-seal {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #006233;
+  border-radius: 50%;
+}
+.ppt-seal-star { font-size: 30px; color: #c8102e; line-height: 1; }
+.ppt-seal-ring { display: none; }
+
+.ppt-header-center {
+  flex: 1;
   text-align: center;
-  border-bottom: 2px solid black;
-  padding-bottom: 20px;
-  margin-bottom: 30px;
 }
-
-.kingdom-header p {
-  font-size: 14pt;
-  font-weight: bold;
-  margin: 5px 0;
-}
-
-.form-title {
-  margin-top: 20px;
-}
-
-.form-title h2 {
-  font-size: 18pt;
-  text-decoration: underline;
-  margin-bottom: 5px;
-}
-
-.form-title p {
-  font-style: italic;
-  font-size: 10pt;
-}
-
-.print-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.print-row {
-  display: flex;
-  gap: 20px;
-}
-
-.field-box {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.flex-1 { flex: 1; }
-.flex-2 { flex: 2; }
-.full { width: 100%; }
-
-.field-box label {
-  font-size: 9pt;
-  font-weight: bold;
-}
-
-.field-value {
-  font-size: 12pt;
-  border-bottom: 1px dotted #ccc;
+.ppt-kingdom-ar { font-size: 13pt; font-weight: 700; direction: rtl; margin: 0 0 2px; }
+.ppt-kingdom-fr { font-size: 11pt; font-weight: 700; text-transform: uppercase; margin: 0 0 2px; }
+.ppt-ministry   { font-size: 8pt; color: #444; margin: 0 0 8px; }
+.ppt-form-title {
+  font-size: 13pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 2px;
+  border-top: 2px solid #000;
+  border-bottom: 2px solid #000;
   padding: 5px 0;
-  min-height: 20px;
 }
+.ppt-form-title-ar { font-size: 10pt; direction: rtl; margin: 2px 0 0; color: #444; }
 
-.section-divider {
-  margin-top: 20px;
+.ppt-header-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ppt-ref-box   { border: 1px solid #999; padding: 4px 10px; min-width: 96px; }
+.ppt-ref-label { font-size: 7pt; text-transform: uppercase; color: #666; }
+.ppt-ref-val   { font-size: 9pt; font-weight: 700; font-family: 'Courier New', monospace; }
+
+/* ── DIVIDER ──────────────────────────────────── */
+.ppt-divider { height: 2px; background: #000; margin: 8px 0 12px; }
+
+/* ── SECTIONS ─────────────────────────────────── */
+.ppt-section { margin-bottom: 14px; }
+
+.ppt-section-title {
+  font-size: 9pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   background: #f0f0f0;
+  border: 1px solid #bbb;
   padding: 5px 10px;
-  font-weight: bold;
-  border: 1px solid black;
-  font-size: 10pt;
+  margin-bottom: 8px;
+}
+.ppt-ar { font-weight: 400; direction: rtl; }
+
+.ppt-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 12px;
 }
 
-.print-footer {
-  margin-top: 50px;
+.ppt-field { display: flex; flex-direction: column; }
+.ppt-col-1 { grid-column: span 1; }
+.ppt-col-2 { grid-column: span 2; }
+
+.ppt-field-label {
+  font-size: 7pt;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+.ppt-field-val {
+  border-bottom: 1px solid #888;
+  min-height: 22px;
+  font-size: 11pt;
+  padding: 1px 2px;
+}
+.ppt-bold { font-weight: 700; }
+.ppt-mono { font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; }
+
+/* ── SIGNATURES ───────────────────────────────── */
+.ppt-signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #bbb;
+}
+
+.ppt-sig-box { display: flex; flex-direction: column; gap: 6px; }
+.ppt-sig-label { font-size: 8pt; color: #444; }
+
+.ppt-sig-img {
+  height: 56px;
+  width: 100%;
+  object-fit: contain;
+  object-position: left center;
+  border: 1px dashed #bbb;
+  padding: 2px;
+  background: #fafafa;
+}
+.ppt-sig-area {
+  height: 60px;
+  border: 1px solid #bbb;
+}
+
+/* ── FOOTER ───────────────────────────────────── */
+.ppt-footer {
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 2px solid #000;
+  gap: 20px;
 }
+.ppt-footer-legal { font-size: 7pt; color: #444; line-height: 1.5; flex: 1; }
+.ppt-barcode-area { text-align: right; flex-shrink: 0; }
+.ppt-barcode { font-family: monospace; font-size: 14pt; letter-spacing: 3px; line-height: 1; }
+.ppt-barcode-num { font-size: 6pt; color: #666; font-family: monospace; margin-top: 2px; }
 
-.sig-box {
-  width: 200px;
-  height: 100px;
-  border: 1px solid black;
-  margin-top: 10px;
-}
-
-.print-date {
-  margin-top: 50px;
-  text-align: right;
-  font-style: italic;
-}
-
-/* UI Preview Mode (when shown in a modal or similar) */
-.preview-mode {
-  display: block;
-  box-shadow: 0 0 50px rgba(0,0,0,0.1);
-  transform: scale(0.8);
-  transform-origin: top center;
-  margin-top: -100px;
+/* ── @MEDIA PRINT ─────────────────────────────── */
+@media print {
+  body * { visibility: hidden !important; }
+  #police-print-area,
+  #police-print-area * { visibility: visible !important; }
+  #police-print-area {
+    display: block !important;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: white;
+    padding: 0;
+  }
+  .ppt-doc { box-shadow: none; width: 100%; min-height: 0; padding: 12mm 15mm; }
+  @page { size: A4; margin: 0; }
 }
