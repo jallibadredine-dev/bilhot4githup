@@ -32,3 +32,9 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+VITE_CHANNEX_API_URL = "https://app.channex.io/api/v1"
+VITE_TTLOCK_API_URL = "https://euapi.ttlock.com"

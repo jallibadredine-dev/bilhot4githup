@@ -1,276 +1,320 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Database, Globe, Link as LinkIcon, Settings, Server, CheckCircle2, 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Database, Globe, Link as LinkIcon, Settings, Server, CheckCircle2,
   ArrowRight, RefreshCcw, Home, Plus, Calendar, Activity,
-  MessageSquare, Star, LayoutDashboard, Share2, ShieldCheck, 
+  MessageSquare, Star, Share2, ShieldCheck,
   AlertCircle, ChevronRight, DownloadCloud, XCircle, Tag,
-  Zap, Key, Shield, UserPlus, FileText, Bell, Lock, Unlock, Eye,
-  CreditCard, Search, Filter, Monitor, Smartphone, Tablet
+  Zap, Key, Shield, FileText, Bell, Lock, Eye, EyeOff,
+  Search, Filter, Wifi, WifiOff, ChevronDown, X, Send,
+  BarChart3, TrendingUp, Users, DollarSign, ExternalLink,
+  Copy, Check, RefreshCw, Building2, Layers
 } from 'lucide-react';
+import { channexAPI } from '../../lib/channex';
 import './ChannelManager.css';
 
 const OTAS = [
-  { id: 'airbnb', name: 'Airbnb', color: 'bg-rose-500', icon: 'A', desc: 'Short-Term Rentals', sync: ['Availability', 'Rates', 'Messages', 'Reviews'] },
-  { id: 'booking', name: 'Booking.com', color: 'bg-blue-900', icon: 'B', desc: 'Global Hotel Standard', sync: ['Availability', 'Rates', 'Messages'] },
-  { id: 'expedia', name: 'Expedia', color: 'bg-yellow-500', icon: 'E', desc: 'Flights & Stays', sync: ['Availability', 'Rates'] },
-  { id: 'tripadvisor', name: 'TripAdvisor', color: 'bg-green-600', icon: 'T', desc: 'Reviews & Bookings', sync: ['Availability', 'Reviews'] },
-  { id: 'vrbo', name: 'Vrbo / Abritel', color: 'bg-indigo-900', icon: 'V', desc: 'Villas & Large Stays', sync: ['Availability', 'Rates', 'Messages'] },
-  { id: 'agoda', name: 'Agoda', color: 'bg-pink-600', icon: 'Ag', desc: 'Asian Market & Hotels', sync: ['Availability', 'Rates'] },
-  { id: 'google', name: 'Google Hotels', color: 'bg-red-500', icon: 'G', desc: 'Search Engine', sync: ['Rates'] },
+  { id: 'airbnb', name: 'Airbnb', color: '#FF5A5F', bg: '#FFF0F0', icon: 'A', desc: 'Short-Term Rentals' },
+  { id: 'booking', name: 'Booking.com', color: '#003580', bg: '#E8F0FF', icon: 'B', desc: 'Global Hotel Standard' },
+  { id: 'expedia', name: 'Expedia', color: '#FFC72C', bg: '#FFF8E0', icon: 'E', desc: 'Flights & Stays' },
+  { id: 'tripadvisor', name: 'TripAdvisor', color: '#00AA6C', bg: '#E0F7EE', icon: 'T', desc: 'Reviews & Bookings' },
+  { id: 'vrbo', name: 'Vrbo', color: '#1B468A', bg: '#E8EEFF', icon: 'V', desc: 'Villas & Large Stays' },
+  { id: 'agoda', name: 'Agoda', color: '#E0113A', bg: '#FFE8EC', icon: 'Ag', desc: 'Asian Market' },
+  { id: 'google', name: 'Google Hotels', color: '#EA4335', bg: '#FFE8E8', icon: 'G', desc: 'Search Engine' },
 ];
 
-const MOCK_PROPERTIES_HOT = [
-  { id: 'l1', name: 'Appartement Vue Mer #102', otas: ['airbnb', 'booking'], type: 'Appartement', status: 'Sync', price: '120€' },
-  { id: 'l2', name: 'Villa Royale Palmeraie', otas: ['booking', 'expedia', 'vrbo'], type: 'Villa', status: 'Sync', price: '450€' },
-  { id: 'l3', name: 'Riad Medina Authentique', otas: ['airbnb', 'tripadvisor'], type: 'Riad', status: 'Sync', price: '90€' },
-  { id: 'l4', name: 'Premium Loft Guéliz', otas: ['airbnb'], type: 'Appartement', status: 'Sync', price: '110€' }
+const TABS = [
+  { id: 'overview', label: 'Dashboard', icon: Activity },
+  { id: 'channels', label: 'Canaux OTA', icon: Globe },
+  { id: 'reservations', label: 'Réservations', icon: Calendar },
+  { id: 'messenger', label: 'Messages', icon: MessageSquare },
+  { id: 'reviews', label: 'Avis', icon: Star },
+  { id: 'pricing', label: 'Tarification', icon: Tag },
+  { id: 'automation', label: 'Automation', icon: Zap },
+  { id: 'config', label: 'API Config', icon: Settings },
 ];
 
 const ChannelManager = ({ pmsMode = 'pro' }) => {
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Credentials
   const [channexToken, setChannexToken] = useState(localStorage.getItem('channex_token') || '');
-  const [channexGroupId, setChannexGroupId] = useState(localStorage.getItem('channex_group_id') || '');
-  const [channexProperties, setChannexProperties] = useState([]);
-  const [channexBookings, setChannexBookings] = useState([]);
-  const [channexLoading, setChannexLoading] = useState(false);
-  const [syncStatus, setSyncStatus] = useState('Disconnected');
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
-  const [messageText, setMessageText] = useState('');
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [automationActive, setAutomationActive] = useState(true);
-  const [activeChannelConfig, setActiveChannelConfig] = useState(null);
-  const [tempChannelId, setTempChannelId] = useState('');
+  const [showToken, setShowToken] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // API data
+  const [properties, setProperties] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [ratePlans, setRatePlans] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [channels, setChannels] = useState([]);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(localStorage.getItem('channex_token') ? 'idle' : 'disconnected');
+  const [apiError, setApiError] = useState(null);
+  const [lastSync, setLastSync] = useState(null);
+
+  // Messaging
+  const [selectedConv, setSelectedConv] = useState(null);
+  const [msgText, setMsgText] = useState('');
+  const [sendingMsg, setSendingMsg] = useState(false);
+
+  // Booking filter
+  const [bookingSearch, setBookingSearch] = useState('');
+  const [bookingFilter, setBookingFilter] = useState('all');
+
+  const isConnected = syncStatus === 'connected' || syncStatus === 'idle';
+
+  const fetchAll = useCallback(async (token = channexToken) => {
+    if (!token) return;
+    setLoading(true);
+    setApiError(null);
+    setSyncStatus('syncing');
+    try {
+      const [propRes, bookRes, chanRes] = await Promise.allSettled([
+        channexAPI.getProperties(token),
+        channexAPI.getBookings(token),
+        channexAPI.getChannels(token),
+      ]);
+
+      if (propRes.status === 'fulfilled' && propRes.value?.data) {
+        setProperties(propRes.value.data);
+      }
+      if (bookRes.status === 'fulfilled' && bookRes.value?.data) {
+        setBookings(bookRes.value.data);
+      }
+      if (chanRes.status === 'fulfilled' && chanRes.value?.data) {
+        setChannels(chanRes.value.data);
+      }
+
+      // Fetch reviews & messages (non-critical)
+      const [revRes, msgRes] = await Promise.allSettled([
+        channexAPI.getReviews(token),
+        channexAPI.getMessages(token),
+      ]);
+      if (revRes.status === 'fulfilled' && revRes.value?.data) setReviews(revRes.value.data);
+      if (msgRes.status === 'fulfilled' && msgRes.value?.data) setMessages(msgRes.value.data);
+
+      setSyncStatus('connected');
+      setLastSync(new Date());
+    } catch (err) {
+      setApiError(err.message || 'Erreur de connexion à Channex.io');
+      setSyncStatus('error');
+    } finally {
+      setLoading(false);
+    }
+  }, [channexToken]);
 
   useEffect(() => {
-    if (channexToken) fetchChannexData();
+    if (channexToken) fetchAll();
   }, []);
 
-  const fetchChannexData = async () => {
-    if (!channexToken) return;
-    setChannexLoading(true);
-    setSyncStatus('Connecting API...');
-    try {
-      const headers = { 'user-api-key': channexToken };
-      const [propRes, bookRes] = await Promise.all([
-        fetch('https://staging.channex.io/api/v1/properties', { headers }).catch(() => null),
-        fetch('https://staging.channex.io/api/v1/bookings', { headers }).catch(() => null)
-      ]);
-      
-      if (propRes) {
-        const data = await propRes.json();
-        if (data?.data) {
-          setChannexProperties(data.data);
-          setSyncStatus(`Connected (${data.data.length} properties)`);
-        }
-      }
-      if (bookRes) {
-        const bData = await bookRes.json();
-        if (bData?.data) setChannexBookings(bData.data);
-      }
-    } catch (e) {
-      setSyncStatus('Network Error');
-    }
-    setChannexLoading(false);
-  };
-
-  const saveChannexCredentials = () => {
+  const saveAndConnect = async () => {
+    if (!channexToken.trim()) return;
     localStorage.setItem('channex_token', channexToken);
-    localStorage.setItem('channex_group_id', channexGroupId);
-    fetchChannexData();
+    await fetchAll(channexToken);
   };
 
-  const MetricCard = ({ title, value, sub, icon: Icon, color }) => (
-    <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition duration-500 group">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors ${color}`}>
-        <Icon size={20} />
+  const disconnect = () => {
+    localStorage.removeItem('channex_token');
+    setChannexToken('');
+    setSyncStatus('disconnected');
+    setProperties([]); setBookings([]); setChannels([]);
+    setReviews([]); setMessages([]);
+    setApiError(null);
+  };
+
+  const handleSendMessage = async (bookingId) => {
+    if (!msgText.trim() || !bookingId) return;
+    setSendingMsg(true);
+    try {
+      await channexAPI.sendMessage(channexToken, bookingId, msgText);
+      setMsgText('');
+    } catch (e) {
+      console.error(e);
+    }
+    setSendingMsg(false);
+  };
+
+  const copyToken = () => {
+    navigator.clipboard.writeText(channexToken);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const filteredBookings = bookings.filter(b => {
+    const name = b.attributes?.customer?.name?.toLowerCase() || '';
+    const channel = b.attributes?.channel_name?.toLowerCase() || '';
+    const status = b.attributes?.status?.toLowerCase() || '';
+    const search = bookingSearch.toLowerCase();
+    const matchSearch = !search || name.includes(search) || channel.includes(search);
+    const matchFilter = bookingFilter === 'all' || status === bookingFilter;
+    return matchSearch && matchFilter;
+  });
+
+  // ── STATUS BADGE ──────────────────────────────────────────────────────────
+  const StatusBadge = () => {
+    const map = {
+      connected: { color: '#10B981', bg: '#D1FAE5', label: 'Connecté', pulse: true },
+      syncing: { color: '#F59E0B', bg: '#FEF3C7', label: 'Sync...', pulse: true },
+      error: { color: '#EF4444', bg: '#FEE2E2', label: 'Erreur', pulse: false },
+      disconnected: { color: '#94A3B8', bg: '#F1F5F9', label: 'Déconnecté', pulse: false },
+      idle: { color: '#3B82F6', bg: '#DBEAFE', label: 'Prêt', pulse: false },
+    };
+    const s = map[syncStatus] || map.disconnected;
+    return (
+      <div className="cm-status-badge" style={{ background: s.bg, color: s.color }}>
+        <div className={`cm-dot ${s.pulse ? 'pulse' : ''}`} style={{ background: s.color }} />
+        {s.label}
+        {lastSync && <span className="cm-lastsync">· {lastSync.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}</span>}
       </div>
-      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</div>
-      <div className="text-3xl font-black text-slate-900 mb-1">{value}</div>
-      <div className="text-xs font-bold text-slate-400">{sub}</div>
+    );
+  };
+
+  // ── METRIC CARD ──────────────────────────────────────────────────────────
+  const MetricCard = ({ title, value, sub, icon: Icon, color }) => (
+    <div className="cm-metric-card">
+      <div className="cm-metric-icon" style={{ background: color + '15', color }}><Icon size={20} /></div>
+      <div className="cm-metric-title">{title}</div>
+      <div className="cm-metric-value">{value}</div>
+      <div className="cm-metric-sub">{sub}</div>
     </div>
   );
 
   return (
-    <div className="p-8 md:p-12 max-w-screen-2xl mx-auto font-sans bg-[#F8FAFC] min-h-screen text-slate-900">
-      
-      {/* Premium Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
-        <div>
-           <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                 <Share2 size={24} />
-              </div>
-              <h1 className="text-4xl font-black tracking-tight text-slate-900">Channel Manager</h1>
-              <span className="bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-tighter">v2.5 PRO</span>
-           </div>
-           <p className="text-slate-500 font-medium max-w-xl">Centralize your global distribution. Sync rates, availability, and messages across all OTAs in real-time via Channex.io.</p>
+    <div className="cm-wrapper">
+
+      {/* ── HEADER ─────────────────────────────────────────────────────── */}
+      <div className="cm-header">
+        <div className="cm-header-left">
+          <div className="cm-logo-icon"><Share2 size={22} /></div>
+          <div>
+            <h1 className="cm-title">Channel Manager</h1>
+            <p className="cm-subtitle">Distribution globale via Channex.io · {properties.length} propriété{properties.length !== 1 ? 's' : ''} synchronisée{properties.length !== 1 ? 's' : ''}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4 bg-white p-2 rounded-[1.5rem] border border-slate-100 shadow-sm">
-           <button onClick={() => fetchChannexData()} className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition">
-              <RefreshCcw size={20} className={channexLoading ? 'animate-spin' : ''} />
-           </button>
-           <div className="h-8 w-px bg-slate-100"></div>
-           <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-xl shadow-indigo-100 transition flex items-center gap-2">
-              <Plus size={18}/> New Channel
-           </button>
+        <div className="cm-header-right">
+          <StatusBadge />
+          <button className="cm-btn-icon" onClick={() => fetchAll()} disabled={loading || !channexToken} title="Rafraîchir">
+            <RefreshCcw size={18} className={loading ? 'cm-spin' : ''} />
+          </button>
         </div>
       </div>
 
-      {/* Tabs Navigation - Expanded with all options */}
-      <div className="flex items-center gap-2 mb-8 bg-slate-100/50 p-1.5 rounded-2xl w-full overflow-x-auto hide-scrollbar">
-        {[
-          { id: 'overview', label: 'Dashboard', icon: Activity },
-          { id: 'channels', label: 'OTAs & Hub', icon: Globe },
-          { id: 'reservations', label: 'Bookings', icon: Calendar },
-          { id: 'messenger', label: 'Inbox', icon: MessageSquare },
-          { id: 'reviews', label: 'Reviews', icon: Star },
-          { id: 'listing', label: 'Listings', icon: Home },
-          { id: 'pricing', label: 'Pricing Rules', icon: Tag },
-          { id: 'automation', label: 'Automation', icon: Zap },
-          { id: 'reports', label: 'Analytics', icon: FileText },
-          { id: 'config', label: 'API Setup', icon: Settings }
-        ].map(tab => (
-          <button 
+      {/* ── API ERROR BANNER ─────────────────────────────────────────── */}
+      {apiError && (
+        <div className="cm-error-banner">
+          <AlertCircle size={16} />
+          <span>{apiError}</span>
+          <button onClick={() => setApiError(null)}><X size={14} /></button>
+        </div>
+      )}
+
+      {/* ── TABS ─────────────────────────────────────────────────────── */}
+      <div className="cm-tabs">
+        {TABS.map(tab => (
+          <button
             key={tab.id}
+            className={`cm-tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
           >
-            <tab.icon size={16} /> {tab.label}
+            <tab.icon size={15} />
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
-        {/* --- TAB: OVERVIEW --- */}
+      {/* ── CONTENT ──────────────────────────────────────────────────── */}
+      <div className="cm-content">
+
+        {/* ── OVERVIEW ─── */}
         {activeTab === 'overview' && (
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-               <MetricCard title="Active Channels" value="4" sub="of 12 connected" icon={Share2} color="bg-indigo-50 text-indigo-600" />
-               <MetricCard title="Properties Sync" value={channexProperties.length} sub="Protected by Guard" icon={ShieldCheck} color="bg-emerald-50 text-emerald-600" />
-               <MetricCard title="Bookings (24h)" value={channexBookings.length} sub="+12% from last week" icon={Calendar} color="bg-amber-50 text-amber-600" />
-               <MetricCard title="API Health" value="100%" sub="Last sync 2m ago" icon={Activity} color="bg-blue-50 text-blue-600" />
+          <div className="cm-section">
+            <div className="cm-metrics-grid">
+              <MetricCard title="Canaux actifs" value={channels.length || '—'} sub="connectés via Hub" icon={Share2} color="#6366F1" />
+              <MetricCard title="Propriétés" value={properties.length || '—'} sub="synchronisées" icon={Building2} color="#10B981" />
+              <MetricCard title="Réservations" value={bookings.length || '—'} sub="reçues du Hub" icon={Calendar} color="#F59E0B" />
+              <MetricCard title="Messages" value={messages.length || '—'} sub="conversations ouvertes" icon={MessageSquare} color="#3B82F6" />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-                   <h3 className="font-black text-slate-800 flex items-center gap-3"><RefreshCcw size={20} className="text-indigo-600"/> Live Channel Status</h3>
-                   <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Real-time bi-directional sync</span>
+            {!isConnected && (
+              <div className="cm-connect-cta">
+                <div className="cm-cta-icon"><Wifi size={32} /></div>
+                <h3>Connectez Channex.io pour démarrer</h3>
+                <p>Configurez votre clé API pour activer la synchronisation en temps réel avec vos OTAs.</p>
+                <button className="cm-btn-primary" onClick={() => setActiveTab('config')}>
+                  <Settings size={16} /> Configurer l'API
+                </button>
+              </div>
+            )}
+
+            {isConnected && properties.length > 0 && (
+              <div className="cm-card">
+                <div className="cm-card-header">
+                  <h3><Activity size={18} /> Propriétés synchronisées</h3>
+                  <span className="cm-tag-count">{properties.length} total</span>
                 </div>
-                <div className="divide-y divide-slate-50">
-                  {OTAS.slice(0, 4).map(ota => (
-                    <div key={ota.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition">
-                       <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-2xl ${ota.color} text-white flex items-center justify-center font-black text-xl shadow-md`}>{ota.icon}</div>
-                          <div>
-                             <h4 className="font-black text-slate-800">{ota.name}</h4>
-                             <div className="flex gap-2 mt-1">
-                                {ota.sync.map(s => <span key={s} className="text-[9px] font-bold text-slate-400 border border-slate-200 px-2 py-0.5 rounded-full uppercase tracking-tighter">{s}</span>)}
-                             </div>
-                          </div>
-                       </div>
-                       <div className="flex items-center gap-6">
-                          <div className="flex flex-col items-end">
-                             <span className="text-[10px] font-black text-emerald-500 uppercase flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Active</span>
-                             <span className="text-[10px] font-bold text-slate-300">Syncing 4m ago</span>
-                          </div>
-                          <button className="p-2 text-slate-300 hover:text-slate-600 transition"><Settings size={18}/></button>
-                       </div>
+                <div className="cm-property-list">
+                  {properties.map(prop => (
+                    <div key={prop.id} className="cm-property-item">
+                      <div className="cm-property-avatar"><Building2 size={18} /></div>
+                      <div className="cm-property-info">
+                        <strong>{prop.attributes?.title || prop.attributes?.name || 'Propriété'}</strong>
+                        <span>{prop.attributes?.currency} · {prop.attributes?.timezone}</span>
+                      </div>
+                      <div className="cm-property-status">
+                        <div className="cm-dot pulse" style={{ background: '#10B981' }} />
+                        <span>Live</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-
-              <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden flex flex-col justify-between">
-                 <div className="relative z-10">
-                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6"><Zap size={24} className="text-amber-400" /></div>
-                    <h3 className="text-2xl font-black mb-2">Omnichannel AI Autopilot</h3>
-                    <p className="text-slate-400 text-sm font-medium leading-relaxed">AI is currently handling guest inquiries and optimizing rates across your connected channels.</p>
-                 </div>
-                 <div className="relative z-10 mt-12 space-y-4">
-                    <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
-                       <span className="text-xs font-bold text-slate-300">AI Response Rate</span>
-                       <span className="text-lg font-black text-emerald-400">92%</span>
-                    </div>
-                    <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl">
-                       <span className="text-xs font-bold text-slate-300">Rate Optimizations</span>
-                       <span className="text-lg font-black text-amber-400">142</span>
-                    </div>
-                    <button className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition shadow-2xl shadow-indigo-900/50">Configure Autopilot</button>
-                 </div>
-                 <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-3xl"></div>
-              </div>
-            </div>
+            )}
           </div>
         )}
 
-        {/* --- TAB: REVIEWS --- */}
-        {activeTab === 'reviews' && (
-          <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div>
-                <h2 className="text-3xl font-black text-slate-900">Guest Reputation</h2>
-                <p className="text-slate-500 font-medium mt-2">Monitor and respond to guest feedback across all connected channels.</p>
-              </div>
-              <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-full border border-slate-100 shadow-sm">
-                <Star size={16} className="text-amber-500 fill-amber-500" />
-                <span className="text-sm font-black text-slate-800">Global Score: 4.8/5.0</span>
-              </div>
+        {/* ── CANAUX OTA ─── */}
+        {activeTab === 'channels' && (
+          <div className="cm-section">
+            <div className="cm-section-header">
+              <h2>Réseau de Distribution</h2>
+              <p>Gérez vos connexions OTA via Channex.io</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
-              {[
-                { guest: 'Jean Dupont', ota: 'airbnb', score: '5.0', comment: "Incroyable séjour ! L'appartement est parfaitement situé et l'hôte est très réactif.", date: '2h ago', status: 'Pending' },
-                { guest: 'Sarah Miller', ota: 'booking', score: '4.8', comment: "Very clean and modern. The self check-in was seamless. Will definitely come back.", date: 'Yesterday', status: 'Replied' },
-                { guest: 'Marc Laroche', ota: 'expedia', score: '4.5', comment: "Great value for money. A bit noisy in the morning but overall excellent experience.", date: '2 days ago', status: 'Pending' }
-              ].map((review, i) => (
-                <div key={i} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl transition duration-500 group">
-                  <div className="flex flex-col md:flex-row gap-8">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-slate-400 text-xl border border-slate-100 shadow-inner">
-                            {review.guest[0]}
-                          </div>
-                          <div>
-                            <h4 className="font-black text-slate-800 text-lg">{review.guest}</h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className={`w-5 h-5 rounded-full ${OTAS.find(o => o.id === review.ota)?.color} text-white flex items-center justify-center text-[8px] font-black`}>
-                                {OTAS.find(o => o.id === review.ota)?.icon}
-                              </div>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{review.ota} • {review.date}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 bg-amber-50 px-4 py-2 rounded-xl text-amber-600 font-black">
-                           <Star size={16} className="fill-amber-500" /> {review.score}
-                        </div>
-                      </div>
-                      <p className="text-slate-600 font-medium leading-relaxed italic text-lg mb-8">"{review.comment}"</p>
-                      <div className="flex items-center gap-4">
-                         <span className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${review.status === 'Replied' ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
-                            {review.status}
-                         </span>
-                         <div className="h-4 w-px bg-slate-100"></div>
-                         <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition">Translate Review</button>
+            {channels.length > 0 && (
+              <div className="cm-card" style={{ marginBottom: '1.5rem' }}>
+                <div className="cm-card-header"><h3><Wifi size={16} /> Canaux actifs ({channels.length})</h3></div>
+                <div className="cm-channel-list">
+                  {channels.map(ch => (
+                    <div key={ch.id} className="cm-channel-row">
+                      <div className="cm-channel-dot" style={{ background: '#10B981' }} />
+                      <strong>{ch.attributes?.title || ch.attributes?.name || 'Canal'}</strong>
+                      <span className="cm-channel-type">{ch.attributes?.type || 'OTA'}</span>
+                      <div className="cm-channel-sync">
+                        <Check size={13} /> Actif
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                    <div className="w-full md:w-96 bg-slate-50/50 rounded-[2.5rem] p-8 flex flex-col justify-between border border-slate-100">
-                       <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Zap size={14} className="text-amber-500"/> AI Draft</span>
-                             <button onClick={() => setIsAiGenerating(true)} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline">Regenerate</button>
-                          </div>
-                          <div className="bg-white p-4 rounded-2xl text-xs font-medium text-slate-500 border border-slate-100 leading-relaxed">
-                             {review.status === 'Replied' ? "Thank you Sarah! We're thrilled you enjoyed the seamless check-in. Looking forward to your next visit!" : "Drafting professional response based on guest sentiment..."}
-                          </div>
-                       </div>
-                       <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest mt-6 hover:bg-black transition">
-                          {review.status === 'Replied' ? 'Edit Response' : 'Post AI Reply'}
-                       </button>
-                    </div>
+            <div className="cm-ota-grid">
+              {OTAS.map(ota => (
+                <div key={ota.id} className="cm-ota-card">
+                  <div className="cm-ota-icon" style={{ background: ota.bg, color: ota.color }}>{ota.icon}</div>
+                  <div className="cm-ota-info">
+                    <h4>{ota.name}</h4>
+                    <p>{ota.desc}</p>
+                  </div>
+                  <div className="cm-ota-status">
+                    {channels.some(c => c.attributes?.title?.toLowerCase().includes(ota.id) || c.attributes?.type?.toLowerCase().includes(ota.id)) ? (
+                      <span className="cm-badge-active"><Check size={11} /> Connecté</span>
+                    ) : (
+                      <span className="cm-badge-inactive">Via Hub</span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -278,443 +322,326 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
           </div>
         )}
 
-        {/* --- TAB: LISTING --- */}
-        {activeTab === 'listing' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                 <h2 className="text-3xl font-black text-slate-900">Listing Manager</h2>
-                 <p className="text-slate-500 font-medium mt-1">Push content updates (photos, descriptions) to all OTAs simultaneously.</p>
-              </div>
-              <button className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-slate-200 transition flex items-center gap-2">
-                 <Plus size={18}/> New Listing
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {MOCK_PROPERTIES_HOT.map(item => (
-                 <div key={item.id} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center justify-between hover:border-indigo-200 transition group">
-                    <div className="flex items-center gap-6">
-                       <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition shadow-inner">
-                          <Home size={28}/>
-                       </div>
-                       <div>
-                          <div className="flex items-center gap-3">
-                             <h4 className="font-black text-slate-800 text-xl">{item.name}</h4>
-                             <span className="bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase px-2 py-1 rounded-lg">SYNCED</span>
-                          </div>
-                          <div className="flex items-center gap-4 mt-2">
-                             <div className="flex -space-x-2">
-                               {item.otas.map(ota => (
-                                 <div key={ota} className={`w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-black ${OTAS.find(o => o.id === ota)?.color}`}>
-                                    {OTAS.find(o => o.id === ota)?.icon}
-                                 </div>
-                               ))}
-                             </div>
-                             <span className="text-slate-400 text-xs font-bold">{item.type} • {item.price}/night</span>
-                          </div>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                       <button className="p-4 bg-slate-50 text-slate-400 rounded-2xl hover:text-indigo-600 transition"><Eye size={20}/></button>
-                       <button className="p-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition shadow-lg shadow-indigo-100"><Settings size={20}/></button>
-                    </div>
-                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* --- TAB: PRICING --- */}
-        {activeTab === 'pricing' && (
-          <div className="space-y-12">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div>
-                 <h2 className="text-3xl font-black text-slate-900">Pricing & Rate Rules</h2>
-                 <p className="text-slate-500 font-medium mt-2">Set dynamic adjustments and map rate plans to Channex identifiers.</p>
-              </div>
-              <button className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-indigo-100 transition flex items-center gap-2">
-                 <Tag size={18}/> New Pricing Rule
-              </button>
-            </div>
-
-            <div className="bg-white rounded-[3rem] p-12 border-2 border-dashed border-slate-100 text-center">
-               <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><CreditCard size={40}/></div>
-               <h3 className="text-2xl font-black text-slate-800 mb-2">No Active Pricing Rules</h3>
-               <p className="text-slate-400 font-medium max-w-sm mx-auto mb-8">Establish dynamic pricing logic that automatically pushes to Channex based on occupancy or seasonal demand.</p>
-               <div className="flex justify-center gap-4">
-                  <button className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl">Setup Base Rates</button>
-                  <button className="bg-white border border-slate-200 text-slate-600 px-8 py-4 rounded-2xl font-black text-sm shadow-sm">Sync from PMS</button>
-               </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- TAB: AUTOMATION --- */}
-        {activeTab === 'automation' && (
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-               <h2 className="text-3xl font-black text-slate-900">Automated Workflows</h2>
-               <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-xs transition-all ${automationActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                  <div className={`w-2 h-2 rounded-full ${automationActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
-                  {automationActive ? 'SYSTEM OPERATIONAL' : 'SYSTEM PAUSED'}
-               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                { title: 'Smart Check-In', desc: 'Send codes 24h before arrival', icon: Key, color: 'bg-indigo-50 text-indigo-600' },
-                { title: 'Review Collector', desc: 'Request review 2h after checkout', icon: Star, color: 'bg-amber-50 text-amber-600' },
-                { title: 'Rate Optimizer', desc: 'Boost prices for high demand', icon: Activity, color: 'bg-rose-50 text-rose-600' }
-              ].map((auto, i) => (
-                <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl transition duration-500">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-8 ${auto.color}`}><auto.icon size={28}/></div>
-                  <h4 className="text-xl font-black text-slate-800 mb-2">{auto.title}</h4>
-                  <p className="text-slate-500 font-medium mb-8">{auto.desc}</p>
-                  <div className="flex justify-between items-center">
-                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Status</span>
-                     <div className="w-12 h-6 bg-emerald-500 rounded-full relative p-1 cursor-pointer">
-                        <div className="w-4 h-4 bg-white rounded-full ml-auto"></div>
-                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* --- TAB: ANALYTICS --- */}
-        {activeTab === 'reports' && (
-          <div className="space-y-8">
-            <div className="flex items-center justify-between mb-8">
-               <h2 className="text-3xl font-black text-slate-900">Market Intelligence</h2>
-               <div className="flex items-center gap-4">
-                  <div className="bg-white border border-slate-100 rounded-xl px-4 py-2 text-sm font-bold text-slate-500">April 2026</div>
-                  <button className="bg-slate-900 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest">Download PDF</button>
-               </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-               <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-                  <h4 className="font-black text-slate-800 text-lg mb-8 flex items-center gap-2"><Smartphone size={20} className="text-indigo-600"/> Booking Sources</h4>
-                  <div className="space-y-6">
-                     {OTAS.slice(0,4).map(ota => (
-                       <div key={ota.id} className="space-y-2">
-                          <div className="flex justify-between text-xs font-black uppercase tracking-widest text-slate-400">
-                             <span>{ota.name}</span>
-                             <span className="text-slate-800">25%</span>
-                          </div>
-                          <div className="w-full bg-slate-50 h-3 rounded-full overflow-hidden">
-                             <div className={`h-full ${ota.color}`} style={{width: '25%'}}></div>
-                          </div>
-                       </div>
-                     ))}
-                  </div>
-               </div>
-               <div className="bg-indigo-600 p-10 rounded-[3rem] text-white relative overflow-hidden flex flex-col justify-between">
-                  <h4 className="font-black text-xl mb-4 relative z-10">Revenue Insights</h4>
-                  <div className="text-6xl font-black mb-4 relative z-10">$12,490.00</div>
-                  <p className="text-indigo-100 font-medium relative z-10">+18.5% compared to previous period</p>
-                  <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-               </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- TAB: API CONFIG --- */}
-        {activeTab === 'config' && (
-          <div className="max-w-3xl mx-auto w-full space-y-8 py-12">
-             <div className="text-center mb-12">
-                <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-inner">
-                   <Server size={40} />
-                </div>
-                <h2 className="text-3xl font-black text-slate-900 mb-2">Channex.io Integration Hub</h2>
-                <p className="text-slate-500 font-medium">Configure your enterprise API credentials to enable global distribution.</p>
-             </div>
-
-             <div className="bg-white rounded-[3rem] border border-slate-100 p-12 shadow-2xl space-y-10">
-                <div className="space-y-4">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Channex API Token</label>
-                   <div className="relative group">
-                      <div className="absolute inset-y-0 left-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition">
-                         <Key size={20} />
-                      </div>
-                      <input 
-                        type="password" 
-                        value={channexToken}
-                        onChange={e => setChannexToken(e.target.value)}
-                        placeholder="sk_live_..." 
-                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] px-16 py-5 text-slate-800 font-mono text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
-                      />
-                      {channexToken && (
-                        <div className="absolute inset-y-0 right-6 flex items-center text-emerald-500">
-                           <CheckCircle2 size={20} />
-                        </div>
-                      )}
-                   </div>
-                </div>
-
-                <div className="space-y-4">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Property Group ID</label>
-                   <div className="relative group">
-                      <div className="absolute inset-y-0 left-6 flex items-center text-slate-300 group-focus-within:text-indigo-600 transition">
-                         <Database size={20} />
-                      </div>
-                      <input 
-                        type="text" 
-                        value={channexGroupId}
-                        onChange={e => setChannexGroupId(e.target.value)}
-                        placeholder="88f28c11-..." 
-                        className="w-full bg-slate-50 border-2 border-slate-50 rounded-[1.5rem] px-16 py-5 text-slate-800 font-mono text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
-                      />
-                   </div>
-                </div>
-
-                <div className="bg-emerald-50 rounded-[2rem] p-6 border border-emerald-100 flex items-center justify-between">
-                   <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm">
-                         <ShieldCheck size={24} />
-                      </div>
-                      <div>
-                         <div className="font-black text-emerald-800 text-sm">Real-time Sync Active</div>
-                         <div className="text-emerald-600 text-xs font-medium">Latency: 142ms • Status: Operational</div>
-                      </div>
-                   </div>
-                   <button className="text-emerald-700 font-black text-[10px] uppercase tracking-widest hover:underline">Test Latency</button>
-                </div>
-
-                <button 
-                  onClick={saveChannexCredentials}
-                  className="w-full bg-slate-900 hover:bg-black text-white py-6 rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-2xl shadow-slate-200 transition active:scale-[0.98]"
-                >
-                   {channexLoading ? 'Establishing Connection...' : 'Save & Sync API Credentials'}
-                </button>
-             </div>
-          </div>
-        )}
-
-        {/* --- TAB: RESERVATIONS --- */}
+        {/* ── RÉSERVATIONS ─── */}
         {activeTab === 'reservations' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black text-slate-900">Synchronized Bookings</h2>
-              <div className="flex gap-2">
-                 <button className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-indigo-600 shadow-sm transition"><DownloadCloud size={20}/></button>
-                 <button className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-indigo-600 shadow-sm transition"><Filter size={20}/></button>
+          <div className="cm-section">
+            <div className="cm-section-header">
+              <h2>Réservations synchronisées</h2>
+              <div className="cm-filter-bar">
+                <div className="cm-search-box">
+                  <Search size={15} />
+                  <input placeholder="Rechercher..." value={bookingSearch} onChange={e => setBookingSearch(e.target.value)} />
+                </div>
+                <select className="cm-select" value={bookingFilter} onChange={e => setBookingFilter(e.target.value)}>
+                  <option value="all">Tous les statuts</option>
+                  <option value="confirmed">Confirmées</option>
+                  <option value="cancelled">Annulées</option>
+                  <option value="modified">Modifiées</option>
+                </select>
               </div>
             </div>
-            
-            <div className="grid grid-cols-1 gap-4">
-              {channexBookings.length > 0 ? channexBookings.map(booking => (
-                <div key={booking.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-100 transition duration-300 flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-4 w-full md:w-auto">
-                    <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-indigo-600 border border-slate-100 text-xl">
-                      {booking.attributes?.customer?.name?.[0] || 'G'}
+
+            {filteredBookings.length === 0 ? (
+              <div className="cm-empty-state">
+                <Calendar size={40} />
+                <h3>{isConnected ? 'Aucune réservation trouvée' : 'API non connectée'}</h3>
+                <p>{isConnected ? 'Aucune réservation ne correspond à vos filtres.' : 'Configurez Channex.io pour recevoir les réservations.'}</p>
+                {!isConnected && <button className="cm-btn-primary" onClick={() => setActiveTab('config')}><Settings size={14} /> Configurer</button>}
+              </div>
+            ) : (
+              <div className="cm-booking-list">
+                {filteredBookings.map(booking => {
+                  const attr = booking.attributes || {};
+                  const customer = attr.customer || {};
+                  const statusColor = { confirmed: '#10B981', cancelled: '#EF4444', modified: '#F59E0B' }[attr.status] || '#94A3B8';
+                  return (
+                    <div key={booking.id} className="cm-booking-card">
+                      <div className="cm-booking-avatar" style={{ background: statusColor + '20', color: statusColor }}>
+                        {(customer.name || 'G')[0].toUpperCase()}
+                      </div>
+                      <div className="cm-booking-info">
+                        <div className="cm-booking-name">{customer.name || 'Voyageur'}</div>
+                        <div className="cm-booking-meta">
+                          <span>{attr.arrival_date} → {attr.departure_date}</span>
+                          {attr.channel_name && <span className="cm-booking-channel">{attr.channel_name}</span>}
+                        </div>
+                        {customer.email && <div className="cm-booking-contact">{customer.email}</div>}
+                      </div>
+                      <div className="cm-booking-right">
+                        <div className="cm-booking-amount">{attr.amount ? `${attr.amount} ${attr.currency || ''}` : '—'}</div>
+                        <div className="cm-booking-status" style={{ background: statusColor + '15', color: statusColor }}>
+                          {attr.status || 'confirmée'}
+                        </div>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── MESSAGES ─── */}
+        {activeTab === 'messenger' && (
+          <div className="cm-messenger">
+            <div className="cm-msg-sidebar">
+              <div className="cm-msg-sidebar-header">
+                <h3>Inbox Unifié</h3>
+                <span className="cm-tag-count">{messages.length}</span>
+              </div>
+              <div className="cm-msg-list">
+                {messages.length === 0 ? (
+                  <div className="cm-msg-empty">
+                    {isConnected ? 'Aucun message' : 'API non connectée'}
+                  </div>
+                ) : (
+                  messages.map(msg => {
+                    const attr = msg.attributes || {};
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`cm-msg-item ${selectedConv?.id === msg.id ? 'active' : ''}`}
+                        onClick={() => setSelectedConv(msg)}
+                      >
+                        <div className="cm-msg-avatar">{(attr.guest_name || 'G')[0]}</div>
+                        <div className="cm-msg-preview">
+                          <div className="cm-msg-guest">{attr.guest_name || 'Voyageur'}</div>
+                          <div className="cm-msg-text">{attr.content || attr.message || '...'}</div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+            <div className="cm-msg-panel">
+              {selectedConv ? (
+                <>
+                  <div className="cm-msg-panel-header">
+                    <div className="cm-msg-avatar lg">{(selectedConv.attributes?.guest_name || 'G')[0]}</div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-black text-slate-800 text-lg">{booking.attributes?.customer?.name || 'Guest'}</h4>
-                        <span className="text-[10px] font-black text-slate-300 uppercase">#{booking.id}</span>
-                      </div>
-                      <div className="flex items-center gap-3 mt-1">
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase tracking-tighter"><Calendar size={12}/> {booking.attributes?.arrival_date} - {booking.attributes?.departure_date}</div>
-                        <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
-                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{booking.attributes?.channel_name || 'Channel'}</div>
-                      </div>
+                      <strong>{selectedConv.attributes?.guest_name || 'Voyageur'}</strong>
+                      <span>via {selectedConv.attributes?.channel_name || 'Channel'}</span>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center justify-between md:justify-end gap-12 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 border-slate-50">
-                    <div className="text-right">
-                       <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Amount</div>
-                       <div className="text-2xl font-black text-slate-900">{booking.attributes?.amount} <span className="text-sm font-bold text-slate-400">{booking.attributes?.currency}</span></div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                       <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${booking.attributes?.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                          {booking.attributes?.status || 'Confirmed'}
-                       </span>
-                       <button className="p-3 bg-slate-50 hover:bg-slate-100 text-slate-400 rounded-xl transition"><ChevronRight size={20}/></button>
+                  <div className="cm-msg-body">
+                    <div className="cm-bubble received">
+                      <p>{selectedConv.attributes?.content || selectedConv.attributes?.message || '...'}</p>
                     </div>
                   </div>
-                </div>
-              )) : (
-                <div className="bg-white rounded-[3rem] p-24 text-center border-2 border-dashed border-slate-100">
-                   <div className="w-24 h-24 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner"><Calendar size={48}/></div>
-                   <h3 className="text-2xl font-black text-slate-800 mb-2">No Bookings Found</h3>
-                   <p className="text-slate-400 font-medium max-w-xs mx-auto mb-8">Connect your Channex API to start receiving real-time reservations from all OTAs.</p>
-                   <button onClick={() => setActiveTab('config')} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-sm transition shadow-xl shadow-indigo-100 hover:bg-indigo-700">Configure API</button>
+                  <div className="cm-msg-input-bar">
+                    <input
+                      placeholder="Votre réponse..."
+                      value={msgText}
+                      onChange={e => setMsgText(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage(selectedConv.attributes?.booking_id)}
+                    />
+                    <button
+                      className="cm-send-btn"
+                      onClick={() => handleSendMessage(selectedConv.attributes?.booking_id)}
+                      disabled={sendingMsg || !msgText.trim()}
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="cm-msg-placeholder">
+                  <MessageSquare size={40} />
+                  <p>Sélectionnez une conversation</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* --- TAB: MESSENGER (MODERN INBOX) --- */}
-        {activeTab === 'messenger' && (
-           <div className="h-[750px] bg-white rounded-[3rem] border border-slate-100 shadow-2xl flex overflow-hidden">
-              {/* Sidebar List */}
-              <div className="w-96 border-r border-slate-50 flex flex-col bg-slate-50/20">
-                 <div className="p-8 pb-4">
-                    <h3 className="text-2xl font-black text-slate-900 mb-6">Unified Inbox</h3>
-                    <div className="relative">
-                       <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-                       <input type="text" placeholder="Search guests..." className="w-full bg-white border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-sm font-medium outline-none focus:border-indigo-500 transition" />
+        {/* ── AVIS ─── */}
+        {activeTab === 'reviews' && (
+          <div className="cm-section">
+            <div className="cm-section-header">
+              <h2>Réputation & Avis</h2>
+              <div className="cm-global-score"><Star size={16} style={{ color: '#F59E0B', fill: '#F59E0B' }} /> Score Global: {reviews.length > 0 ? (reviews.reduce((s, r) => s + (r.attributes?.score || 0), 0) / reviews.length).toFixed(1) : '—'}/5</div>
+            </div>
+
+            {reviews.length === 0 ? (
+              <div className="cm-empty-state">
+                <Star size={40} />
+                <h3>{isConnected ? 'Aucun avis reçu' : 'API non connectée'}</h3>
+                <p>{isConnected ? 'Les avis apparaîtront ici dès réception.' : 'Connectez Channex.io pour voir les avis.'}</p>
+              </div>
+            ) : (
+              <div className="cm-reviews-list">
+                {reviews.map(review => {
+                  const attr = review.attributes || {};
+                  return (
+                    <div key={review.id} className="cm-review-card">
+                      <div className="cm-review-header">
+                        <div className="cm-review-guest">
+                          <div className="cm-review-avatar">{(attr.reviewer_name || 'G')[0]}</div>
+                          <div>
+                            <strong>{attr.reviewer_name || 'Voyageur'}</strong>
+                            <span>{attr.channel_name}</span>
+                          </div>
+                        </div>
+                        <div className="cm-review-score">
+                          {[1,2,3,4,5].map(i => <Star key={i} size={14} style={{ color: i <= (attr.score || 0) ? '#F59E0B' : '#E2E8F0', fill: i <= (attr.score || 0) ? '#F59E0B' : 'none' }} />)}
+                        </div>
+                      </div>
+                      <p className="cm-review-text">{attr.review_text || attr.comment || 'Pas de commentaire.'}</p>
+                      {attr.reply && <div className="cm-review-reply"><strong>Votre réponse :</strong> {attr.reply}</div>}
                     </div>
-                 </div>
-                 <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                    {[
-                      { id: 1, name: 'Alice Smith', platform: 'booking', lastMsg: 'Is late check-in possible?', time: '10:30', unread: true },
-                      { id: 2, name: 'Bob Johnson', platform: 'airbnb', lastMsg: 'Thanks for the instructions!', time: '09:15', unread: false },
-                      { id: 3, name: 'Claire Dubois', platform: 'expedia', lastMsg: 'Are towels provided?', time: 'Yesterday', unread: false }
-                    ].map(conv => (
-                       <div key={conv.id} onClick={() => setSelectedConversation(conv)} className={`p-5 rounded-[2rem] cursor-pointer transition-all duration-300 flex items-center gap-4 group ${selectedConversation?.id === conv.id ? 'bg-white shadow-xl ring-1 ring-slate-100 scale-[1.02]' : 'hover:bg-white hover:shadow-lg'}`}>
-                          <div className="relative">
-                             <div className="w-14 h-14 bg-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-500 text-lg group-hover:bg-indigo-50 group-hover:text-indigo-600 transition">
-                                {conv.name[0]}
-                             </div>
-                             <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-black ${OTAS.find(o => o.id === conv.platform)?.color}`}>
-                                {OTAS.find(o => o.id === conv.platform)?.icon}
-                             </div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                             <div className="flex justify-between items-center mb-1">
-                                <span className="font-black text-slate-800 text-sm truncate">{conv.name}</span>
-                                <span className="text-[10px] font-bold text-slate-400">{conv.time}</span>
-                             </div>
-                             <p className="text-xs text-slate-400 font-medium truncate">{conv.lastMsg}</p>
-                          </div>
-                          {conv.unread && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200"></div>}
-                       </div>
-                    ))}
-                 </div>
+                  );
+                })}
               </div>
-
-              {/* Chat View */}
-              <div className="flex-1 flex flex-col bg-white">
-                 {selectedConversation ? (
-                   <>
-                      <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-slate-400 border border-slate-100">
-                               {selectedConversation.name[0]}
-                            </div>
-                            <div>
-                               <h4 className="font-black text-slate-800">{selectedConversation.name}</h4>
-                               <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                                  {selectedConversation.platform} Reservation <div className="w-1 h-1 bg-emerald-500 rounded-full"></div> <span className="text-emerald-500">Online</span>
-                               </div>
-                            </div>
-                         </div>
-                         <div className="flex items-center gap-3">
-                            <button className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition"><Star size={20}/></button>
-                            <button className="p-3 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition"><XCircle size={20}/></button>
-                         </div>
-                      </div>
-
-                      <div className="flex-1 p-12 overflow-y-auto space-y-8 bg-slate-50/10">
-                         <div className="flex justify-start">
-                            <div className="bg-white p-6 rounded-[2.5rem] rounded-tl-none border border-slate-100 shadow-sm max-w-[70%]">
-                               <p className="text-sm font-medium text-slate-700 leading-relaxed">{selectedConversation.lastMsg}</p>
-                               <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-4 block">{selectedConversation.time} • Received via Channel Hub</span>
-                            </div>
-                         </div>
-                         <div className="flex justify-end">
-                            <div className="bg-indigo-600 p-6 rounded-[2.5rem] rounded-tr-none text-white shadow-2xl shadow-indigo-100 max-w-[70%]">
-                               <p className="text-sm font-bold leading-relaxed">Bonjour {selectedConversation.name.split(' ')[0]}, yes absolutely! We can arrange a late check-in for you. Are you arriving by plane?</p>
-                               <span className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mt-4 block">10:45 • Read</span>
-                            </div>
-                         </div>
-                      </div>
-
-                      <div className="p-8">
-                         <div className="bg-indigo-50/50 border border-indigo-100 rounded-[2.5rem] p-6 mb-4 flex flex-col gap-4 relative overflow-hidden group">
-                            <div className="flex items-center justify-between relative z-10">
-                               <div className="flex items-center gap-2 text-indigo-700 text-xs font-black uppercase tracking-widest">
-                                  <Zap size={14} className={isAiGenerating ? 'animate-spin' : ''}/> AI Smart Reply
-                               </div>
-                               <button onClick={() => setIsAiGenerating(true)} className="text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:underline">Draft with IA</button>
-                            </div>
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-200/20 rounded-full blur-3xl group-hover:scale-150 transition duration-700"></div>
-                         </div>
-
-                         <div className="flex items-center gap-4 bg-slate-50 border border-slate-100 rounded-[2.5rem] p-3 pl-8 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-50 transition-all duration-300">
-                            <input type="text" placeholder="Type your message..." className="flex-1 bg-transparent border-none outline-none text-sm font-medium py-3 text-slate-800" />
-                            <button className="bg-indigo-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition active:scale-90">
-                               <ArrowRight size={24} />
-                            </button>
-                         </div>
-                      </div>
-                   </>
-                 ) : (
-                   <div className="flex-1 flex flex-col items-center justify-center text-slate-200 p-12">
-                      <div className="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-8 shadow-inner"><MessageSquare size={64}/></div>
-                      <h3 className="text-3xl font-black text-slate-300">Omnichannel Messenger</h3>
-                      <p className="text-slate-400 font-bold mt-4 max-w-sm text-center">Select a conversation from your connected channels to start chatting with your guests.</p>
-                   </div>
-                 )}
-              </div>
-           </div>
+            )}
+          </div>
         )}
 
-        {/* --- TAB: CHANNELS (HUB) --- */}
-        {activeTab === 'channels' && (
-          <div className="space-y-12">
-             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                <div>
-                   <h2 className="text-3xl font-black text-slate-900">Distribution Network</h2>
-                   <p className="text-slate-500 font-medium mt-2">Manage your active OTA connections and discover new opportunities.</p>
-                </div>
-                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400 bg-white px-6 py-3 rounded-full border border-slate-100">
-                   Active Connections: <span className="text-indigo-600 ml-2">4 / 24</span>
-                </div>
-             </div>
+        {/* ── TARIFICATION ─── */}
+        {activeTab === 'pricing' && (
+          <div className="cm-section">
+            <div className="cm-section-header">
+              <h2>Règles de Tarification</h2>
+              <button className="cm-btn-primary" onClick={() => fetchAll()}><RefreshCw size={14} /> Actualiser</button>
+            </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {OTAS.map(ota => (
-                   <div key={ota.id} className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm hover:shadow-2xl transition duration-500 group flex flex-col justify-between">
-                      <div>
-                         <div className="flex items-start justify-between mb-8">
-                            <div className={`w-16 h-16 rounded-[1.5rem] ${ota.color} text-white flex items-center justify-center font-black text-3xl shadow-xl shadow-${ota.color.split('-')[1]}-200/50`}>{ota.icon}</div>
-                            <div className="flex flex-col items-end">
-                               <span className="bg-slate-50 text-slate-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter mb-2">Available</span>
-                               <div className="flex gap-1">
-                                  {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-slate-100 group-hover:bg-indigo-100 transition"></div>)}
-                               </div>
-                            </div>
-                         </div>
-                         <h3 className="text-2xl font-black text-slate-900 mb-2">{ota.name}</h3>
-                         <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">{ota.desc}</p>
-                         <div className="flex flex-wrap gap-2 mb-10">
-                            {ota.sync.map(s => <span key={s} className="bg-slate-50 text-slate-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">{s}</span>)}
-                         </div>
-                      </div>
-                      
-                      {activeChannelConfig === ota.id ? (
-                        <div className="space-y-3 animate-in fade-in zoom-in-95 duration-300">
-                           <input 
-                             type="text" 
-                             placeholder="Channel Property ID" 
-                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition"
-                             value={tempChannelId}
-                             onChange={e => setTempChannelId(e.target.value)}
-                           />
-                           <div className="flex gap-2">
-                              <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg" onClick={() => { alert('Channel Linked'); setActiveChannelConfig(null); setTempChannelId(''); }}>Connect</button>
-                              <button className="flex-1 bg-slate-100 text-slate-400 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest" onClick={() => setActiveChannelConfig(null)}>Cancel</button>
-                           </div>
-                        </div>
-                      ) : (
-                        <button className="w-full bg-slate-900 hover:bg-black text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs transition shadow-xl group-hover:shadow-indigo-100" onClick={() => setActiveChannelConfig(ota.id)}>
-                           Connect {ota.name}
-                        </button>
-                      )}
-                   </div>
+            {ratePlans.length === 0 ? (
+              <div className="cm-empty-state">
+                <Tag size={40} />
+                <h3>{isConnected ? 'Aucun plan tarifaire' : 'API non connectée'}</h3>
+                <p>{isConnected ? 'Créez des plans tarifaires dans Channex.io.' : 'Connectez Channex.io pour gérer les tarifs.'}</p>
+              </div>
+            ) : (
+              <div className="cm-rate-list">
+                {ratePlans.map(rp => (
+                  <div key={rp.id} className="cm-rate-card">
+                    <strong>{rp.attributes?.title || 'Plan'}</strong>
+                    <span>{rp.attributes?.currency} · Base: {rp.attributes?.base_rate || '—'}</span>
+                  </div>
                 ))}
-             </div>
+              </div>
+            )}
+
+            <div className="cm-card" style={{ marginTop: '1.5rem' }}>
+              <div className="cm-card-header"><h3><Zap size={16} /> Règles Dynamiques</h3></div>
+              <div className="cm-automation-list">
+                {[
+                  { name: 'Tarif Weekend +15%', active: true, desc: 'Vendredi & Samedi automatique' },
+                  { name: 'Haute Saison +25%', active: true, desc: 'Juillet - Août' },
+                  { name: 'Last Minute -10%', active: false, desc: '48h avant arrivée' },
+                ].map((rule, i) => (
+                  <div key={i} className="cm-auto-item">
+                    <div>
+                      <strong>{rule.name}</strong>
+                      <span>{rule.desc}</span>
+                    </div>
+                    <div className={`cm-toggle ${rule.active ? 'on' : 'off'}`}>
+                      <div className="cm-toggle-knob" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── AUTOMATION ─── */}
+        {activeTab === 'automation' && (
+          <div className="cm-section">
+            <div className="cm-section-header">
+              <h2>Workflows Automatisés</h2>
+            </div>
+            <div className="cm-automation-grid">
+              {[
+                { title: 'Check-In Intelligent', desc: 'Envoie le code PIN 24h avant l\'arrivée automatiquement', icon: Key, color: '#6366F1', active: true },
+                { title: 'Collecte d\'Avis', desc: 'Sollicite un avis 2h après le départ du client', icon: Star, color: '#F59E0B', active: true },
+                { title: 'Optimisation Tarifaire', desc: 'Ajuste les prix selon le taux d\'occupation en temps réel', icon: TrendingUp, color: '#10B981', active: false },
+                { title: 'Message de Bienvenue', desc: 'Envoi automatique dès confirmation de réservation', icon: MessageSquare, color: '#3B82F6', active: true },
+                { title: 'Alerte Batterie Serrure', desc: 'Notification si batterie < 20% sur TTLock', icon: Bell, color: '#EF4444', active: false },
+                { title: 'Sync Inventaire', desc: 'Ferme la disponibilité sur tous les canaux dès réservation', icon: Layers, color: '#8B5CF6', active: true },
+              ].map((auto, i) => (
+                <div key={i} className="cm-auto-card">
+                  <div className="cm-auto-icon" style={{ background: auto.color + '15', color: auto.color }}><auto.icon size={22} /></div>
+                  <div className="cm-auto-body">
+                    <h4>{auto.title}</h4>
+                    <p>{auto.desc}</p>
+                  </div>
+                  <div className={`cm-toggle ${auto.active ? 'on' : 'off'}`}>
+                    <div className="cm-toggle-knob" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── API CONFIG ─── */}
+        {activeTab === 'config' && (
+          <div className="cm-section cm-config-section">
+            <div className="cm-config-card">
+              <div className="cm-config-header">
+                <div className="cm-config-icon"><Server size={28} /></div>
+                <h2>Connexion Channex.io</h2>
+                <p>Entrez votre clé API pour activer la synchronisation en temps réel avec tous vos OTAs.</p>
+              </div>
+
+              {syncStatus === 'connected' && (
+                <div className="cm-success-banner">
+                  <CheckCircle2 size={18} />
+                  <span>API connectée avec succès — {properties.length} propriété{properties.length !== 1 ? 's' : ''} trouvée{properties.length !== 1 ? 's' : ''}</span>
+                </div>
+              )}
+
+              {apiError && syncStatus === 'error' && (
+                <div className="cm-error-inline">
+                  <AlertCircle size={16} />
+                  <span>{apiError}</span>
+                </div>
+              )}
+
+              <div className="cm-config-field">
+                <label>Clé API Channex.io</label>
+                <div className="cm-token-input-wrap">
+                  <Key size={16} className="cm-input-icon" />
+                  <input
+                    type={showToken ? 'text' : 'password'}
+                    value={channexToken}
+                    onChange={e => setChannexToken(e.target.value)}
+                    placeholder="Entrez votre clé API..."
+                    className="cm-input"
+                    onKeyDown={e => e.key === 'Enter' && saveAndConnect()}
+                  />
+                  <button className="cm-input-action" onClick={() => setShowToken(v => !v)} title={showToken ? 'Masquer' : 'Afficher'}>
+                    {showToken ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                  {channexToken && (
+                    <button className="cm-input-action" onClick={copyToken} title="Copier">
+                      {copied ? <Check size={15} /> : <Copy size={15} />}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="cm-config-info">
+                <div className="cm-info-item"><Globe size={14} /> Endpoint: <code>app.channex.io/api/v1</code></div>
+                <div className="cm-info-item"><Shield size={14} /> Données chiffrées en transit (TLS 1.3)</div>
+                <div className="cm-info-item"><ExternalLink size={14} /> <a href="https://docs.channex.io" target="_blank" rel="noreferrer">Documentation Channex.io</a></div>
+              </div>
+
+              <div className="cm-config-actions">
+                <button className="cm-btn-primary" onClick={saveAndConnect} disabled={loading || !channexToken.trim()}>
+                  {loading ? <><RefreshCcw size={16} className="cm-spin" /> Connexion...</> : <><Wifi size={16} /> Connecter & Synchroniser</>}
+                </button>
+                {isConnected && (
+                  <button className="cm-btn-danger" onClick={disconnect}>
+                    <WifiOff size={16} /> Déconnecter
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
-
     </div>
   );
 };
