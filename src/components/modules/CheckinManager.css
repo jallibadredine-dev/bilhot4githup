@@ -678,3 +678,26 @@
   .cm2-layout { padding: 16px 32px 80px; }
   .cm2-title { font-size: 1.6rem; }
 }
+
+/* ── Encoder RFID card button ────────────────────── */
+.cm2-encode-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  margin-top: 4px;
+  border-radius: 10px;
+  border: 1.5px dashed #C7D2FE;
+  background: #EEF2FF;
+  color: #4F46E5;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cm2-encode-btn:hover {
+  background: #E0E7FF;
+  border-color: #6366F1;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+}

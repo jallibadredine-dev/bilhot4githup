@@ -6,12 +6,13 @@ import {
   User, LayoutGrid, List,
   Eye, EyeOff, RefreshCw, Copy, Shield,
   Link2, Unlink, ChevronDown, Settings, ArrowRight,
-  Download, CheckCircle2
+  Download, CheckCircle2, CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ttlockAPI } from '../../lib/ttlock';
 import { tthotelAPI } from '../../lib/tthotel';
 import { tuyaAPI, TUYA_REGIONS } from '../../lib/tuya';
+import CardEncoderModal from './CardEncoderModal';
 import './SmartLockHub.css';
 
 /* ════════════════════════════════════════════════════════════
@@ -149,6 +150,8 @@ const SmartLockHub = () => {
   const [pinSuccess,  setPinSuccess]  = useState(false);
   const [pinCopied,   setPinCopied]   = useState(false);
   const [showPin,     setShowPin]     = useState(false);
+  const [showEncoder, setShowEncoder] = useState(false);
+  const [encoderData, setEncoderData] = useState({});
 
   /* ════ TTLock fetch ════ */
   const fetchTTLock = useCallback(async (token = ttToken) => {
@@ -983,7 +986,29 @@ const SmartLockHub = () => {
                 <button className="slh-close-btn" onClick={() => setShowPin(false)}><X size={16}/></button>
               </div>
               {pinSuccess ? (
-                <div className="slh-pin-success"><Check size={32} color="#16A34A"/><span>Code PIN créé !</span></div>
+                <div className="slh-pin-success">
+                  <Check size={32} color="#16A34A"/>
+                  <span>Code PIN créé !</span>
+                  <button
+                    className="slh-encode-card-btn"
+                    onClick={() => {
+                      const room     = assignments[selectedLock.id] || '';
+                      const roomInfo = PROPERTY_ROOMS.find(r => r.number === room);
+                      setEncoderData({
+                        guestName: pinName || 'Client',
+                        room,
+                        floor:    roomInfo?.floor || '',
+                        checkIn:  pinStart ? pinStart.slice(0, 10) : '',
+                        checkOut: pinEnd   ? pinEnd.slice(0, 10)   : '',
+                        pin:      pinValue,
+                      });
+                      setShowPin(false);
+                      setShowEncoder(true);
+                    }}
+                  >
+                    <CreditCard size={14} /> Encoder la carte d'accès RFID
+                  </button>
+                </div>
               ) : (
                 <div className="slh-auth-form">
                   <div className="slh-pin-display">
@@ -1020,6 +1045,17 @@ const SmartLockHub = () => {
               )}
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* ══ CARD ENCODER MODAL ══════════════════════════════ */}
+      <AnimatePresence>
+        {showEncoder && (
+          <CardEncoderModal
+            open={showEncoder}
+            onClose={() => setShowEncoder(false)}
+            cardData={encoderData}
+          />
         )}
       </AnimatePresence>
     </div>

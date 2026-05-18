@@ -1,0 +1,513 @@
+/* ════════════════════════════════════════════════════════════
+   CARD ENCODER MODAL  —  CardEncoderModal.css
+════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ── */
+.cem-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 30, 0.62);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* ── Modal card ── */
+.cem-modal {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.cem-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #E5E7EB;
+  background: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+}
+
+.cem-header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #4F46E5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.cem-header-text {
+  flex: 1;
+}
+
+.cem-header-text h2 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1E1B4B;
+  margin: 0 0 2px;
+}
+
+.cem-header-text p {
+  font-size: 0.72rem;
+  color: #6B7280;
+  margin: 0;
+}
+
+.cem-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6B7280;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cem-close:hover { background: #FEE2E2; color: #DC2626; }
+
+/* ── Guest band ── */
+.cem-guest-band {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: #F9FAFB;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+.cem-guest-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cem-guest-info {
+  flex: 1;
+}
+
+.cem-guest-info strong {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.cem-guest-info span {
+  font-size: 0.72rem;
+  color: #6B7280;
+}
+
+.cem-demo-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #92400E;
+}
+
+/* ── Step bar ── */
+.cem-stepbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px 8px;
+  gap: 0;
+}
+
+.cem-stepbar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cem-stepbar-item span {
+  font-size: 0.62rem;
+  color: #9CA3AF;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.cem-stepbar-item.active span,
+.cem-stepbar-item.done span { color: #4F46E5; }
+
+.cem-stepbar-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #F3F4F6;
+  border: 2px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #9CA3AF;
+  transition: all 0.2s;
+}
+
+.cem-stepbar-item.active .cem-stepbar-dot {
+  background: #4F46E5;
+  border-color: #4F46E5;
+  color: #fff;
+}
+
+.cem-stepbar-item.done .cem-stepbar-dot {
+  background: #10B981;
+  border-color: #10B981;
+  color: #fff;
+}
+
+.cem-stepbar-line {
+  flex: 1;
+  height: 2px;
+  background: #E5E7EB;
+  margin: 0 4px;
+  margin-bottom: 14px;
+  transition: background 0.3s;
+}
+
+.cem-stepbar-line.done { background: #10B981; }
+
+/* ── Warning banner ── */
+.cem-warn-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 20px 4px;
+  padding: 8px 12px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  color: #92400E;
+  line-height: 1.45;
+}
+
+.cem-warn-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Body ── */
+.cem-body {
+  padding: 8px 20px 20px;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cem-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.cem-step h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+  text-align: center;
+}
+
+.cem-step > p {
+  font-size: 0.8rem;
+  color: #6B7280;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 360px;
+}
+
+/* ── Illustrations ── */
+.cem-illus {
+  margin: 6px 0 2px;
+}
+
+.cem-svg {
+  width: 140px;
+  height: auto;
+}
+
+.cem-illus--success .cem-success-icon {
+  color: #10B981;
+  filter: drop-shadow(0 4px 12px rgba(16, 185, 129, 0.3));
+}
+
+.cem-illus--error .cem-error-icon {
+  color: #EF4444;
+  filter: drop-shadow(0 4px 12px rgba(239, 68, 68, 0.3));
+}
+
+/* ── Card preview (step 2) ── */
+.cem-card-preview {
+  width: 220px;
+  height: 70px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cem-card-preview::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+}
+
+.cem-card-chip {
+  width: 24px;
+  height: 18px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #FBBF24, #F59E0B);
+  border: 1px solid rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.cem-card-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.cem-card-lines span {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.8);
+  font-family: monospace;
+  letter-spacing: 0.03em;
+}
+
+.cem-card-guest {
+  font-weight: 700 !important;
+  color: #fff !important;
+}
+
+.cem-card-nfc {
+  color: rgba(255,255,255,0.6);
+  flex-shrink: 0;
+}
+
+/* ── Progress bar (writing step) ── */
+.cem-progress-bar {
+  width: 100%;
+  max-width: 340px;
+  height: 6px;
+  background: #E5E7EB;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.cem-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366F1, #8B5CF6);
+  border-radius: 99px;
+  animation: cem-progress 2.4s ease-in-out infinite;
+}
+
+@keyframes cem-progress {
+  0%   { width: 0%;    margin-left: 0%;    }
+  50%  { width: 70%;   margin-left: 15%;   }
+  100% { width: 10%;   margin-left: 100%;  }
+}
+
+/* ── Writing rows ── */
+.cem-writing-rows {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cem-writing-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: #F9FAFB;
+  border-radius: 6px;
+  border: 1px solid #F3F4F6;
+}
+
+.cem-wr-label {
+  font-size: 0.7rem;
+  color: #9CA3AF;
+  width: 58px;
+  flex-shrink: 0;
+}
+
+.cem-wr-val {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+  flex: 1;
+}
+
+.cem-wr-spin {
+  color: #6366F1;
+  animation: spin 1.2s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── UID row ── */
+.cem-uid-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+}
+
+.cem-uid-label {
+  font-size: 0.7rem;
+  color: #065F46;
+  font-weight: 600;
+}
+
+.cem-uid-val {
+  font-size: 0.78rem;
+  font-family: monospace;
+  color: #047857;
+  letter-spacing: 0.08em;
+}
+
+/* ── Success details ── */
+.cem-success-details {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cem-success-details > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 14px;
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+}
+
+.cem-success-details span {
+  font-size: 0.65rem;
+  color: #6B7280;
+}
+
+.cem-success-details strong {
+  font-size: 0.8rem;
+  color: #065F46;
+}
+
+/* ── Error banner ── */
+.cem-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  color: #991B1B;
+  line-height: 1.45;
+  width: 100%;
+  max-width: 380px;
+  text-align: left;
+}
+
+.cem-error-banner svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ── Action buttons ── */
+.cem-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  width: 100%;
+  max-width: 380px;
+  justify-content: flex-end;
+}
+
+.cem-btn-primary,
+.cem-btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.cem-btn-primary {
+  background: #4F46E5;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.cem-btn-primary:hover {
+  background: #4338CA;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+}
+
+.cem-btn-secondary {
+  background: #F9FAFB;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+}
+
+.cem-btn-secondary:hover {
+  background: #F3F4F6;
+}

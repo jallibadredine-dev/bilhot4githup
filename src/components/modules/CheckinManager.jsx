@@ -4,13 +4,14 @@ import {
   Calendar, Key, Clock, CheckCircle2, AlertCircle, XCircle,
   Link as LinkIcon, Eye, Shield, Smartphone, Wifi, Home,
   Mail, Phone, FileText, ChevronRight, Search, Filter, X,
-  Building2, QrCode, Download, Send, MessageCircle
+  Building2, QrCode, Download, Send, MessageCircle, CreditCard
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   getAllCheckins, createCheckin, deleteCheckin,
   buildCheckinURL, fmtDateLong,
 } from '../../lib/checkin';
+import CardEncoderModal from './CardEncoderModal';
 import './CheckinManager.css';
 
 const EMPTY_FORM = {
@@ -37,6 +38,8 @@ const STATUS_LABELS = {
 const CheckinManager = () => {
   const [checkins, setCheckins] = useState(getAllCheckins());
   const [showForm, setShowForm] = useState(false);
+  const [showEncoder,  setShowEncoder]  = useState(false);
+  const [encoderData,  setEncoderData]  = useState({});
   const [form, setForm] = useState(EMPTY_FORM);
   const [copied, setCopied] = useState('');
   const [selectedId, setSelectedId] = useState(null);
@@ -302,6 +305,24 @@ const CheckinManager = () => {
                     <span>PIN : <strong style={{ fontFamily: 'monospace', color: '#6366F1' }}>{selected.pin}</strong></span>
                   </div>
                 )}
+
+                {/* ── Encoder RFID card ── */}
+                <button
+                  className="cm2-encode-btn"
+                  onClick={() => {
+                    setEncoderData({
+                      guestName: selected.guestName || '',
+                      room:      selected.lockName   || '',
+                      floor:     '',
+                      checkIn:   selected.arrivalDate   || '',
+                      checkOut:  selected.departureDate || '',
+                      pin:       selected.pin || '',
+                    });
+                    setShowEncoder(true);
+                  }}
+                >
+                  <CreditCard size={14} /> Encoder la carte d'accès RFID
+                </button>
                 {selected.wifiName && (
                   <div className="cm2-detail-row">
                     <Wifi size={13} />
@@ -486,6 +507,16 @@ const CheckinManager = () => {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+      {/* ── CARD ENCODER MODAL ───────────────────── */}
+      <AnimatePresence>
+        {showEncoder && (
+          <CardEncoderModal
+            open={showEncoder}
+            onClose={() => setShowEncoder(false)}
+            cardData={encoderData}
+          />
         )}
       </AnimatePresence>
     </div>
