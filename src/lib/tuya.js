@@ -95,7 +95,7 @@ async function apiFetch(clientId, secret, accessToken, method, path, region, bod
 
 export const tuyaAPI = {
 
-  /* ── AUTH — get platform access token ─────────────────── */
+  /* ── AUTH — platform access token ─────────────────────── */
   getToken: async (clientId, secret, region = 'eu') => {
     const path = '/v1.0/token?grant_type=1';
     const base = TUYA_REGIONS[region]?.base || TUYA_REGIONS.eu.base;
@@ -108,7 +108,33 @@ export const tuyaAPI = {
     return data; // data.result.access_token, data.result.expire_time
   },
 
-  /* ── LIST ALL LOCK DEVICES ─────────────────────────────── */
+  /* ── USER LOGIN (Smart Life email + password) ───────────── */
+  loginUser: async (clientId, secret, email, password, region = 'eu') => {
+    // 1. Get platform token
+    const auth = await tuyaAPI.getToken(clientId, secret, region);
+    const platToken = auth.result?.access_token;
+    if (!platToken) throw new Error('Token plateforme non reçu');
+    // 2. MD5 the password (like Smart Life app does)
+    const md5 = await import('md5').then(m => m.default || m).catch(() => null);
+    const hashedPwd = md5 ? md5(password) : password;
+    // 3. User login — endpoint varies by region
+    return apiFetch(clientId, secret, platToken, 'POST',
+      '/v1.0/iam/login',
+      region,
+      JSON.stringify({ username: email, password: hashedPwd, from: 'user' })
+    );
+    // result.uid + result.token (user-scoped token)
+  },
+
+  /* ── USER DEVICES by UID ────────────────────────────────── */
+  getUserDevices: async (clientId, secret, platToken, uid, region = 'eu') => {
+    return apiFetch(clientId, secret, platToken, 'GET',
+      `/v1.0/users/${uid}/devices?page_no=1&page_size=100`,
+      region
+    );
+  },
+
+  /* ── LIST ALL LOCK DEVICES (by category) ───────────────── */
   getDevices: async (clientId, secret, accessToken, region = 'eu') => {
     return apiFetch(clientId, secret, accessToken, 'GET',
       '/v1.3/iot-03/devices?page_no=1&page_size=100&category=ms',
