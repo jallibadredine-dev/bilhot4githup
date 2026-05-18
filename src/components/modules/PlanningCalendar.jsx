@@ -890,7 +890,7 @@ const PlanningCalendar = () => {
                   <>
                     <button className="pc-panel-btn-sec" style={{marginLeft:'auto'}} onClick={()=>setCreateStep(1)}>← Retour</button>
                     <button className="pc-panel-btn-prim" onClick={submitCreate} disabled={!form.roomId||(!form.firstName?.trim()&&!form.lastName?.trim())}>
-                      <Plus size={15}/> Créer la Réservation
+                      <Plus size={15}/> Ajouter
                     </button>
                   </>
                 )}
