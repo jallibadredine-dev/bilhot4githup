@@ -296,6 +296,45 @@ router.get('/audit-logs', async (req, res) => {
 });
 
 /* ════════════════════════════════════════
+   GOOGLE OAUTH STATS
+   ════════════════════════════════════════ */
+
+router.get('/google-auth-stats', async (req, res) => {
+  try {
+    const r = await sbFetch('/auth/v1/admin/users?page=1&per_page=1000');
+    if (!r.ok) return res.json({ googleUsers: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [] });
+    const body = await r.json();
+    const allUsers = Array.isArray(body) ? body : (Array.isArray(body?.users) ? body.users : []);
+
+    const googleUsers = allUsers.filter(u => {
+      const p = u.app_metadata?.provider;
+      const ps = u.app_metadata?.providers;
+      return p === 'google' || (Array.isArray(ps) && ps.includes('google'));
+    });
+
+    const now = Date.now();
+    const ms30d = 30 * 24 * 60 * 60 * 1000;
+    const ms24h = 24 * 60 * 60 * 1000;
+
+    const googleSignups30d   = googleUsers.filter(u => u.created_at && (now - new Date(u.created_at).getTime()) < ms30d).length;
+    const activeSessions24h  = googleUsers.filter(u => u.last_sign_in_at && (now - new Date(u.last_sign_in_at).getTime()) < ms24h).length;
+    const recentUsers = googleUsers
+      .sort((a, b) => new Date(b.last_sign_in_at || b.created_at) - new Date(a.last_sign_in_at || a.created_at))
+      .slice(0, 8)
+      .map(u => ({
+        email: u.email,
+        name:  u.user_metadata?.full_name || u.user_metadata?.name || '—',
+        created_at: u.created_at,
+        last_sign_in_at: u.last_sign_in_at,
+      }));
+
+    res.json({ googleUsers: googleUsers.length, googleSignups30d, activeSessions24h, recentUsers });
+  } catch (err) {
+    res.json({ googleUsers: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [], error: err.message });
+  }
+});
+
+/* ════════════════════════════════════════
    PLANS (in Supabase plans table, fallback to static)
    ════════════════════════════════════════ */
 

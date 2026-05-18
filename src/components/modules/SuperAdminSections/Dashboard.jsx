@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, Building2, Calendar, DollarSign, TrendingUp, TrendingDown,
   Activity, RefreshCw, Cpu, Database, Globe, Wifi,
-  AlertTriangle, Clock,
+  AlertTriangle, Clock, UserCheck, LogIn, ShieldCheck,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -33,18 +33,34 @@ const KPI = ({ icon:Icon, label, value, sub, trend, color='#5B5BA6', loading }) 
   </div>
 );
 
+const GoogleLogo = () => (
+  <svg width="14" height="14" viewBox="0 0 18 18" style={{flexShrink:0}}>
+    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+    <path fill="#FBBC05" d="M3.964 10.707a5.41 5.41 0 0 1 0-3.414V4.961H.957a8.992 8.992 0 0 0 0 8.078l3.007-2.332z"/>
+    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.582C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+  </svg>
+);
+
+const fmtDate = (d) => {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'2-digit' });
+};
+
 export default function Dashboard() {
   const [stats, setStats]         = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [googleAuth, setGoogleAuth] = useState(null);
   const [loading, setLoading]     = useState(true);
   const [ts, setTs]               = useState(new Date());
 
   const load = async () => {
     setLoading(true);
     try {
-      const [s,a] = await Promise.all([
+      const [s, a, g] = await Promise.all([
         fetch('/api/admin/stats').then(r=>r.json()).catch(()=>({})),
         fetch('/api/admin/analytics').then(r=>r.json()).catch(()=>({})),
+        fetch('/api/admin/google-auth-stats').then(r=>r.json()).catch(()=>({})),
       ]);
       setStats({
         clients:      s?.totalUsers      || s?.activeUsers   || s?.clients      || 0,
@@ -53,7 +69,9 @@ export default function Dashboard() {
         revenue:      s?.totalRevenue    || s?.revenue       || 0,
         ...s,
       });
-      setAnalytics(a); setTs(new Date());
+      setAnalytics(a);
+      setGoogleAuth(g);
+      setTs(new Date());
     } finally { setLoading(false); }
   };
   useEffect(()=>{ load(); },[]);
@@ -170,6 +188,67 @@ export default function Dashboard() {
             <div><div className="sa2-metric-val">{val}</div><div className="sa2-metric-lbl">{lbl}</div></div>
           </div>
         ))}
+      </div>
+
+      {/* ── Google Auth Block ─────────────────────────────────────── */}
+      <div style={{background:'var(--sa2-surface)',border:'1px solid var(--sa2-border)',borderRadius:'var(--sa2-radius)',padding:18,display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{width:28,height:28,borderRadius:8,background:'#4285F415',border:'1px solid #4285F430',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <GoogleLogo/>
+            </div>
+            <div>
+              <div style={{fontSize:'0.82rem',fontWeight:600,color:'var(--sa2-text)'}}>Google OAuth</div>
+              <div style={{fontSize:'0.7rem',color:'var(--sa2-text-muted)'}}>Authentification via Google</div>
+            </div>
+          </div>
+          {googleAuth?.error && (
+            <div style={{display:'flex',alignItems:'center',gap:5,fontSize:'0.72rem',color:'#EF4444',background:'#EF444410',border:'1px solid #EF444430',borderRadius:6,padding:'3px 10px'}}>
+              <AlertTriangle size={11}/> Backend indisponible
+            </div>
+          )}
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+          {[
+            {Icon:UserCheck, label:'Utilisateurs Google', value: loading ? '…' : fmtN(googleAuth?.googleUsers ?? 0), color:'#4285F4'},
+            {Icon:LogIn,     label:'Inscriptions (30j)',  value: loading ? '…' : fmtN(googleAuth?.googleSignups30d ?? 0), color:'#34A853'},
+            {Icon:ShieldCheck,label:'Sessions actives (24h)', value: loading ? '…' : fmtN(googleAuth?.activeSessions24h ?? 0), color:'#FBBC05'},
+          ].map(({Icon,label,value,color})=>(
+            <div key={label} style={{background:'var(--sa2-surface2)',border:'1px solid var(--sa2-border)',borderRadius:'var(--sa2-radius-sm)',padding:'12px 14px',display:'flex',alignItems:'center',gap:10}}>
+              <div style={{width:32,height:32,borderRadius:8,background:color+'18',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Icon size={15} style={{color}}/>
+              </div>
+              <div>
+                <div style={{fontSize:'1.1rem',fontWeight:700,color:'var(--sa2-text)',lineHeight:1.1}}>{value}</div>
+                <div style={{fontSize:'0.68rem',color:'var(--sa2-text-muted)',marginTop:2}}>{label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {(googleAuth?.recentUsers?.length > 0) && (
+          <div>
+            <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--sa2-text-muted)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8}}>Dernières connexions Google</div>
+            <div style={{display:'flex',flexDirection:'column',gap:4}}>
+              {googleAuth.recentUsers.slice(0,5).map((u,i)=>(
+                <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 10px',background:'var(--sa2-bg)',borderRadius:'var(--sa2-radius-sm)',fontSize:'0.78rem'}}>
+                  <div style={{width:22,height:22,borderRadius:6,background:'#4285F420',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <GoogleLogo/>
+                  </div>
+                  <span style={{flex:1,color:'var(--sa2-text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.email}</span>
+                  <span style={{fontSize:'0.68rem',color:'var(--sa2-text-muted)',flexShrink:0}}>{fmtDate(u.last_sign_in_at)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(!loading && !googleAuth?.error && googleAuth?.googleUsers === 0) && (
+          <div style={{textAlign:'center',padding:'16px 0',fontSize:'0.78rem',color:'var(--sa2-text-muted)'}}>
+            Aucun utilisateur Google pour l'instant. Le bouton "Continuer avec Google" est actif sur la page de connexion.
+          </div>
+        )}
       </div>
     </div>
   );

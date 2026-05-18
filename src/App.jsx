@@ -101,6 +101,33 @@ function App() {
       } catch (_) {}
     };
 
+    // Helper: create profile row on first Google (or any OAuth) sign-in
+    const ensureUserProfile = async (user) => {
+      if (!user?.id) return;
+      try {
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+        if (!existing) {
+          const displayName =
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split('@')[0] || '';
+          await supabase.from('profiles').upsert({
+            id: user.id,
+            full_name: displayName,
+            email: user.email,
+            role: 'user',
+            plan: 'starter',
+            avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+            created_at: new Date().toISOString(),
+          }, { onConflict: 'id' });
+        }
+      } catch (_) {}
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
@@ -115,6 +142,7 @@ function App() {
         setIsAuthenticated(true);
         setCurrentUser(session.user);
         checkSuperAdmin(session.user);
+        if (_event === 'SIGNED_IN') ensureUserProfile(session.user);
       } else {
         setIsAuthenticated(false);
         setCurrentUser(null);
