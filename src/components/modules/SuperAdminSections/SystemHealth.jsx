@@ -6,6 +6,7 @@ import {
   Radio, TrendingUp, AlertCircle,
 } from 'lucide-react';
 import { adminFetch } from './adminUtils';
+import { useAppStore } from '../../../store/appStore';
 
 const SEVERITY_COLOR = {
   info:     '#3B82F6',
@@ -92,31 +93,37 @@ function RecentErrors({ errors }) {
 }
 
 export default function SystemHealth() {
-  const [providers, setProviders]         = useState([]);
-  const [checkedAt, setCheckedAt]         = useState(null);
-  const [healthLoading, setHealthLoading] = useState(true);
+  // ── Centralized store slices ────────────────────────────────
+  const setSystemHealth        = useAppStore(s => s.setSystemHealth);
+  const setSystemHealthLoading = useAppStore(s => s.setSystemHealthLoading);
+  const systemHealth           = useAppStore(s => s.systemHealth);
+  const systemHealthLoading    = useAppStore(s => s.systemHealthLoading);
+  const setSystemLogs          = useAppStore(s => s.setSystemLogs);
+  const systemLogs             = useAppStore(s => s.systemLogs);
+  const systemLogsTotal        = useAppStore(s => s.systemLogsTotal);
 
-  const [logs, setLogs]             = useState([]);
-  const [logsTotal, setLogsTotal]   = useState(0);
+  // Derive display values from store
+  const providers  = systemHealth?.providers  || [];
+  const checkedAt  = systemHealth?.checkedAt  || null;
+
+  // Local UI-only state (filter controls, not data)
   const [logsLoading, setLogsLoading] = useState(true);
   const [logSeverity, setLogSeverity] = useState('');
-  const [logModule, setLogModule]   = useState('');
-  const [tableReady, setTableReady] = useState(true);
-
+  const [logModule, setLogModule]     = useState('');
+  const [tableReady, setTableReady]   = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   const loadHealth = useCallback(async () => {
-    setHealthLoading(true);
+    setSystemHealthLoading(true);
     try {
       const r = await adminFetch('/api/health/providers');
       if (r.ok) {
         const d = await r.json();
-        setProviders(d.providers || []);
-        setCheckedAt(d.checkedAt || null);
+        setSystemHealth(d);  // stores { providers, checkedAt, ... } in Zustand
       }
     } catch (_) {}
-    setHealthLoading(false);
-  }, []);
+    setSystemHealthLoading(false);
+  }, [setSystemHealth, setSystemHealthLoading]);
 
   const loadLogs = useCallback(async () => {
     setLogsLoading(true);
@@ -127,14 +134,13 @@ export default function SystemHealth() {
       const r = await adminFetch(`/api/health/logs?${params}`);
       if (r.ok) {
         const d = await r.json();
-        setLogs(d.logs || []);
-        setLogsTotal(d.total || 0);
+        setSystemLogs(d.logs || [], d.total || 0);  // writes to Zustand store
         if (d.tableNotReady) setTableReady(false);
         else setTableReady(true);
       }
     } catch (_) {}
     setLogsLoading(false);
-  }, [logSeverity, logModule]);
+  }, [logSeverity, logModule, setSystemLogs]);
 
   useEffect(() => { loadHealth(); loadLogs(); }, []);
   useEffect(() => { loadLogs(); }, [logSeverity, logModule]);
@@ -276,7 +282,7 @@ export default function SystemHealth() {
             <Filter size={14} style={{ color: 'var(--sa2-text-muted)' }} />
             <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--sa2-text)' }}>
               Journal système
-              {logsTotal > 0 && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--sa2-text-muted)', fontWeight: 400 }}>({logsTotal} entrées)</span>}
+              {systemLogsTotal > 0 && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--sa2-text-muted)', fontWeight: 400 }}>({systemLogsTotal} entrées)</span>}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -320,7 +326,7 @@ export default function SystemHealth() {
           <div style={{ padding: '20px' }}>
             {[1,2,3].map(i => <div key={i} className="sa2-skeleton" style={{ height: 32, marginBottom: 6, borderRadius: 6 }} />)}
           </div>
-        ) : logs.length === 0 ? (
+        ) : systemLogs.length === 0 ? (
           <div style={{ padding: '24px 20px', textAlign: 'center', fontSize: '0.82rem', color: 'var(--sa2-text-muted)' }}>
             Aucun log système{logSeverity || logModule ? ' pour ce filtre' : ''}.
           </div>
@@ -335,7 +341,7 @@ export default function SystemHealth() {
                 </tr>
               </thead>
               <tbody>
-                {logs.map((log, i) => {
+                {systemLogs.map((log, i) => {
                   const col = SEVERITY_COLOR[log.severity] || '#6B7280';
                   return (
                     <tr key={log.id || i} style={{ borderBottom: '1px solid var(--sa2-border)' }}>

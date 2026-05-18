@@ -117,8 +117,9 @@ export async function writeSystemLog({ severity = 'info', module = 'system', mes
   if (!SUPABASE_READY) return;
   const entry = { severity, module, message, details, created_at: new Date().toISOString() };
   try {
-    await supabase.from('system_logs').insert(entry);
-    useAppStore.getState().prependSystemLog(entry);
+    const { error } = await supabase.from('system_logs').insert(entry);
+    // Only update the in-memory store after confirmed write — avoids phantom entries
+    if (!error) useAppStore.getState().prependSystemLog(entry);
   } catch (_) {}
 }
 
@@ -145,6 +146,16 @@ export async function loadInitialStoreData() {
       .catch(() => {}),
     supabase.from('payments').select('*').order('created_at', { ascending: false }).limit(200)
       .then(({ data }) => data && store.setPayments(data))
+      .catch(() => {}),
+    /* Optional domains — fail silently if tables do not exist yet */
+    supabase.from('settings').select('key,value')
+      .then(({ data }) => { if (data) data.forEach(r => r.key && store.mergeSetting(r.key, r.value)); })
+      .catch(() => {}),
+    supabase.from('permissions').select('*').limit(200)
+      .then(({ data }) => data && store.setPermissions(data))
+      .catch(() => {}),
+    supabase.from('system_logs').select('*').order('created_at', { ascending: false }).limit(50)
+      .then(({ data }) => data && store.setSystemLogs(data, data.length))
       .catch(() => {}),
   ];
 
