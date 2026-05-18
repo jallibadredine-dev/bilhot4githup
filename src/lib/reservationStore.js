@@ -82,7 +82,9 @@ export const saveReservations = (list) => {
   try {
     localStorage.setItem(RES_KEY, JSON.stringify(list));
     window.dispatchEvent(new StorageEvent('storage', { key: RES_KEY }));
-  } catch {}
+  } catch (err) {
+    console.warn('[saveReservations] localStorage write failed:', err);
+  }
 };
 
 export const addReservation = (resa) => {

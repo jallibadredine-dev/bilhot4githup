@@ -136,7 +136,9 @@ const loadOTAConns = () => {
   OTA_DEFS.forEach(o => {
     const raw = secureStorage.getSensitive(`cm_ota_${o.id}`);
     if (raw) {
-      try { result[o.id] = JSON.parse(raw); } catch {}
+      try { result[o.id] = JSON.parse(raw); } catch (err) {
+        console.warn(`[loadOTAConns] Failed to parse credentials for OTA ${o.id}:`, err);
+      }
     }
   });
   return result;
@@ -170,7 +172,9 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
     const r = {};
     OTA_DEFS.forEach(o => {
       const raw = secureStorage.getSensitive(`cm_prods_${o.id}`);
-      if (raw) try { r[o.id] = JSON.parse(raw); } catch {}
+      if (raw) try { r[o.id] = JSON.parse(raw); } catch (err) {
+        console.warn(`[otaProducts init] Failed to parse products for OTA ${o.id}:`, err);
+      }
     });
     return r;
   });

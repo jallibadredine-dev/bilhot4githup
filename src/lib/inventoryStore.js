@@ -66,7 +66,9 @@ export const persistInventory = (buildings) => {
     localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms));
     localStorage.setItem(BLDS_KEY,  JSON.stringify(buildings));
     window.dispatchEvent(new StorageEvent('storage', { key: ROOMS_KEY }));
-  } catch {}
+  } catch (err) {
+    console.warn('[persistInventory] localStorage write failed:', err);
+  }
 };
 
 /* ─── Read (auth-gated — only admin PMS reads inventory state) ─ */

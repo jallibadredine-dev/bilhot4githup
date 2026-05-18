@@ -12,10 +12,8 @@ router.use(requireSuperAdmin);
 
 /* ─── Validation helpers ─── */
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function isValidUUID(v) { return typeof v === 'string' && UUID_RE.test(v); }
-function isValidEmail(v) { return typeof v === 'string' && EMAIL_RE.test(v) && v.length <= 254; }
 function safeInt(v, def, min, max) {
   const n = parseInt(v, 10);
   if (isNaN(n)) return def;
