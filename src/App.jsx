@@ -15,6 +15,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import ToastContainer from './components/common/ToastContainer';
 import { logError, logWarn } from './lib/errorHandler';
 import { setAuthState } from './lib/authState';
+import { toast } from './lib/toast';
 
 // Lazy-loaded Views (Performance Optimization)
 const TaskListView = lazy(() => import('./components/views/TaskListView'));
@@ -180,6 +181,18 @@ function App() {
 
           // New user → set trial banner info
           setTrialInfo({ daysLeft: 14, expired: false });
+
+          // Welcome toast — shown once per session for brand-new accounts
+          try {
+            const welcomed = sessionStorage.getItem('hova_trial_welcomed');
+            if (!welcomed) {
+              sessionStorage.setItem('hova_trial_welcomed', '1');
+              setTimeout(() => {
+                toast.success('🎉 Bienvenue ! Votre essai gratuit de 14 jours commence maintenant.', 6000);
+              }, 800);
+            }
+          } catch {}
+
           // OAuth new user → send through qualification wizard (steps 2-5)
           if (isOAuthProvider) {
             setGoogleOnboardingUser(user);
@@ -272,6 +285,7 @@ function App() {
         try {
           sessionStorage.removeItem('hova_onboarding_draft');
           sessionStorage.removeItem('hova_onboarding_pending');
+          sessionStorage.removeItem('hova_trial_welcomed');
         } catch {}
         if (_event === 'SIGNED_OUT') {
           writeSystemLog({ severity: 'info', module: 'auth', message: 'User signed out' });
@@ -602,21 +616,26 @@ function App() {
       <div className={`trial-banner ${expired ? 'trial-banner--expired' : ''}`}>
         <div className="trial-banner-inner">
           {expired ? (
-            <Clock size={15} className="trial-banner-icon"/>
+            <Clock size={14} className="trial-banner-icon"/>
           ) : (
-            <Sparkles size={15} className="trial-banner-icon"/>
+            <Sparkles size={14} className="trial-banner-icon"/>
           )}
           <span className="trial-banner-text">
             {expired
-              ? 'Votre essai gratuit est terminé. Abonnez-vous pour continuer à accéder à toutes les fonctionnalités.'
-              : `Essai gratuit — ${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}.`
+              ? 'Votre essai gratuit est terminé — abonnez-vous pour continuer.'
+              : `Essai gratuit en cours — profitez de toutes les fonctionnalités sans engagement.`
             }
           </span>
+          {!expired && (
+            <span className="trial-banner-days">
+              {daysLeft} jour{daysLeft > 1 ? 's' : ''} restant{daysLeft > 1 ? 's' : ''}
+            </span>
+          )}
           <button
             className="trial-banner-cta"
             onClick={() => setActiveView('plans')}
           >
-            {expired ? 'Voir les plans' : 'Choisir un plan'} →
+            {expired ? 'Voir les plans' : 'Passer Pro'} →
           </button>
           {!expired && (
             <button
