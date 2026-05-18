@@ -28,15 +28,20 @@ const handleResponse = async (res) => {
 
 export const ttlockAPI = {
   // ── AUTH ─────────────────────────────────────────────────────────────────────
-  getToken: async (username, password) => {
+  // clientId / clientSecret: from TTLock Open Platform (https://open.ttlock.com)
+  // Fall back to env vars if not provided (for self-hosted / pre-configured setups).
+  getToken: async (username, password, clientId, clientSecret) => {
+    const cid = clientId || CLIENT_ID;
+    const csec = clientSecret || CLIENT_SECRET;
+    if (!cid || !csec) throw new Error('Client ID et Client Secret TTLock requis. Obtenez-les sur open.ttlock.com');
     const md5 = await import('md5').then(m => m.default || m).catch(() => null);
     const hashedPwd = md5 ? md5(password) : password;
     const res = await fetch(`${BASE}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
+        client_id: cid,
+        client_secret: csec,
         grant_type: 'password',
         username,
         password: hashedPwd,
@@ -45,13 +50,15 @@ export const ttlockAPI = {
     return handleResponse(res);
   },
 
-  refreshToken: async (refreshToken) => {
+  refreshToken: async (refreshToken, clientId, clientSecret) => {
+    const cid = clientId || CLIENT_ID;
+    const csec = clientSecret || CLIENT_SECRET;
     const res = await fetch(`${BASE}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
+        client_id: cid,
+        client_secret: csec,
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
       }),

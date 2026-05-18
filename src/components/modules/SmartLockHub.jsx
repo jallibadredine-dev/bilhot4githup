@@ -85,12 +85,15 @@ const SmartLockHub = () => {
   const [connTuya,    setConnTuya]    = useState(!!secureStorage.getSensitive('slh_tuya'));
 
   // TTLock
-  const [ttUser,   setTtUser]   = useState(secureStorage.getSensitive('ttlock_user', ''));
-  const [ttPass,   setTtPass]   = useState('');
-  const [ttToken,  setTtToken]  = useState(secureStorage.getSessionSensitive('ttlock_token', ''));
-  const [ttShowPw, setTtShowPw] = useState(false);
-  const [ttLoading,setTtLoading]= useState(false);
-  const [ttErr,    setTtErr]    = useState('');
+  const [ttUser,      setTtUser]      = useState(secureStorage.getSensitive('ttlock_user', ''));
+  const [ttPass,      setTtPass]      = useState('');
+  const [ttClientId,  setTtClientId]  = useState(secureStorage.getSensitive('ttlock_client_id',  ''));
+  const [ttClientSec, setTtClientSec] = useState(secureStorage.getSensitive('ttlock_client_sec', ''));
+  const [ttToken,     setTtToken]     = useState(secureStorage.getSessionSensitive('ttlock_token', ''));
+  const [ttShowPw,    setTtShowPw]    = useState(false);
+  const [ttShowSec,   setTtShowSec]   = useState(false);
+  const [ttLoading,   setTtLoading]   = useState(false);
+  const [ttErr,       setTtErr]       = useState('');
 
   // TTHotel — all reads auth-gated via secureStorage
   const [tthUser,     setTthUser]     = useState(secureStorage.getSensitive('slh_tthotel_user',    ''));
@@ -324,10 +327,13 @@ const SmartLockHub = () => {
   const connectTTLock = async (e) => {
     e.preventDefault(); setTtErr(''); setTtLoading(true);
     try {
-      const data = await ttlockAPI.getToken(ttUser, ttPass);
+      if (!ttClientId.trim() || !ttClientSec.trim()) throw new Error('Client ID et Client Secret requis. Obtenez-les sur open.ttlock.com');
+      const data = await ttlockAPI.getToken(ttUser, ttPass, ttClientId.trim(), ttClientSec.trim());
       if (data?.access_token) {
         sessionStorage.setItem('ttlock_token', data.access_token);
-        localStorage.setItem('ttlock_user', ttUser);
+        secureStorage.setSensitive('ttlock_user',       ttUser);
+        secureStorage.setSensitive('ttlock_client_id',  ttClientId.trim());
+        secureStorage.setSensitive('ttlock_client_sec', ttClientSec.trim());
         setTtToken(data.access_token); setConnTTLock(true); setTtPass('');
         await fetchTTLock(data.access_token);
       } else throw new Error(data?.errmsg || 'Identifiants incorrects');
@@ -444,7 +450,7 @@ const SmartLockHub = () => {
   };
 
   const disconnect = (prov) => {
-    if (prov === 'ttlock')  { sessionStorage.removeItem('ttlock_token'); localStorage.removeItem('ttlock_user'); setTtToken(''); setTtlockDevices([]); setConnTTLock(false); }
+    if (prov === 'ttlock')  { sessionStorage.removeItem('ttlock_token'); secureStorage.removeSensitive('ttlock_user'); secureStorage.removeSensitive('ttlock_client_id'); secureStorage.removeSensitive('ttlock_client_sec'); setTtToken(''); setTtlockDevices([]); setConnTTLock(false); }
     if (prov === 'tthotel') { ['slh_tthotel','slh_tthotel_user','slh_tthotel_token','slh_tthotel_refresh','slh_tthotel_devices','slh_tthotel_demo'].forEach(k => localStorage.removeItem(k)); setTthotelDevices([]); setTthToken(''); setTthRefresh(''); setTthDemoMode(false); setConnTTHotel(false); }
     if (prov === 'tuya')    { ['slh_tuya','slh_tuya_id','slh_tuya_secret','slh_tuya_token','slh_tuya_devices','slh_tuya_demo'].forEach(k => localStorage.removeItem(k)); setTuyaDevices([]); setTuyaToken(''); setTuyaDemoMode(false); setConnTuya(false); }
     if (selectedLock?.provider === prov) setSelectedLock(null);
@@ -494,8 +500,21 @@ const SmartLockHub = () => {
               <form onSubmit={connectTTLock} className="slh-setup-form">
                 {ttErr && <div className="slh-setup-err"><AlertTriangle size={13}/> {ttErr}</div>}
                 <div className="slh-sf-group">
+                  <label>Client ID <span style={{ fontWeight: 400, opacity: 0.65, fontSize: '0.75rem' }}>— open.ttlock.com</span></label>
+                  <div className="slh-sf-input"><Key size={13}/><input type="text" value={ttClientId} onChange={e => setTtClientId(e.target.value)} placeholder="ex: a1b2c3d4e5f6..." required/></div>
+                </div>
+                <div className="slh-sf-group">
+                  <label>Client Secret</label>
+                  <div className="slh-sf-input">
+                    <Lock size={13}/>
+                    <input type={ttShowSec ? 'text' : 'password'} value={ttClientSec} onChange={e => setTtClientSec(e.target.value)} placeholder="••••••••••••" required/>
+                    <button type="button" className="slh-sf-eye" onClick={() => setTtShowSec(v => !v)}>{ttShowSec ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
+                  </div>
+                </div>
+                <div className="slh-sf-divider"/>
+                <div className="slh-sf-group">
                   <label>Email / Identifiant TTLock</label>
-                  <div className="slh-sf-input"><User size={13}/><input type="text" value={ttUser} onChange={e => setTtUser(e.target.value)} placeholder="votre@email.com" required/></div>
+                  <div className="slh-sf-input"><User size={13}/><input type="text" value={ttUser} onChange={e => setTtUser(e.target.value)} placeholder="votre@email.com ou +212..." required/></div>
                 </div>
                 <div className="slh-sf-group">
                   <label>Mot de passe</label>
@@ -505,7 +524,7 @@ const SmartLockHub = () => {
                     <button type="button" className="slh-sf-eye" onClick={() => setTtShowPw(v => !v)}>{ttShowPw ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
                   </div>
                 </div>
-                <div className="slh-sf-hint"><Shield size={11}/> OAuth2 · Connexion sécurisée TTLock</div>
+                <div className="slh-sf-hint"><Shield size={11}/> OAuth2 · Credentials chiffrés localement</div>
                 <button type="submit" className="slh-sf-submit" style={{ background: '#2563EB' }} disabled={ttLoading}>
                   {ttLoading ? <><RefreshCcw size={13} className="slh-spin"/> Connexion…</> : <><Wifi size={13}/> Connecter TTLock</>}
                 </button>
