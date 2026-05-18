@@ -1,6 +1,25 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient.js';
 import app from './app.js';
+
+// Load .env manually (backend process doesn't use Vite's env loading)
+try {
+  const __dir = path.dirname(fileURLToPath(import.meta.url));
+  const envPath = path.resolve(__dir, '..', '.env');
+  const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx < 0) continue;
+    const key = trimmed.slice(0, eqIdx).trim();
+    const val = trimmed.slice(eqIdx + 1).trim();
+    if (key && !process.env[key]) process.env[key] = val;
+  }
+} catch (_) {}
 
 const port = parseInt(process.env.BACKEND_PORT || '3001');
 

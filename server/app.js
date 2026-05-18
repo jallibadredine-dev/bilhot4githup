@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import stripeRouter from './routes/stripe.js';
+import adminRouter from './routes/admin.js';
 import { WebhookHandlers } from './webhookHandlers.js';
 
 const app = express();
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 
 /* ─── Routes ─── */
 app.use('/api/stripe', stripeRouter);
+app.use('/api/admin', adminRouter);
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'HosFlow API' }));
 
 export default app;

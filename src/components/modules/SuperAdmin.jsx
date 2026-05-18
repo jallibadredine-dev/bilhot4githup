@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, Users, CreditCard, Globe, HeadphonesIcon, Calendar,
   Shield, TrendingUp, TrendingDown, Server, Zap, RefreshCw,
@@ -131,7 +131,7 @@ const SelecteurMode = ({ mode, setMode }) => (
   </div>
 );
 
-const SectionDashboard = ({ mode }) => {
+const SectionDashboard = ({ mode, stats }) => {
   const chartData = useMemo(() => {
     if (mode === 'global') return revenueData;
     return revenueData.map(d => ({ m: d.m, value: d[mode] }));
@@ -142,22 +142,22 @@ const SectionDashboard = ({ mode }) => {
       {/* KPI Widgets */}
       <div className="sa-widget-row">
         <div className="sa-card sa-interactive-card">
-          <div className="card-lbl">MRR TOTAL</div>
-          <div className="card-val">{mode === 'pro' ? '$25.7k' : mode === 'hot' ? '$13.2k' : '$38.9k'}</div>
-          <div className="card-delta up">+12.4% vs mois dernier</div>
+          <div className="card-lbl">UTILISATEURS ACTIFS</div>
+          <div className="card-val">{stats ? stats.activeUsers : '—'}</div>
+          <div className="card-delta up">{stats ? `${stats.totalUsers} total Supabase` : 'Chargement...'}</div>
+          <Users className="card-bg-icon" />
+        </div>
+        <div className="sa-card sa-interactive-card">
+          <div className="card-lbl">PROPRIÉTÉS ACTIVES</div>
+          <div className="card-val">{stats ? stats.activeProperties : '—'}</div>
+          <div className="card-delta">{stats ? `${stats.totalProperties} propriétés total` : 'Chargement...'}</div>
+          <Building2 className="card-bg-icon" />
+        </div>
+        <div className="sa-card sa-interactive-card">
+          <div className="card-lbl">REVENUE CUMULÉ</div>
+          <div className="card-val">{stats ? (stats.totalRevenue > 0 ? stats.totalRevenue.toLocaleString('fr-FR') + ' MAD' : '0') : '—'}</div>
+          <div className="card-delta">Réservations Supabase</div>
           <TrendingUp className="card-bg-icon" />
-        </div>
-        <div className="sa-card sa-interactive-card">
-          <div className="card-lbl">LICENCES ACTIVES</div>
-          <div className="card-val">{mode === 'pro' ? '54' : mode === 'hot' ? '193' : '247'}</div>
-          <div className="card-delta">Net +18 ce mois</div>
-          <Shield className="card-bg-icon" />
-        </div>
-        <div className="sa-card sa-interactive-card">
-          <div className="card-lbl">API HEALTH</div>
-          <div className="card-val">99.2%</div>
-          <div className="card-delta">Statut opérationnel</div>
-          <Activity className="card-bg-icon" />
         </div>
       </div>
 
@@ -263,6 +263,42 @@ export default function SuperAdmin() {
     try { return JSON.parse(localStorage.getItem('sa_created_users') || '[]'); } catch { return []; }
   });
 
+  const [sbUsers, setSbUsers] = useState([]);
+  const [sbProperties, setSbProperties] = useState([]);
+  const [sbReservations, setSbReservations] = useState([]);
+  const [sbStats, setSbStats] = useState(null);
+  const [sbLoading, setSbLoading] = useState(false);
+  const [sbError, setSbError] = useState('');
+
+  const BACKEND = import.meta.env.VITE_BACKEND_URL || '';
+
+  const fetchAdminData = useCallback(async () => {
+    setSbLoading(true);
+    setSbError('');
+    try {
+      const [usersRes, statsRes] = await Promise.all([
+        fetch(`${BACKEND}/api/admin/users`),
+        fetch(`${BACKEND}/api/admin/stats`),
+      ]);
+      if (usersRes.ok) {
+        const d = await usersRes.json();
+        setSbUsers(d.users || []);
+      }
+      if (statsRes.ok) {
+        const d = await statsRes.json();
+        setSbStats(d);
+      }
+    } catch (err) {
+      setSbError('Impossible de joindre le backend admin.');
+    } finally {
+      setSbLoading(false);
+    }
+  }, [BACKEND]);
+
+  useEffect(() => {
+    fetchAdminData();
+  }, [fetchAdminData]);
+
   const saveStripeConfig = () => {
     localStorage.setItem('sa_stripe_mode', stripeMode);
     localStorage.setItem('sa_stripe_test_pk', stripeTestPk);
@@ -275,21 +311,21 @@ export default function SuperAdmin() {
     if (!newUser.email || !newUser.name) { setUserCreateError('Nom et email requis.'); return; }
     setUserCreateStatus('loading');
     setUserCreateError('');
-    const tempPassword = 'Hova' + Math.random().toString(36).slice(2, 8).toUpperCase() + '!';
     try {
-      const { supabase } = await import('../../lib/supabase');
-      const { error } = await supabase.auth.signUp({
-        email: newUser.email,
-        password: tempPassword,
-        options: { data: { full_name: newUser.name } }
+      const res = await fetch(`${BACKEND}/api/admin/create-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser),
       });
-      if (error) throw error;
-      const created = { ...newUser, password: tempPassword, createdAt: new Date().toISOString() };
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de la création.');
+      const created = { ...newUser, password: data.user.password, createdAt: new Date().toISOString() };
       const updated = [...createdUsers, created];
       setCreatedUsers(updated);
       localStorage.setItem('sa_created_users', JSON.stringify(updated));
       setNewUser({ name: '', email: '', plan: 'starter', role: 'user' });
       setUserCreateStatus('success');
+      await fetchAdminData();
       setTimeout(() => setUserCreateStatus('idle'), 3000);
     } catch (err) {
       setUserCreateStatus('idle');
@@ -375,7 +411,7 @@ export default function SuperAdmin() {
 
   const renderContent = () => {
     switch(activeTab) {
-      case 'dashboard': return <SectionDashboard mode={mode} />;
+      case 'dashboard': return <SectionDashboard mode={mode} stats={sbStats} />;
       case 'billing': 
         return (
           <motion.div 
@@ -1022,9 +1058,9 @@ export default function SuperAdmin() {
 
             {/* Created users history */}
             {createdUsers.length > 0 && (
-              <div className="sa-card">
+              <div className="sa-card mb-4">
                 <div className="sa-card-header">
-                  <h3>Comptes Créés ({createdUsers.length})</h3>
+                  <h3>Comptes Créés — Session ({createdUsers.length})</h3>
                   <button className="white-action-btn sa-clickable" onClick={() => { setCreatedUsers([]); localStorage.removeItem('sa_created_users'); }}>Effacer l'historique</button>
                 </div>
                 <div className="sa-table-wrap">
@@ -1049,6 +1085,65 @@ export default function SuperAdmin() {
                 </div>
               </div>
             )}
+
+            {/* Real users from Supabase */}
+            <div className="sa-card">
+              <div className="sa-card-header">
+                <h3>Profils Supabase — Base de données réelle</h3>
+                <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                  {sbLoading && <RefreshCw size={14} className="animate-spin text-slate-400"/>}
+                  <button className="white-action-btn sa-clickable" onClick={fetchAdminData}><RefreshCw size={13}/> Actualiser</button>
+                </div>
+              </div>
+              {sbError && (
+                <div style={{ background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:8, padding:'8px 12px', fontSize:'0.76rem', color:'#991B1B', marginBottom:12, display:'flex', gap:6 }}>
+                  <AlertTriangle size={13}/>{sbError}
+                </div>
+              )}
+              {sbUsers.length === 0 && !sbLoading && !sbError ? (
+                <div style={{ textAlign:'center', padding:'24px 0', color:'#94A3B8', fontSize:'0.82rem' }}>
+                  Aucun profil trouvé dans Supabase.
+                </div>
+              ) : (
+                <div className="sa-table-wrap">
+                  <table className="sa-modern-table">
+                    <thead>
+                      <tr>
+                        <th>NOM</th><th>EMAIL</th><th>RÔLE</th><th>PLAN</th><th>STATUT</th><th>CRÉÉ LE</th><th>ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sbUsers.map(u => (
+                        <tr key={u.id}>
+                          <td className="font-bold">{u.full_name || '—'}</td>
+                          <td className="text-slate-500" style={{ fontSize:'0.8rem' }}>{u.email || '—'}</td>
+                          <td>
+                            <span style={{ background: u.role === 'super_admin' ? '#FEF3C7' : u.role === 'admin' ? '#EFF6FF' : '#F1F5F9', color: u.role === 'super_admin' ? '#92400E' : u.role === 'admin' ? '#1D4ED8' : '#64748B', borderRadius:5, padding:'2px 7px', fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase' }}>
+                              {u.role || 'user'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`plan-pill ${u.plan === 'enterprise' ? 'enterprise' : u.plan === 'pro' ? 'gold' : u.plan === 'lifetime' ? 'enterprise' : 'silver'}`}>
+                              {(u.plan || 'starter').toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status-pill ${u.status === 'active' ? 'active' : 'silver'}`}>{u.status || 'active'}</span>
+                          </td>
+                          <td className="text-slate-400" style={{ fontSize:'0.75rem' }}>
+                            {u.created_at ? new Date(u.created_at).toLocaleDateString('fr-FR') : '—'}
+                          </td>
+                          <td style={{ display:'flex', gap:4 }}>
+                            <button className="icon-btn-gray sa-clickable" title="Voir profil"><Eye size={13}/></button>
+                            <button className="icon-btn-gray sa-clickable" title="Modifier"><Settings size={13}/></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </motion.div>
         );
 
