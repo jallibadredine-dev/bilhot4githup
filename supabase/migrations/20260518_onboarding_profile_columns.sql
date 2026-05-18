@@ -2,6 +2,10 @@
 -- Task #21 — Multi-step onboarding wizard + 14-day trial
 -- Run this in Supabase Dashboard > SQL Editor (or via Supabase CLI)
 
+-- Ensure plan column exists (may already be present in some environments)
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'trial';
+
 ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS establishment_type   TEXT,
   ADD COLUMN IF NOT EXISTS establishment_custom TEXT,
