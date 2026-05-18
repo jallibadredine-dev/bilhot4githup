@@ -166,7 +166,7 @@ export async function issueCard(data) {
     lock_id:        data.lock_id        || null,
     card_uid:       data.card_uid       || null,
     status:         CARD_STATUS.PENDING,
-    encoded_at:     now(),
+    encoded_at:     null,   // Set by the encoder success callback after physical write
     activated_at:   data.activated_at   || null,
     expires_at:     data.expires_at     || null,
     guest_name:     data.guest_name     || 'Client',
@@ -488,7 +488,9 @@ async function _updateStatus(cardId, status, eventType, extraFields = {}, notes 
 
 /* ── DEMO SEED ──────────────────────────────────────────────────── */
 
-export function seedDemoCards() {
+export async function seedDemoCards() {
+  const sb = await sbReady();
+  if (sb) return; // Supabase online — never seed synthetic data in production
   const existing = _lsGetCards();
   if (existing.length > 0) return;
   const today = new Date();

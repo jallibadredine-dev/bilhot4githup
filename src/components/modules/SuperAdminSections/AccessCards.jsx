@@ -20,12 +20,13 @@ const STATUS = {
 };
 
 const EVENT_LABELS = {
-  encoded:        'Encodée',      activated: 'Activée',
-  deactivated:    'Désactivée',   expired:   'Expirée',
-  lost:           'Perdue',       're-encoded': 'Ré-encodée',
-  renewed:        'Renouvelée',   access_granted: 'Accès accordé',
-  access_denied:  'Accès refusé',
+  issued:         'Émise',        encoded:   'Encodée',
+  activated:      'Activée',      deactivated: 'Désactivée',
+  expired:        'Expirée',      lost:        'Perdue',
+  're-encoded':   'Ré-encodée',   renewed:     'Renouvelée',
+  access_granted: 'Accès accordé', access_denied: 'Accès refusé',
 };
+const ENCODER_EVENTS = new Set(['encoded', 're-encoded']);
 
 const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString('fr', { day:'numeric', month:'short', year:'numeric' }) : '—';
 const fmtDT   = (iso) => iso ? new Date(iso).toLocaleString('fr',   { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
@@ -41,10 +42,11 @@ export default function AccessCards() {
   const [tab,      setTab]      = useState('cards');
   const [search,   setSearch]   = useState('');
   const [fStatus,  setFStatus]  = useState('all');
+  const [fEvType,  setFEvType]  = useState('all');
 
   const load = useCallback(async () => {
     setLoading(true);
-    seedDemoCards();
+    await seedDemoCards();
     const [c, e, s] = await Promise.all([getAllCards(), getAllCardEvents({ limit: 200 }), getCardStats()]);
     setCards(c);
     setEvents(e);
@@ -124,7 +126,7 @@ export default function AccessCards() {
 
       {/* ── TABS ── */}
       <div className="sac-tabs">
-        {[['cards','Toutes les cartes'],['events','Journal des événements']].map(([k,l]) => (
+        {[['cards','Toutes les cartes'],['events','Journal des événements'],['encoder','Journal encodeur']].map(([k,l]) => (
           <button key={k} className={`sac-tab ${tab===k?'active':''}`} onClick={() => setTab(k)}>{l}</button>
         ))}
       </div>
@@ -141,6 +143,14 @@ export default function AccessCards() {
             <option value="all">Tous les statuts</option>
             {Object.entries(CARD_STATUS).map(([,v]) => (
               <option key={v} value={v}>{STATUS[v]?.label || v}</option>
+            ))}
+          </select>
+        )}
+        {tab === 'events' && (
+          <select className="sac-filter-sel" value={fEvType} onChange={e => setFEvType(e.target.value)}>
+            <option value="all">Tous les événements</option>
+            {Object.keys(EVENT_LABELS).map(k => (
+              <option key={k} value={k}>{EVENT_LABELS[k]}</option>
             ))}
           </select>
         )}
@@ -195,8 +205,12 @@ export default function AccessCards() {
       )}
 
       {/* ── EVENTS LOG ── */}
-      {tab === 'events' && (
-        loading ? (
+      {tab === 'events' && (() => {
+        const filtered = events.filter(e =>
+          (fEvType === 'all' || e.event_type === fEvType) &&
+          (!search || cards.find(c => c.id === e.card_id)?.guest_name?.toLowerCase().includes(search.toLowerCase()))
+        );
+        return loading ? (
           <div className="sac-loading">{[1,2,3].map(i=><div key={i} className="sac-skel"/>)}</div>
         ) : (
           <div className="sac-table-wrap">
@@ -205,15 +219,13 @@ export default function AccessCards() {
                 <tr>{['Événement','Carte','Chambre','Date','Détails'].map(h=><th key={h}>{h}</th>)}</tr>
               </thead>
               <tbody>
-                {events.length === 0 ? (
+                {filtered.length === 0 ? (
                   <tr><td colSpan={5} style={{ textAlign:'center', padding:'32px', color:'#9CA3AF' }}>Aucun événement</td></tr>
-                ) : events.map((evt, i) => {
+                ) : filtered.map((evt, i) => {
                   const card = cards.find(c => c.id === evt.card_id);
                   return (
                     <tr key={evt.id || i} className="sac-tr">
-                      <td>
-                        <span className="sac-evtype">{EVENT_LABELS[evt.event_type] || evt.event_type}</span>
-                      </td>
+                      <td><span className="sac-evtype">{EVENT_LABELS[evt.event_type] || evt.event_type}</span></td>
                       <td><code className="sac-uid">{card?.card_uid || evt.card_id?.slice(0,8)+'…'}</code></td>
                       <td>{card ? <span className="sac-room-badge"><Building2 size={10}/> {card.room_id}</span> : '—'}</td>
                       <td className="sac-date">{fmtDT(evt.created_at)}</td>
@@ -228,8 +240,53 @@ export default function AccessCards() {
               </tbody>
             </table>
           </div>
-        )
-      )}
+        );
+      })()}
+
+      {/* ── ENCODER LOG PANEL ── */}
+      {tab === 'encoder' && (() => {
+        const encEvts = events.filter(e => ENCODER_EVENTS.has(e.event_type));
+        return loading ? (
+          <div className="sac-loading">{[1,2,3].map(i=><div key={i} className="sac-skel"/>)}</div>
+        ) : (
+          <>
+            <div className="sac-encoder-info">
+              <CreditCard size={13} />
+              Journal des opérations d'encodage physique RFID — événements&nbsp;<code>encoded</code>&nbsp;et&nbsp;<code>re-encoded</code> uniquement.
+              <span className="sac-encoder-count">{encEvts.length} encodage(s)</span>
+            </div>
+            <div className="sac-table-wrap">
+              <table className="sac-table">
+                <thead>
+                  <tr>{['Opération','Client','Chambre','UID carte','Date','Propriété'].map(h=><th key={h}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {encEvts.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign:'center', padding:'32px', color:'#9CA3AF' }}>Aucun encodage enregistré</td></tr>
+                  ) : encEvts.map((evt, i) => {
+                    const card = cards.find(c => c.id === evt.card_id);
+                    return (
+                      <tr key={evt.id || i} className="sac-tr">
+                        <td><span className="sac-evtype sac-evtype--encoder">{EVENT_LABELS[evt.event_type] || evt.event_type}</span></td>
+                        <td>
+                          <div className="sac-guest-cell">
+                            <div className="sac-av">{(card?.guest_name||'?').charAt(0).toUpperCase()}</div>
+                            <span>{card?.guest_name || '—'}</span>
+                          </div>
+                        </td>
+                        <td>{card ? <span className="sac-room-badge"><Building2 size={10}/> {card.room_id}</span> : '—'}</td>
+                        <td><code className="sac-uid">{evt.details?.card_uid || card?.card_uid || '—'}</code></td>
+                        <td className="sac-date">{fmtDT(evt.created_at)}</td>
+                        <td className="sac-date" style={{ fontSize:'0.68rem' }}>{card?.property_id || '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

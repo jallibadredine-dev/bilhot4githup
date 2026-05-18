@@ -66,7 +66,7 @@ export default function CardManagement() {
   /* ── Load ── */
   const load = useCallback(async () => {
     setLoading(true);
-    seedDemoCards();
+    await seedDemoCards();
     const [all, st, evts] = await Promise.all([
       getAllCards(), getCardStats(), getAllCardEvents({ limit: 200 }),
     ]);

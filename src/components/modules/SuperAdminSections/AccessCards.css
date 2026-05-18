@@ -178,3 +178,41 @@
 .sac-property-table td {
   font-size: 0.82rem;
 }
+
+/* ── Encoder log panel ── */
+.sac-encoder-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  border-radius: 8px;
+  color: #4338CA;
+  font-size: 0.8rem;
+}
+.sac-encoder-count {
+  margin-left: auto;
+  font-weight: 700;
+  background: #6366F1;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+}
+.sac-evtype--encoder {
+  background: #EEF2FF;
+  color: #4338CA;
+  border: 1px solid #C7D2FE;
+}
+
+/* ── Events tab filter select ── */
+.sac-filter-sel {
+  padding: 6px 10px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
