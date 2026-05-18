@@ -5,7 +5,6 @@ import { fileURLToPath } from 'url';
 
 const router = express.Router();
 
-// Read .env file at module load time (works regardless of import order)
 function loadEnvFile() {
   try {
     const __dir = path.dirname(fileURLToPath(import.meta.url));
@@ -24,76 +23,108 @@ function loadEnvFile() {
 }
 const dotEnv = loadEnvFile();
 
-function getSbUrl() {
-  return process.env.VITE_SB_URL || process.env.SUPABASE_URL || dotEnv.VITE_SB_URL || dotEnv.SUPABASE_URL || '';
-}
-function getSbKey() {
-  return process.env.VITE_SB_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY_ACTUAL || dotEnv.VITE_SB_SERVICE_KEY || dotEnv.SUPABASE_SERVICE_ROLE_KEY_ACTUAL || '';
-}
+function getSbUrl()  { return process.env.VITE_SB_URL || process.env.SUPABASE_URL || dotEnv.VITE_SB_URL || dotEnv.SUPABASE_URL || ''; }
+function getSbKey()  { return process.env.VITE_SB_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY_ACTUAL || dotEnv.VITE_SB_SERVICE_KEY || dotEnv.SUPABASE_SERVICE_ROLE_KEY_ACTUAL || ''; }
+function getSbAnon() { return process.env.VITE_SB_ANON_KEY || dotEnv.VITE_SB_ANON_KEY || ''; }
 
 function sbFetch(urlPath, options = {}) {
   const SB_URL = getSbUrl();
-  const SB_SERVICE_KEY = getSbKey();
-  if (!SB_URL || !SB_SERVICE_KEY) throw new Error('Supabase non configuré côté serveur.');
+  const SB_KEY = getSbKey();
+  if (!SB_URL || !SB_KEY) throw new Error('Supabase non configuré côté serveur.');
   return fetch(`${SB_URL}${urlPath}`, {
     ...options,
     headers: {
-      'apikey': SB_SERVICE_KEY,
-      'Authorization': `Bearer ${SB_SERVICE_KEY}`,
+      'apikey': SB_KEY,
+      'Authorization': `Bearer ${SB_KEY}`,
       'Content-Type': 'application/json',
       ...(options.headers || {}),
     },
   });
 }
 
-router.post('/create-user', async (req, res) => {
-  const { email, name, plan, role } = req.body;
-  if (!email || !name) return res.status(400).json({ error: 'email et name requis.' });
+function anonFetch(urlPath, token, options = {}) {
+  const SB_URL = getSbUrl();
+  const anon = getSbAnon();
+  return fetch(`${SB_URL}${urlPath}`, {
+    ...options,
+    headers: {
+      'apikey': anon,
+      'Authorization': `Bearer ${token || anon}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+}
 
+async function logAudit({ user_email, action, resource, type = 'user' }) {
   try {
-    const password = 'Hova' + Math.random().toString(36).slice(2, 8).toUpperCase() + '!';
-
-    const createRes = await sbFetch('/auth/v1/admin/users', {
-      method: 'POST',
-      body: JSON.stringify({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: name },
-      }),
-    });
-
-    const userData = await createRes.json();
-    if (!createRes.ok) throw new Error(userData.message || userData.error_description || 'Erreur création auth.');
-
-    const userId = userData.id;
-
-    await sbFetch('/rest/v1/profiles', {
+    await sbFetch('/rest/v1/audit_logs', {
       method: 'POST',
       headers: { Prefer: 'return=minimal' },
-      body: JSON.stringify({
-        id: userId,
-        full_name: name,
-        email,
-        role: role || 'user',
-        plan: plan || 'starter',
-        status: 'active',
-      }),
+      body: JSON.stringify({ user_email, action, resource, type, created_at: new Date().toISOString() }),
     });
+  } catch (_) {}
+}
 
-    res.json({ ok: true, user: { id: userId, email, name, plan, role, password } });
+/* ════════════════════════════════════════
+   USERS / CLIENTS
+   ════════════════════════════════════════ */
+
+router.get('/users', async (req, res) => {
+  const { search = '', role = '', plan = '', limit = 100, offset = 0 } = req.query;
+  try {
+    let url = `/rest/v1/profiles?select=*&order=created_at.desc&limit=${limit}&offset=${offset}`;
+    const r = await sbFetch(url);
+    if (!r.ok) throw new Error('Erreur lecture profiles');
+    let data = await r.json();
+    if (!Array.isArray(data)) data = [];
+    if (search) {
+      const q = search.toLowerCase();
+      data = data.filter(u => (u.full_name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q) || (u.company || '').toLowerCase().includes(q));
+    }
+    if (role) data = data.filter(u => u.role === role);
+    if (plan) data = data.filter(u => u.plan === plan);
+    res.json({ users: data, total: data.length });
   } catch (err) {
-    console.error('[Admin] create-user error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/users', async (req, res) => {
+router.get('/users/:id', async (req, res) => {
+  const { id } = req.params;
   try {
-    const r = await sbFetch('/rest/v1/profiles?select=*&order=created_at.desc');
-    if (!r.ok) throw new Error('Erreur lecture profiles');
-    const data = await r.json();
-    res.json({ users: data });
+    const [profileR, propsR] = await Promise.all([
+      sbFetch(`/rest/v1/profiles?id=eq.${id}&select=*`),
+      sbFetch(`/rest/v1/properties?select=id,name,type,status&limit=20`),
+    ]);
+    const profiles = profileR.ok ? await profileR.json() : [];
+    const props = propsR.ok ? await propsR.json() : [];
+    if (!profiles.length) return res.status(404).json({ error: 'Profil introuvable.' });
+    res.json({ user: profiles[0], properties: Array.isArray(props) ? props : [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/create-user', async (req, res) => {
+  const { email, name, plan = 'starter', role = 'user', company = '', phone = '' } = req.body;
+  if (!email || !name) return res.status(400).json({ error: 'email et name requis.' });
+  try {
+    const password = 'Hova' + Math.random().toString(36).slice(2, 8).toUpperCase() + '!';
+    const createRes = await sbFetch('/auth/v1/admin/users', {
+      method: 'POST',
+      body: JSON.stringify({ email, password, email_confirm: true, user_metadata: { full_name: name } }),
+    });
+    const userData = await createRes.json();
+    if (!createRes.ok) throw new Error(userData.message || userData.error_description || 'Erreur création auth.');
+    const userId = userData.id;
+    await sbFetch('/rest/v1/profiles', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ id: userId, full_name: name, email, role, plan, company, phone, created_at: new Date().toISOString() }),
+    });
+    await logAudit({ user_email: 'super_admin', action: `Compte créé: ${email}`, resource: userId, type: 'user' });
+    res.json({ ok: true, user: { id: userId, email, name, plan, role, password } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -101,8 +132,9 @@ router.get('/users', async (req, res) => {
 
 router.patch('/users/:id', async (req, res) => {
   const { id } = req.params;
-  const fields = req.body;
+  const { email: _e, ...fields } = req.body;
   try {
+    fields.updated_at = new Date().toISOString();
     const r = await sbFetch(`/rest/v1/profiles?id=eq.${id}`, {
       method: 'PATCH',
       headers: { Prefer: 'return=representation' },
@@ -110,7 +142,8 @@ router.patch('/users/:id', async (req, res) => {
     });
     if (!r.ok) throw new Error('Erreur mise à jour profil');
     const data = await r.json();
-    res.json({ user: data[0] });
+    await logAudit({ user_email: 'super_admin', action: `Profil mis à jour`, resource: id, type: 'user' });
+    res.json({ user: Array.isArray(data) ? data[0] : data });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -119,17 +152,22 @@ router.patch('/users/:id', async (req, res) => {
 router.delete('/users/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    await sbFetch(`/rest/v1/profiles?id=eq.${id}`, { method: 'DELETE' });
     const delAuth = await sbFetch(`/auth/v1/admin/users/${id}`, { method: 'DELETE' });
     if (!delAuth.ok && delAuth.status !== 404) {
       const txt = await delAuth.text();
-      throw new Error(txt);
+      console.warn('[admin] auth delete warn:', txt);
     }
-    await sbFetch(`/rest/v1/profiles?id=eq.${id}`, { method: 'DELETE' });
+    await logAudit({ user_email: 'super_admin', action: `Compte supprimé`, resource: id, type: 'user' });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+/* ════════════════════════════════════════
+   ANALYTICS & STATS
+   ════════════════════════════════════════ */
 
 router.get('/stats', async (req, res) => {
   try {
@@ -141,12 +179,136 @@ router.get('/stats', async (req, res) => {
     const users  = usersR.ok  ? await usersR.json()  : [];
     const props  = propsR.ok  ? await propsR.json()  : [];
     const resvs  = resvR.ok   ? await resvR.json()   : [];
-    const activeProps  = Array.isArray(props) ? props.filter(p => p.status === 'active').length : 0;
-    const totalRevenue = Array.isArray(resvs) ? resvs.reduce((s, r) => s + (Number(r.amount) || 0), 0) : 0;
-    const totalUsers   = Array.isArray(users) ? users.length : 0;
-    res.json({ totalUsers, activeUsers: totalUsers, totalProperties: Array.isArray(props) ? props.length : 0, activeProperties: activeProps, totalRevenue });
+    const safeUsers = Array.isArray(users) ? users : [];
+    const safeProps = Array.isArray(props) ? props : [];
+    const safeResvs = Array.isArray(resvs) ? resvs : [];
+    const totalRevenue = safeResvs.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const byPlan = safeUsers.reduce((acc, u) => { acc[u.plan || 'starter'] = (acc[u.plan || 'starter'] || 0) + 1; return acc; }, {});
+    const byRole = safeUsers.reduce((acc, u) => { acc[u.role || 'user'] = (acc[u.role || 'user'] || 0) + 1; return acc; }, {});
+    res.json({
+      totalUsers: safeUsers.length,
+      activeUsers: safeUsers.length,
+      totalProperties: safeProps.length,
+      activeProperties: safeProps.filter(p => p.status === 'active').length,
+      totalRevenue,
+      totalReservations: safeResvs.length,
+      byPlan,
+      byRole,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/analytics', async (req, res) => {
+  try {
+    const [usersR, propsR] = await Promise.all([
+      sbFetch('/rest/v1/profiles?select=id,plan,role,created_at&order=created_at.asc'),
+      sbFetch('/rest/v1/properties?select=id,status,created_at'),
+    ]);
+    const users = usersR.ok ? (await usersR.json() || []) : [];
+    const props = propsR.ok ? (await propsR.json() || []) : [];
+
+    const safeUsers = Array.isArray(users) ? users : [];
+
+    const monthMap = {};
+    for (const u of safeUsers) {
+      const d = new Date(u.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      monthMap[key] = (monthMap[key] || 0) + 1;
+    }
+    const signupTrend = Object.entries(monthMap)
+      .sort(([a],[b]) => a.localeCompare(b))
+      .slice(-6)
+      .map(([month, count]) => ({ month: month.slice(5), count }));
+
+    const planDist = [];
+    const planCounts = safeUsers.reduce((acc, u) => { acc[u.plan || 'starter'] = (acc[u.plan || 'starter'] || 0) + 1; return acc; }, {});
+    for (const [name, value] of Object.entries(planCounts)) planDist.push({ name: name.toUpperCase(), value });
+
+    const roleDist = [];
+    const roleCounts = safeUsers.reduce((acc, u) => { acc[u.role || 'user'] = (acc[u.role || 'user'] || 0) + 1; return acc; }, {});
+    for (const [name, value] of Object.entries(roleCounts)) roleDist.push({ name, value });
+
+    res.json({ signupTrend, planDist, roleDist, totalUsers: safeUsers.length, totalProps: Array.isArray(props) ? props.length : 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ════════════════════════════════════════
+   PAYMENTS (Stripe)
+   ════════════════════════════════════════ */
+
+router.get('/payments', async (req, res) => {
+  try {
+    const { getUncachableStripeClient } = await import('../stripeClient.js').catch(() => ({ getUncachableStripeClient: null }));
+    if (!getUncachableStripeClient) return res.json({ payments: [], error: 'Stripe non disponible.' });
+    const stripe = await getUncachableStripeClient();
+    const [charges, subs] = await Promise.all([
+      stripe.charges.list({ limit: 50 }),
+      stripe.subscriptions.list({ limit: 50, status: 'all' }),
+    ]);
+    const payments = charges.data.map(c => ({
+      id: c.id,
+      amount: c.amount / 100,
+      currency: c.currency.toUpperCase(),
+      status: c.status,
+      email: c.billing_details?.email || c.receipt_email || '—',
+      description: c.description || '—',
+      created: new Date(c.created * 1000).toISOString(),
+    }));
+    const subscriptions = subs.data.map(s => ({
+      id: s.id,
+      status: s.status,
+      email: s.customer || '—',
+      plan: s.items?.data?.[0]?.price?.nickname || s.items?.data?.[0]?.price?.id || '—',
+      amount: (s.items?.data?.[0]?.price?.unit_amount || 0) / 100,
+      currency: (s.items?.data?.[0]?.price?.currency || 'eur').toUpperCase(),
+      created: new Date(s.created * 1000).toISOString(),
+      current_period_end: new Date(s.current_period_end * 1000).toISOString(),
+    }));
+    const totalRevenue = payments.filter(p => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
+    res.json({ payments, subscriptions, totalRevenue });
+  } catch (err) {
+    res.status(500).json({ error: err.message, payments: [], subscriptions: [] });
+  }
+});
+
+/* ════════════════════════════════════════
+   AUDIT LOGS
+   ════════════════════════════════════════ */
+
+router.get('/audit-logs', async (req, res) => {
+  const { limit = 50, type = '' } = req.query;
+  try {
+    let url = `/rest/v1/audit_logs?select=*&order=created_at.desc&limit=${limit}`;
+    if (type) url += `&type=eq.${type}`;
+    const r = await sbFetch(url);
+    if (!r.ok) {
+      return res.json({ logs: [] });
+    }
+    const data = await r.json();
+    res.json({ logs: Array.isArray(data) ? data : [] });
+  } catch (err) {
+    res.json({ logs: [], error: err.message });
+  }
+});
+
+/* ════════════════════════════════════════
+   PLANS (in Supabase plans table, fallback to static)
+   ════════════════════════════════════════ */
+
+router.get('/plans', async (req, res) => {
+  try {
+    const r = await sbFetch('/rest/v1/plans?select=*');
+    if (r.ok) {
+      const data = await r.json();
+      if (Array.isArray(data) && data.length) return res.json({ plans: data });
+    }
+    res.json({ plans: [] });
+  } catch (err) {
+    res.json({ plans: [] });
   }
 });
 
