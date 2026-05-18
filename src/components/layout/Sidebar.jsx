@@ -33,8 +33,7 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
 
       {/* ── Logo ── */}
       <div className="sidebar-logo">
-        <div className="logo-icon">H</div>
-        <h2>Hova</h2>
+        <img src="/hova-logo.png" alt="Hova" style={{ height: 30, width: 'auto', objectFit: 'contain', flexShrink: 0 }}/>
         <button
           className="mobile-sidebar-close"
           onClick={onClose}

@@ -135,9 +135,8 @@ const AuthPage = ({ onLogin, onClose }) => {
       <div className="ambient-orb orb-3"></div>
 
       <header className="auth-header">
-        <div className="logo-group">
-          <div className="logo-icon-auth" onClick={handleLogoClick} style={{ cursor:'default', userSelect:'none' }}>H</div>
-          <h2>Hova</h2>
+        <div className="logo-group" onClick={handleLogoClick} style={{ cursor: 'default', userSelect: 'none' }}>
+          <img src="/hova-logo.png" alt="Hova" style={{ height: 30, width: 'auto', objectFit: 'contain' }}/>
         </div>
         {onClose && (
           <button className="auth-close-btn" onClick={onClose} aria-label="Fermer">

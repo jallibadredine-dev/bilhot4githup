@@ -149,19 +149,7 @@ const ErrorBanner = ({ msg }) => msg ? (
   </div>
 ) : null;
 
-/* ═══════════════════════════════════════════
-   MODE SELECTOR
-   ═══════════════════════════════════════════ */
-const SelecteurMode = ({ mode, setMode }) => (
-  <div className="mode-selector-container">
-    <div className="mode-selector-track">
-      <button className={`mode-btn ${mode === 'global' ? 'active' : ''}`} onClick={() => setMode('global')}>GLOBAL</button>
-      <button className={`mode-btn ${mode === 'hot' ? 'active' : ''}`} onClick={() => setMode('hot')}>HÔTE</button>
-      <button className={`mode-btn ${mode === 'pro' ? 'active' : ''}`} onClick={() => setMode('pro')}>PRO</button>
-      <div className={`mode-slider mode-${mode}`} />
-    </div>
-  </div>
-);
+/* mode selector removed — interface centralisée niveau projet */
 
 /* ═══════════════════════════════════════════
    CREATE / EDIT CLIENT MODAL
@@ -247,7 +235,6 @@ const ClientModal = ({ client, onClose, onSave, loading, error }) => {
 export default function SuperAdmin({ onLogout }) {
   /* ── UI State ── */
   const [activeTab, setActiveTab]             = useState('dashboard');
-  const [mode, setMode]                       = useState('global');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [darkMode, setDarkMode]               = useState(false);
   const [mobileOpen, setMobileOpen]           = useState(false);
@@ -1177,16 +1164,15 @@ export default function SuperAdmin({ onLogout }) {
       <aside className="sa-sidebar">
         <div className="sa-sidebar-top">
           <div className="sa-logo-brand">
-            <div className="logo-box">HF</div>
+            {sidebarCollapsed
+              ? <div className="logo-box" style={{ background: 'transparent', padding: 0 }}><img src="/hova-logo.png" alt="Hova" style={{ width: 40, height: 40, objectFit: 'contain' }}/></div>
+              : <img src="/hova-logo.png" alt="Hova" style={{ height: 30, width: 'auto', objectFit: 'contain', flexShrink: 0 }}/>
+            }
             {!sidebarCollapsed && (
-              <div className="brand-text">
-                <strong>HOSFLOW</strong>
-                <span>SUPER ADMIN</span>
-              </div>
+              <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: 'auto' }}>SUPER ADMIN</span>
             )}
             <button className="mobile-close-btn" onClick={() => setMobileOpen(false)}><XCircle size={22}/></button>
           </div>
-          <SelecteurMode mode={mode} setMode={setMode}/>
         </div>
 
         <nav className="sa-sidebar-nav hide-scrollbar">

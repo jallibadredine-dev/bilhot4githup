@@ -54,8 +54,7 @@ const LandingPage = ({ onLogin }) => {
       <nav className={`td-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="td-nav-container">
           <div className="td-logo">
-            <div className="td-logo-icon">H</div>
-            <span>Hova</span>
+            <img src="/hova-logo.png" alt="Hova" style={{ height: 32, width: 'auto', objectFit: 'contain' }}/>
           </div>
           <div className="td-nav-links hide-mobile">
             <a href="#how-it-works">Fonctionnement</a>

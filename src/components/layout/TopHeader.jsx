@@ -55,6 +55,7 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }
 
       {/* ── LEFT: Property context + live stats ── */}
       <div className="th-left">
+        <img src="/hova-logo.png" alt="Hova" style={{ height: 24, width: 'auto', objectFit: 'contain', marginRight: 12, flexShrink: 0 }}/>
         <button className="th-property-pill">
           <span className="th-property-icon">
             <Home size={13} />

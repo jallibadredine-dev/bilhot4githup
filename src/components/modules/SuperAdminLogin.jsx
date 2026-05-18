@@ -61,21 +61,8 @@ export default function SuperAdminLogin({ onSuccess }) {
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 56,
-            height: 56,
-            background: 'linear-gradient(135deg, #2E5BFF, #7c3aed)',
-            borderRadius: 16,
-            marginBottom: 16,
-            boxShadow: '0 8px 24px rgba(46,91,255,0.4)',
-          }}>
-            <Shield size={28} color="white" />
-          </div>
-          <div style={{ color: 'white', fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-            HosFlow
+          <div style={{ display: 'inline-block', background: 'white', borderRadius: 14, padding: '10px 20px', marginBottom: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
+            <img src="/hova-logo.png" alt="Hova" style={{ height: 36, width: 'auto', display: 'block' }}/>
           </div>
           <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>
             Super Admin
