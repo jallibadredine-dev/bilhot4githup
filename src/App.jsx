@@ -12,6 +12,8 @@ import Sidebar from './components/layout/Sidebar';
 import TopHeader from './components/layout/TopHeader';
 import OracleAssistant from './components/common/OracleAssistant';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import ToastContainer from './components/common/ToastContainer';
+import { logError, logWarn } from './lib/errorHandler';
 
 // Lazy-loaded Views (Performance Optimization)
 const TaskListView = lazy(() => import('./components/views/TaskListView'));
@@ -108,7 +110,7 @@ function App() {
           .single();
         // PGRST116 = "no rows returned" — expected for new users; all other errors are real
         if (fetchErr && fetchErr.code !== 'PGRST116') {
-          console.warn('[Hova] ensureUserProfile: could not check profile:', fetchErr.message);
+          logWarn('auth', 'ensureUserProfile: could not check profile', { code: fetchErr.code, message: fetchErr.message });
           return;
         }
         if (!existing) {
@@ -126,19 +128,19 @@ function App() {
             created_at: new Date().toISOString(),
           }, { onConflict: 'id' });
           if (upsertErr) {
-            console.warn('[Hova] ensureUserProfile: could not create profile:', upsertErr.message);
+            logError('auth', 'ensureUserProfile: could not create profile', { userId: user.id, error: upsertErr.message });
             writeSystemLog({ severity: 'error', module: 'auth', message: 'Profile creation failed', details: { userId: user.id, error: upsertErr.message } });
           }
         }
       } catch (err) {
-        console.warn('[Hova] ensureUserProfile: unexpected error:', err.message);
+        logError('auth', 'ensureUserProfile: unexpected error', { error: err.message });
         writeSystemLog({ severity: 'error', module: 'auth', message: 'ensureUserProfile unexpected error', details: { error: err.message } });
       }
     };
 
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        console.warn('[Hova] getSession error:', error.message);
+        logError('auth', 'getSession failed', { error: error.message });
         writeSystemLog({ severity: 'error', module: 'auth', message: 'getSession failed', details: { error: error.message } });
       }
       if (session) {
@@ -455,6 +457,9 @@ function App() {
       
       {/* Global AI Assistant */}
       <OracleAssistant />
+
+      {/* Global Toast Notifications */}
+      <ToastContainer />
 
       {/* Mobile Bottom Navigation */}
       <nav className="mobile-bottom-nav" aria-label="Navigation mobile">

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { channexAPI } from '../../lib/channex';
 import { getInventoryRooms, roomsToOTAProducts, INVENTORY_STATUS_CFG } from '../../lib/inventoryStore';
+import StatusBadge from '../common/StatusBadge';
 import './ChannelManager.css';
 
 /* ════════════════════════════════════════════════════════════
@@ -382,26 +383,13 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
     setSendingMsg(false);
   };
 
-  /* ─────────────────────────────────────────────────────────
-     STATUS BADGE
-  ───────────────────────────────────────────────────────── */
-  const StatusBadge = ({ status }) => {
-    const map = {
-      connected:    { color: '#10B981', bg: '#D1FAE5', label: 'Channex connecté', pulse: true  },
-      syncing:      { color: '#F59E0B', bg: '#FEF3C7', label: 'Sync...',           pulse: true  },
-      error:        { color: '#EF4444', bg: '#FEE2E2', label: 'Erreur',            pulse: false },
-      disconnected: { color: '#94A3B8', bg: '#F1F5F9', label: 'Hub non connecté', pulse: false },
-      idle:         { color: '#3B82F6', bg: '#DBEAFE', label: 'Channex prêt',     pulse: false },
-    };
-    const s = map[status || syncStatus] || map.disconnected;
-    return (
-      <div className="cm-status-badge" style={{ background: s.bg, color: s.color }}>
-        <div className={`cm-dot${s.pulse ? ' pulse' : ''}`} style={{ background: s.color }} />
-        {s.label}
-        {lastSync && <span className="cm-lastsync">· {lastSync.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}</span>}
-      </div>
-    );
-  };
+  const syncStatusToBadge = (s) => ({
+    connected:    { status: 'active',   label: 'Channex connecté' },
+    syncing:      { status: 'warning',  label: 'Sync...' },
+    error:        { status: 'error',    label: 'Erreur' },
+    disconnected: { status: 'inactive', label: 'Hub non connecté' },
+    idle:         { status: 'info',     label: 'Channex prêt' },
+  }[s] || { status: 'inactive', label: 'Hub non connecté' });
 
   /* ════════════════════════════════════════════════════════
      SETUP PAGE — first launch
@@ -551,7 +539,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
               ))}
             </div>
           )}
-          {isChannexConnected && <StatusBadge />}
+          {isChannexConnected && (() => { const b = syncStatusToBadge(syncStatus); return <StatusBadge status={b.status} label={lastSync ? `${b.label} · ${lastSync.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}` : b.label} />; })()}
           <button className="cm-btn-icon" onClick={() => fetchChannex()} disabled={loading || !channexToken} title="Rafraîchir Channex">
             <RefreshCcw size={16} className={loading ? 'cm-spin' : ''} />
           </button>
@@ -888,8 +876,8 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                   <p>Alternative : connectez toutes vos OTAs via une seule clé API Channex.io</p>
                 </div>
                 {isChannexConnected
-                  ? <StatusBadge />
-                  : <span className="cm-badge-inactive">Non configuré</span>
+                  ? <StatusBadge status="active" label="Channex connecté" />
+                  : <StatusBadge status="inactive" label="Non configuré" />
                 }
               </div>
               {!isChannexConnected && (
@@ -1314,14 +1302,14 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                       <div className="cm-admin-ota-status">
                         {conn
                           ? <>
-                              <span className="cm-badge-active"><Check size={10} /> Actif</span>
+                              <StatusBadge status="active" label="Actif" />
                               <button className="cm-admin-ext-btn" style={{ color: '#EF4444', borderColor: '#FECACA' }}
                                 onClick={() => disconnectOTA(ota.id)}>
                                 <Unlink size={11} /> Retirer
                               </button>
                             </>
                           : <>
-                              <span className="cm-badge-inactive">Non connecté</span>
+                              <StatusBadge status="inactive" label="Non connecté" />
                               <button className="cm-admin-ext-btn" onClick={() => { setActiveTab('otas'); setOtaExpanded(prev => ({ ...prev, [ota.id]: true })); }}>
                                 <Link2 size={11} /> Connecter
                               </button>
@@ -1342,7 +1330,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
                   <h3>Channex.io — Hub</h3>
                   <p>Distribution via API agrégateur</p>
                 </div>
-                {isChannexConnected ? <StatusBadge /> : <span className="cm-badge-inactive">Non configuré</span>}
+                {isChannexConnected ? <StatusBadge status="active" label="Channex connecté" /> : <StatusBadge status="inactive" label="Non configuré" />}
               </div>
               {syncStatus === 'connected' && (
                 <div className="cm-success-banner">

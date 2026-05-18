@@ -175,10 +175,17 @@ router.get('/providers', async (_req, res) => {
 });
 
 /* ── GET /api/health/logs — system_logs ─────────────────────────── */
+const VALID_SEVERITIES = new Set(['info', 'warn', 'error', 'debug']);
+function safeAlnum(v) { return typeof v === 'string' ? v.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64) : ''; }
+function safeIntH(v, def) { const n = parseInt(v, 10); return isNaN(n) ? def : Math.min(Math.max(n, 1), 500); }
+
 router.get('/logs', async (req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
-  const { severity = '', module = '', limit = 50 } = req.query;
+  const rawSeverity = safeAlnum(req.query.severity);
+  const severity = VALID_SEVERITIES.has(rawSeverity) ? rawSeverity : '';
+  const module   = safeAlnum(req.query.module);
+  const limit    = safeIntH(req.query.limit, 50);
 
   if (!SB_URL || !SB_KEY) return res.json({ logs: [], total: 0 });
 
@@ -211,7 +218,12 @@ router.post('/logs', async (req, res) => {
   const SB_KEY = getSbKey();
   if (!SB_URL || !SB_KEY) return res.status(503).json({ error: 'Supabase non configuré.' });
 
-  const { severity = 'info', module = 'system', message, details } = req.body;
+  const rawSev = safeAlnum(req.body.severity);
+  const severity = VALID_SEVERITIES.has(rawSev) ? rawSev : 'info';
+  const module  = safeAlnum(req.body.module) || 'system';
+  const message = typeof req.body.message === 'string' ? req.body.message.slice(0, 500) : '';
+  const details = req.body.details && typeof req.body.details === 'object' && !Array.isArray(req.body.details) ? req.body.details : null;
+
   if (!message) return res.status(400).json({ error: 'message requis.' });
 
   try {

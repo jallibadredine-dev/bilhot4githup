@@ -14,6 +14,7 @@ import { channexAPI } from './channex';
 import { ttlockAPI } from './ttlock';
 import { sendPinNotifications } from './notifications';
 import { autoExpireCards, autoActivateCards } from './cardManagement';
+import { logError } from './errorHandler';
 
 const STORAGE_KEY = 'hosflow_automation_log';
 const MAPPING_KEY = 'hosflow_property_lock_map';
@@ -306,6 +307,7 @@ export const AutomationEngine = {
 
     } catch (err) {
       errors++;
+      logError('automation', 'Erreur cycle automation', { error: err.message });
       addLogEntry({
         type: 'error',
         status: 'error',

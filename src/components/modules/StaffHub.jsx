@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import EmptyState from '../common/EmptyState';
 import {
   Users, Search, Plus, Star, TrendingUp, Clock, FileText, Shield,
   MessageSquare, Award, X, Calendar, Activity, Check, Mail,
@@ -383,10 +384,12 @@ const StaffHub = ({ onNavigate }) => {
           {/* Task cards grid */}
           <div className="sh-hk-grid">
             {filteredTasks.length === 0 && (
-              <div className="sh-hk-empty">
-                <CheckCircle2 size={32} color="#10B981"/>
-                <p>Toutes les chambres sont propres ! 🎉</p>
-              </div>
+              <EmptyState
+                icon="✅"
+                title="Toutes les chambres sont propres !"
+                description="Aucune tâche de ménage en attente."
+                style={{ gridColumn: '1 / -1' }}
+              />
             )}
             <AnimatePresence>
               {filteredTasks.map(([roomNumber, task]) => {

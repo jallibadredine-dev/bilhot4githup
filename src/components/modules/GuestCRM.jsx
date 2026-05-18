@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import EmptyState from '../common/EmptyState';
 import {
   Search, Filter, Phone, Mail, MessageCircle, MoreVertical,
   Star, TrendingUp, TrendingDown, Zap, Sparkles,
@@ -306,10 +307,11 @@ const GuestCRM = () => {
               );
             })}
             {filtered.length === 0 && (
-              <div className="crm2-empty-list">
-                <User size={28}/>
-                <p>Aucun client{search ? ` pour "${search}"` : ''}</p>
-              </div>
+              <EmptyState
+                icon="👤"
+                title={search ? `Aucun client pour "${search}"` : 'Aucun client'}
+                description={search ? 'Essayez un autre terme de recherche.' : 'Les clients apparaissent ici dès que des réservations sont importées.'}
+              />
             )}
           </div>
 
