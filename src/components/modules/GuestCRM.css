@@ -339,12 +339,6 @@
   font-size: 0.82rem;
 }
 
-.crm2-left-footer {
-  padding: 12px 16px;
-  border-top: 1px solid #F1F5F9;
-  flex-shrink: 0;
-}
-
 .crm2-add-btn {
   width: 100%;
   display: flex;
@@ -1104,6 +1098,137 @@
   color: #334155;
   line-height: 1.5;
   margin: 0;
+}
+
+/* ── SOURCE BADGES ────────────────────────────────────────── */
+.crm2-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.crm2-row-sources {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.crm2-hero-sources {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.crm2-channel-summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid #F1F5F9;
+  margin-top: 4px;
+}
+
+.crm2-cs-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94A3B8;
+}
+
+/* ── CHANNEL FILTER BAR ───────────────────────────────────── */
+.crm2-channel-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 24px;
+  background: white;
+  border-bottom: 1px solid #E2E8F0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.crm2-channel-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 2px;
+}
+
+.crm2-channel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.crm2-channel-btn:hover { background: #F1F5F9; color: #0F172A; border-color: #CBD5E1; }
+.crm2-channel-btn.active { border-color: transparent; font-weight: 800; }
+
+/* ── TOPBAR REFRESH ───────────────────────────────────────── */
+.crm2-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.crm2-refresh-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid #E2E8F0;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.crm2-refresh-btn:hover { background: #F8FAFC; color: #2563EB; border-color: #BFDBFE; }
+.crm2-refresh-btn.spinning svg { animation: spin 0.7s linear infinite; }
+
+/* ── LEFT FOOTER COUNT ─────────────────────────────────────── */
+.crm2-left-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #F1F5F9;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.crm2-left-footer-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94A3B8;
+}
+
+/* ── BOOKING CARD ID ROW ──────────────────────────────────── */
+.crm2-bk-id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 /* ── EMPTY STATE ──────────────────────────────────────────── */

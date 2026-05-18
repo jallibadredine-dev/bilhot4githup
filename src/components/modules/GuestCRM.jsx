@@ -1,110 +1,53 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Search, Filter, Phone, Mail, MessageCircle, MoreVertical,
-  Star, TrendingUp, TrendingDown, Minus, Zap, Sparkles,
+  Star, TrendingUp, TrendingDown, Zap, Sparkles,
   Calendar, CreditCard, Tag, Plus, Send, History,
-  ShieldCheck, Clock, CheckCircle2, AlertTriangle,
-  ChevronRight, User, Settings, Trash2, Share2, Lock,
-  ArrowUpRight, Wallet, BarChart3, Users2, Heart,
+  ShieldCheck, AlertTriangle, ChevronRight, User,
+  Settings, Trash2, Share2, Lock, Wallet, Users2,
   MapPin, Globe, Bed, LogIn, LogOut, Receipt, X,
-  ClipboardList, MessageSquare, Activity
+  ClipboardList, MessageSquare, Activity, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  getReservations,
+  deriveGuestsFromReservations,
+  SOURCE_CFG,
+  RES_KEY,
+} from '../../lib/reservationStore';
 import './GuestCRM.css';
 
-/* ─── Data ──────────────────────────────────────────────── */
-const GUESTS = [
-  {
-    id: 1, initials: 'AM', name: 'Alice Mertens', email: 'alice.m@example.com',
-    phone: '+33 6 12 34 56 78', nationality: '🇫🇷 France',
-    tier: 'Gold', status: 'Loyal', sentiment: 'positive', score: 92,
-    totalSpent: '4 250 €', visits: 8, lastStay: 'Il y a 2 jours',
-    nextStay: '12 Juin 2026', room: '204 – Suite Supérieure',
-    wallet: '150,00 €', points: 1250, probability: 92,
-    tags: ['VIP', 'Spa', 'Business'],
-    churn: 'low', nps: 9,
-    timeline: [
-      { date: 'Auj.', icon: 'review', text: 'Avis 5★ laissé sur Google Maps' },
-      { date: '15 Mars', icon: 'checkout', text: 'Check-out chambre 204. Paiement validé.' },
-      { date: '10 Mars', icon: 'checkin', text: 'Check-in automatisé via app mobile.' },
-      { date: '2 Fév.', icon: 'email', text: 'Email de bienvenue envoyé (ouverture 98%).' },
-    ],
-    bookings: [
-      { id: 'RES-0812', dates: '10–15 Mars 2026', room: '204 – Suite', amount: '850 €', status: 'completed' },
-      { id: 'RES-0744', dates: '12–14 Juin 2026', room: '301 – Junior Suite', amount: '480 €', status: 'upcoming' },
-    ],
-  },
-  {
-    id: 2, initials: 'MT', name: 'Mark Thompson', email: 'm.thompson@web.de',
-    phone: '+49 176 9876 5432', nationality: '🇩🇪 Allemagne',
-    tier: 'Bronze', status: 'Nouveau', sentiment: 'neutral', score: 55,
-    totalSpent: '850 €', visits: 1, lastStay: 'Mois dernier',
-    nextStay: '—', room: '102 – Chambre Standard',
-    wallet: '0,00 €', points: 50, probability: 45,
-    tags: ['Famille', 'Premier séjour'],
-    churn: 'medium', nps: 7,
-    timeline: [
-      { date: '10 Avr.', icon: 'checkout', text: 'Check-out chambre 102.' },
-      { date: '7 Avr.', icon: 'checkin', text: 'Check-in (arrivée tardive 23h).' },
-    ],
-    bookings: [
-      { id: 'RES-0780', dates: '7–10 Avr. 2026', room: '102 – Standard', amount: '850 €', status: 'completed' },
-    ],
-  },
-  {
-    id: 3, initials: 'ER', name: 'Elena Rodriguez', email: 'elena.rod@icloud.com',
-    phone: '+34 600 112 233', nationality: '🇪🇸 Espagne',
-    tier: 'Silver', status: 'À risque', sentiment: 'negative', score: 28,
-    totalSpent: '1 120 €', visits: 3, lastStay: 'Aujourd\'hui',
-    nextStay: '—', room: '408 – Chambre Deluxe',
-    wallet: '45,50 €', points: 320, probability: 12,
-    tags: ['Fréquente', 'Late check-out'],
-    churn: 'high', nps: 4,
-    timeline: [
-      { date: 'Auj.', icon: 'alert', text: 'Plainte room-service reçue. Action requise.' },
-      { date: 'Auj.', icon: 'checkin', text: 'Check-in chambre 408.' },
-      { date: '2 Fév.', icon: 'checkout', text: 'Check-out — note interne : mécontente du ménage.' },
-    ],
-    bookings: [
-      { id: 'RES-0901', dates: 'Auj. – 20 Mai 2026', room: '408 – Deluxe', amount: '360 €', status: 'inhouse' },
-      { id: 'RES-0820', dates: '1–5 Fév. 2026', room: '211 – Standard', amount: '420 €', status: 'completed' },
-    ],
-  },
-  {
-    id: 4, initials: 'JD', name: 'Jean-Pierre Dubois', email: 'jp.dubois@corporation.fr',
-    phone: '+33 7 44 55 66 77', nationality: '🇫🇷 France',
-    tier: 'Platinum', status: 'Loyal', sentiment: 'positive', score: 95,
-    totalSpent: '12 800 €', visits: 15, lastStay: 'Il y a 1 semaine',
-    nextStay: '3 Juil. 2026', room: '501 – Suite Présidentielle',
-    wallet: '1 200,00 €', points: 8500, probability: 95,
-    tags: ['Corporate', 'High LTV', 'Ambassadeur'],
-    churn: 'low', nps: 10,
-    timeline: [
-      { date: '10 Mai', icon: 'checkout', text: 'Check-out Suite 501. Avis 10/10 NPS.' },
-      { date: '5 Mai', icon: 'checkin', text: 'Check-in — sur-classement offert automatiquement.' },
-      { date: '1 Avr.', icon: 'email', text: 'Invitation cercle Ambassadeurs envoyée.' },
-    ],
-    bookings: [
-      { id: 'RES-0933', dates: '3–8 Juil. 2026', room: '501 – Présidentielle', amount: '2 400 €', status: 'upcoming' },
-      { id: 'RES-0900', dates: '5–10 Mai 2026', room: '501 – Présidentielle', amount: '2 400 €', status: 'completed' },
-    ],
-  },
-];
+/* ─── KPI header (static, could be derived) ──────────────── */
+const computeKPI = (guests) => {
+  if (!guests.length) return [
+    { label: 'Satisfaction', value: '—', unit: '/10', trend: '—', up: true, color: '#10B981' },
+    { label: 'Rétention', value: '—', unit: '%', trend: '—', up: true, color: '#3B82F6' },
+    { label: 'NPS Moyen', value: '—', unit: '/10', trend: '—', up: true, color: '#F59E0B' },
+    { label: 'Revenu / Client', value: '—', unit: ' €', trend: '—', up: true, color: '#8B5CF6' },
+  ];
+  const avgScore = Math.round(guests.reduce((s, g) => s + g.score, 0) / guests.length);
+  const loyal = guests.filter(g => g.status === 'Loyal' || g.visits >= 2).length;
+  const retentionPct = Math.round((loyal / guests.length) * 100);
+  const avgNps = (guests.reduce((s, g) => s + g.nps, 0) / guests.length).toFixed(1);
+  const totalRevRaw = guests.reduce((s, g) => {
+    const n = parseFloat(g.totalSpent.replace(/[^\d.]/g, ''));
+    return s + (isNaN(n) ? 0 : n);
+  }, 0);
+  const avgRev = guests.length ? Math.round(totalRevRaw / guests.length) : 0;
+  return [
+    { label: 'Score Moyen', value: String(avgScore), unit: '/100', trend: '+2', up: true, color: '#10B981' },
+    { label: 'Rétention', value: String(retentionPct), unit: '%', trend: '+4%', up: true, color: '#3B82F6' },
+    { label: 'NPS Moyen', value: avgNps, unit: '/10', trend: '+0.3', up: true, color: '#F59E0B' },
+    { label: 'Rev. / Client', value: avgRev.toLocaleString('fr-FR'), unit: ' €', trend: '+8%', up: true, color: '#8B5CF6' },
+  ];
+};
 
-const KPI = [
-  { label: 'Satisfaction', value: '8.4', unit: '/10', trend: '+0.3', up: true, color: '#10B981' },
-  { label: 'Rétention', value: '62', unit: '%', trend: '+4%', up: true, color: '#3B82F6' },
-  { label: 'NPS Moyen', value: '7.5', unit: '/10', trend: '-0.2', up: false, color: '#F59E0B' },
-  { label: 'Revenu / Séjour', value: '890', unit: ' €', trend: '+12%', up: true, color: '#8B5CF6' },
-];
-
-const STATUS_FILTERS = ['Tous', 'Loyal', 'Nouveau', 'À risque'];
-
+/* ─── Config ──────────────────────────────────────────────── */
 const TIER_COLORS = {
-  Platinum: { bg: '#1E293B', text: '#fff', accent: '#94A3B8' },
-  Gold:     { bg: '#D97706', text: '#fff', accent: '#FDE68A' },
-  Silver:   { bg: '#64748B', text: '#fff', accent: '#CBD5E1' },
-  Bronze:   { bg: '#92400E', text: '#fff', accent: '#D6D3D1' },
+  Platinum: { bg: '#1E293B', text: '#fff' },
+  Gold:     { bg: '#D97706', text: '#fff' },
+  Silver:   { bg: '#64748B', text: '#fff' },
+  Bronze:   { bg: '#92400E', text: '#fff' },
 };
 
 const SENTIMENT_CONFIG = {
@@ -119,24 +62,26 @@ const CHURN_CONFIG = {
   high:   { label: 'Élevé',   color: '#EF4444', bg: '#FEF2F2' },
 };
 
-const STATUS_CONFIG = {
-  upcoming:  { label: 'À venir',     color: '#3B82F6', bg: '#EFF6FF' },
-  inhouse:   { label: 'En cours',    color: '#10B981', bg: '#ECFDF5' },
-  completed: { label: 'Terminé',     color: '#94A3B8', bg: '#F1F5F9' },
+const BOOKING_STATUS = {
+  upcoming:  { label: 'À venir',  color: '#3B82F6', bg: '#EFF6FF' },
+  inhouse:   { label: 'En cours', color: '#10B981', bg: '#ECFDF5' },
+  completed: { label: 'Terminé',  color: '#94A3B8', bg: '#F1F5F9' },
 };
 
-/* ─── Score ring ─────────────────────────────────────────── */
+const STATUS_FILTERS = ['Tous', 'Loyal', 'Présent', 'À venir', 'Nouveau'];
+
+/* ─── Score ring ──────────────────────────────────────────── */
 const ScoreRing = ({ score, size = 64, stroke = 6 }) => {
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const fill = circ * (1 - score / 100);
-  const color = score >= 75 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444';
+  const color = score >= 70 ? '#10B981' : score >= 45 ? '#F59E0B' : '#EF4444';
   return (
     <svg width={size} height={size} className="crm2-ring">
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#F1F5F9" strokeWidth={stroke}/>
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
-        strokeDasharray={circ} strokeDashoffset={fill}
-        strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`}
+        strokeDasharray={circ} strokeDashoffset={fill} strokeLinecap="round"
+        transform={`rotate(-90 ${size/2} ${size/2})`}
         style={{ transition: 'stroke-dashoffset 0.5s ease' }}/>
       <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central"
         fill={color} fontSize={size * 0.22} fontWeight="800">{score}</text>
@@ -147,45 +92,111 @@ const ScoreRing = ({ score, size = 64, stroke = 6 }) => {
 /* ─── Timeline icon ──────────────────────────────────────── */
 const TLIcon = ({ type }) => {
   const map = {
-    review:   { icon: <Star size={10}/>,        bg: '#FEF3C7', color: '#D97706' },
-    checkout: { icon: <LogOut size={10}/>,      bg: '#F0FDF4', color: '#16A34A' },
-    checkin:  { icon: <LogIn size={10}/>,       bg: '#EFF6FF', color: '#2563EB' },
-    email:    { icon: <Mail size={10}/>,        bg: '#F5F3FF', color: '#7C3AED' },
+    review:   { icon: <Star size={10}/>,          bg: '#FEF3C7', color: '#D97706' },
+    checkout: { icon: <LogOut size={10}/>,        bg: '#F0FDF4', color: '#16A34A' },
+    checkin:  { icon: <LogIn size={10}/>,         bg: '#EFF6FF', color: '#2563EB' },
+    email:    { icon: <Mail size={10}/>,          bg: '#F5F3FF', color: '#7C3AED' },
     alert:    { icon: <AlertTriangle size={10}/>, bg: '#FEF2F2', color: '#DC2626' },
   };
   const cfg = map[type] || map.email;
+  return <div className="crm2-tl-icon" style={{ background: cfg.bg, color: cfg.color }}>{cfg.icon}</div>;
+};
+
+/* ─── Source badge ──────────────────────────────────────── */
+const SourceBadge = ({ source, size = 'sm' }) => {
+  const cfg = SOURCE_CFG[source] || { bg: '#64748B', text: '#fff', abbr: '?', flag: '?' };
   return (
-    <div className="crm2-tl-icon" style={{ background: cfg.bg, color: cfg.color }}>
-      {cfg.icon}
-    </div>
+    <span className="crm2-source-badge" style={{ background: cfg.bg, color: cfg.text }}>
+      {size === 'sm' ? cfg.abbr : <>{cfg.flag} {source}</>}
+    </span>
   );
 };
 
-/* ─── Main component ─────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+════════════════════════════════════════════════════════════ */
 const GuestCRM = () => {
-  const [selected,      setSelected]      = useState(null);
-  const [tab,           setTab]           = useState('overview');
-  const [search,        setSearch]        = useState('');
-  const [filterStatus,  setFilterStatus]  = useState('Tous');
-  const [draft,         setDraft]         = useState('');
-  const [drafting,      setDrafting]      = useState(false);
-  const [menuOpen,      setMenuOpen]      = useState(false);
+  const [reservations, setReservations] = useState(() => getReservations());
+  const [selected,     setSelected]     = useState(null);
+  const [tab,          setTab]          = useState('overview');
+  const [search,       setSearch]       = useState('');
+  const [filterStatus, setFilterStatus] = useState('Tous');
+  const [filterSource, setFilterSource] = useState('all');
+  const [draft,        setDraft]        = useState('');
+  const [drafting,     setDrafting]     = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [refreshing,   setRefreshing]   = useState(false);
 
-  const filtered = useMemo(() => GUESTS.filter(g => {
-    const matchSearch = g.name.toLowerCase().includes(search.toLowerCase()) ||
-                        g.email.toLowerCase().includes(search.toLowerCase());
+  /* ── Reactivity: re-read store when calendar saves ─────── */
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === RES_KEY || !e.key) {
+        setReservations(getReservations());
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  /* ── Derive guests from reservations ────────────────────── */
+  const allGuests = useMemo(
+    () => deriveGuestsFromReservations(reservations),
+    [reservations]
+  );
+
+  const kpis = useMemo(() => computeKPI(allGuests), [allGuests]);
+
+  /* ── All sources present in data ────────────────────────── */
+  const availableSources = useMemo(() => {
+    const s = new Set(reservations.map(r => r.source).filter(Boolean));
+    return ['all', ...Array.from(s)];
+  }, [reservations]);
+
+  /* ── Filtered list ──────────────────────────────────────── */
+  const filtered = useMemo(() => allGuests.filter(g => {
+    const matchSearch = !search ||
+      g.name.toLowerCase().includes(search.toLowerCase()) ||
+      g.email.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === 'Tous' || g.status === filterStatus;
-    return matchSearch && matchStatus;
-  }), [search, filterStatus]);
+    const matchSource = filterSource === 'all' || g.sources?.includes(filterSource);
+    return matchSearch && matchStatus && matchSource;
+  }), [allGuests, search, filterStatus, filterSource]);
 
-  const handleSelect = (g) => { setSelected(g); setTab('overview'); setDraft(''); setMenuOpen(false); };
+  const handleSelect = useCallback((g) => {
+    setSelected(g);
+    setTab('overview');
+    setDraft('');
+    setMenuOpen(false);
+  }, []);
 
+  /* ── Refresh manually ──────────────────────────────────── */
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setReservations(getReservations());
+      setRefreshing(false);
+    }, 600);
+  };
+
+  /* ── Generate draft ─────────────────────────────────────── */
   const generateDraft = () => {
     if (!selected) return;
     setDrafting(true);
     setDraft('');
     setTimeout(() => {
-      setDraft(`Bonjour ${selected.name.split(' ')[0]},\n\nEn tant que membre ${selected.tier}, nous souhaitons vous remercier pour votre fidélité au cours de vos ${selected.visits} séjour${selected.visits > 1 ? 's' : ''} avec nous.\n\nNous sommes heureux de vous proposer une offre exclusive réservée à nos membres ${selected.tier} : accès prioritaire à nos suites premium lors de votre prochain séjour.\n\nNous espérons vous accueillir très prochainement.\n\nCordialement,\nL'équipe Hova`);
+      const firstName = selected.name.split(' ')[0];
+      const sourceList = selected.sources?.join(', ') || 'nos canaux';
+      setDraft(
+        `Bonjour ${firstName},\n\n` +
+        `En tant que membre ${selected.tier} avec ${selected.visits} séjour${selected.visits > 1 ? 's' : ''} confirmé${selected.visits > 1 ? 's' : ''} chez nous` +
+        (sourceList !== 'nos canaux' ? ` (via ${sourceList})` : '') + `,\n` +
+        `nous souhaitons vous remercier pour votre fidélité.\n\n` +
+        (selected.sentiment === 'negative'
+          ? `Nous avons noté quelques points d'amélioration lors de votre dernier séjour et souhaitons vous offrir un geste commercial exclusif : une nuit offerte sur votre prochaine réservation directe.\n\n`
+          : `Nous serions heureux de vous accueillir à nouveau et vous proposons un accès prioritaire à nos meilleures disponibilités, avec un sur-classement offert sous réserve de disponibilité.\n\n`) +
+        `N'hésitez pas à réserver directement pour bénéficier de ce privilège.\n\n` +
+        `Cordialement,\nL'équipe Hova`
+      );
       setDrafting(false);
     }, 1600);
   };
@@ -195,17 +206,20 @@ const GuestCRM = () => {
   return (
     <div className="crm2-root">
 
-      {/* ── TOP BAR ── */}
+      {/* ── TOP BAR ─────────────────────────────────────────── */}
       <header className="crm2-topbar">
         <div className="crm2-topbar-left">
           <div className="crm2-topbar-icon"><Users2 size={18}/></div>
           <div>
             <div className="crm2-topbar-title">Intelligence Client</div>
-            <div className="crm2-topbar-sub">Analyse comportementale · Fidélisation · Upsell IA</div>
+            <div className="crm2-topbar-sub">
+              {allGuests.length} client{allGuests.length > 1 ? 's' : ''} · {reservations.length} réservations · Booking.com · Airbnb · Expedia · Direct
+            </div>
           </div>
         </div>
+
         <div className="crm2-kpi-row">
-          {KPI.map(k => (
+          {kpis.map(k => (
             <div key={k.label} className="crm2-kpi">
               <div className="crm2-kpi-val" style={{ color: k.color }}>
                 {k.value}<span className="crm2-kpi-unit">{k.unit}</span>
@@ -217,15 +231,36 @@ const GuestCRM = () => {
             </div>
           ))}
         </div>
-        <button className="crm2-campaign-btn">
-          <Zap size={14}/> Campagne IA
-        </button>
+
+        <div className="crm2-topbar-actions">
+          <button className={`crm2-refresh-btn ${refreshing ? 'spinning' : ''}`} onClick={handleRefresh} title="Synchroniser">
+            <RefreshCw size={14}/>
+          </button>
+          <button className="crm2-campaign-btn">
+            <Zap size={14}/> Campagne IA
+          </button>
+        </div>
       </header>
 
-      {/* ── BODY ── */}
+      {/* ── SOURCE CHANNEL FILTER BAR ───────────────────────── */}
+      <div className="crm2-channel-bar">
+        <span className="crm2-channel-label">Canal :</span>
+        {availableSources.map(src => (
+          <button key={src}
+            className={`crm2-channel-btn ${filterSource === src ? 'active' : ''}`}
+            onClick={() => setFilterSource(src)}
+            style={filterSource === src && src !== 'all'
+              ? { background: SOURCE_CFG[src]?.bg, color: SOURCE_CFG[src]?.text }
+              : {}}>
+            {src === 'all' ? 'Tous les canaux' : <>{SOURCE_CFG[src]?.flag} {src}</>}
+          </button>
+        ))}
+      </div>
+
+      {/* ── BODY ─────────────────────────────────────────────── */}
       <div className="crm2-body">
 
-        {/* ── LEFT PANEL ── */}
+        {/* ── LEFT PANEL ──────────────────────────────────────── */}
         <aside className="crm2-left">
           <div className="crm2-search-wrap">
             <div className="crm2-search">
@@ -254,8 +289,7 @@ const GuestCRM = () => {
                   className={`crm2-guest-row ${isActive ? 'active' : ''}`}
                   onClick={() => handleSelect(g)}
                   whileHover={{ x: 2 }}
-                  transition={{ duration: 0.12 }}
-                >
+                  transition={{ duration: 0.12 }}>
                   <div className={`crm2-avatar tier-${g.tier.toLowerCase()}`}>{g.initials}</div>
                   <div className="crm2-row-info">
                     <div className="crm2-row-top">
@@ -264,17 +298,20 @@ const GuestCRM = () => {
                         {sc.icon} {g.score}
                       </span>
                     </div>
-                    <div className="crm2-row-sub">
-                      <span>{g.email}</span>
-                    </div>
+                    <div className="crm2-row-sub">{g.email || g._raw?.guest}</div>
                     <div className="crm2-row-meta">
                       <span className="crm2-row-tier"
-                        style={{ background: tc && isActive ? tc.bg : TIER_COLORS[g.tier].bg,
-                                 color: TIER_COLORS[g.tier].text }}>
+                        style={{ background: TIER_COLORS[g.tier].bg, color: TIER_COLORS[g.tier].text }}>
                         {g.tier}
                       </span>
                       <span className="crm2-row-visits"><Bed size={11}/> {g.visits} séj.</span>
                       <span className="crm2-row-spent">{g.totalSpent}</span>
+                    </div>
+                    {/* Source badges mini */}
+                    <div className="crm2-row-sources">
+                      {g.sources?.slice(0, 3).map(src => (
+                        <SourceBadge key={src} source={src} size="sm"/>
+                      ))}
                     </div>
                   </div>
                   <ChevronRight size={14} className="crm2-row-arrow"/>
@@ -284,17 +321,19 @@ const GuestCRM = () => {
             {filtered.length === 0 && (
               <div className="crm2-empty-list">
                 <User size={28}/>
-                <p>Aucun client trouvé</p>
+                <p>Aucun client{search ? ` pour "${search}"` : ''}</p>
               </div>
             )}
           </div>
 
           <div className="crm2-left-footer">
-            <button className="crm2-add-btn"><Plus size={14}/> Ajouter un client</button>
+            <div className="crm2-left-footer-count">
+              {filtered.length} / {allGuests.length} client{allGuests.length > 1 ? 's' : ''}
+            </div>
           </div>
         </aside>
 
-        {/* ── RIGHT PANEL ── */}
+        {/* ── RIGHT PANEL ─────────────────────────────────────── */}
         <main className="crm2-right">
           <AnimatePresence mode="wait">
             {selected ? (
@@ -304,7 +343,7 @@ const GuestCRM = () => {
 
                 {/* Profile hero */}
                 <div className="crm2-hero"
-                  style={{ background: `linear-gradient(135deg, ${TIER_COLORS[selected.tier].bg}22 0%, #F8FAFC 100%)` }}>
+                  style={{ background: `linear-gradient(135deg, ${TIER_COLORS[selected.tier].bg}18 0%, #F8FAFC 100%)` }}>
                   <div className="crm2-hero-left">
                     <div className={`crm2-hero-avatar tier-${selected.tier.toLowerCase()}`}>
                       {selected.initials}
@@ -317,15 +356,21 @@ const GuestCRM = () => {
                           style={{ background: TIER_COLORS[selected.tier].bg, color: TIER_COLORS[selected.tier].text }}>
                           <ShieldCheck size={11}/> {selected.tier}
                         </span>
-                        <span className={`crm2-badge-status ${selected.status === 'À risque' ? 'risk' : selected.status === 'Loyal' ? 'loyal' : 'new'}`}>
-                          {selected.status}
+                        <span className={`crm2-badge-status ${
+                          selected.status === 'À risque' ? 'risk' :
+                          selected.status === 'Loyal' || selected.status === 'Présent' ? 'loyal' : 'new'}`}>
+                          {selected.status === 'Présent' ? '🟢 En séjour' : selected.status}
                         </span>
-                        <span className="crm2-badge-id">#{`G-${selected.id}092`}</span>
+                        <span className="crm2-badge-id">#{`G-${selected.id.slice(0,6).toUpperCase()}`}</span>
                       </div>
                       <div className="crm2-hero-contact">
-                        <span><Phone size={11}/>{selected.phone}</span>
-                        <span><Mail size={11}/>{selected.email}</span>
+                        {selected.phone && <span><Phone size={11}/>{selected.phone}</span>}
+                        {selected.email && <span><Mail size={11}/>{selected.email}</span>}
                         <span><Globe size={11}/>{selected.nationality}</span>
+                      </div>
+                      {/* Source channels */}
+                      <div className="crm2-hero-sources">
+                        {selected.sources?.map(src => <SourceBadge key={src} source={src} size="lg"/>)}
                       </div>
                     </div>
                   </div>
@@ -343,7 +388,7 @@ const GuestCRM = () => {
                       </div>
                       <div className="crm2-qs-div"/>
                       <div className="crm2-qs">
-                        <div className="crm2-qs-val">{selected.points.toLocaleString()}</div>
+                        <div className="crm2-qs-val">{selected.points.toLocaleString('fr-FR')}</div>
                         <div className="crm2-qs-label">Points</div>
                       </div>
                       <div className="crm2-qs-div"/>
@@ -382,30 +427,28 @@ const GuestCRM = () => {
                   </div>
                 </div>
 
-                {/* Tags */}
+                {/* Tags + context */}
                 <div className="crm2-tags-bar">
-                  {selected.tags.map(t => (
+                  {selected.tags?.map(t => (
                     <span key={t} className="crm2-tag"><Tag size={10}/> {t}</span>
                   ))}
                   <button className="crm2-tag-add"><Plus size={10}/></button>
                   <span className="crm2-tags-sep"/>
                   <span className="crm2-next-stay">
-                    <Calendar size={11}/> Prochain séjour : <strong>{selected.nextStay}</strong>
+                    <Calendar size={11}/> Prochain : <strong>{selected.nextStay}</strong>
                   </span>
-                  {selected.room && (
-                    <span className="crm2-room-tag">
-                      <Bed size={11}/> {selected.room}
-                    </span>
+                  {selected.room && selected.room !== '—' && (
+                    <span className="crm2-room-tag"><Bed size={11}/> {selected.room}</span>
                   )}
                 </div>
 
                 {/* Tabs */}
                 <nav className="crm2-tabs">
                   {[
-                    { id: 'overview',  label: 'Vue générale',    icon: <Activity size={13}/> },
-                    { id: 'bookings',  label: 'Réservations',    icon: <Calendar size={13}/> },
-                    { id: 'comms',     label: 'Communication',   icon: <MessageSquare size={13}/> },
-                    { id: 'history',   label: 'Historique',      icon: <History size={13}/> },
+                    { id: 'overview', label: 'Vue générale',   icon: <Activity size={13}/> },
+                    { id: 'bookings', label: `Réservations (${selected.bookings?.length || 0})`, icon: <Calendar size={13}/> },
+                    { id: 'comms',    label: 'Communication',  icon: <MessageSquare size={13}/> },
+                    { id: 'history',  label: 'Historique',     icon: <History size={13}/> },
                   ].map(t => (
                     <button key={t.id}
                       className={`crm2-tab ${tab === t.id ? 'active' : ''}`}
@@ -419,18 +462,16 @@ const GuestCRM = () => {
                 <div className="crm2-tab-content">
                   <AnimatePresence mode="wait">
 
-                    {/* ── Overview tab ── */}
+                    {/* ── Overview ── */}
                     {tab === 'overview' && (
                       <motion.div key="overview" className="crm2-tc"
                         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
                         <div className="crm2-overview-grid">
 
-                          {/* Score & Prédictions */}
+                          {/* Prédictions */}
                           <div className="crm2-card">
-                            <div className="crm2-card-title">
-                              <Sparkles size={14}/> Prédictions Oracle IA
-                            </div>
+                            <div className="crm2-card-title"><Sparkles size={14}/> Prédictions Oracle IA</div>
                             <div className="crm2-pred-row">
                               <div className="crm2-pred-score">
                                 <ScoreRing score={selected.score}/>
@@ -463,10 +504,10 @@ const GuestCRM = () => {
                                 <div className="crm2-rec-box">
                                   <Zap size={12}/>
                                   <p>{selected.sentiment === 'negative'
-                                    ? 'Envoyer un geste commercial immédiatement. Plainte room-service détectée.'
-                                    : selected.tier === 'Platinum' || selected.tier === 'Gold'
-                                      ? `Proposer un sur-classement pour le prochain séjour. Potentiel upsell élevé.`
-                                      : 'Envoyer une invitation programme fidélité pour convertir en client régulier.'
+                                    ? 'Envoyer un geste commercial immédiatement. Ce profil présente un risque de churn élevé.'
+                                    : selected.visits >= 3
+                                      ? `Proposer un sur-classement ou une offre fidélité pour le prochain séjour.`
+                                      : 'Envoyer une invitation programme fidélité pour convertir ce nouveau client.'
                                   }</p>
                                 </div>
                               </div>
@@ -475,17 +516,15 @@ const GuestCRM = () => {
 
                           {/* Wallet & Fidélité */}
                           <div className="crm2-card">
-                            <div className="crm2-card-title">
-                              <Wallet size={14}/> Portefeuille & Fidélité
-                            </div>
+                            <div className="crm2-card-title"><Wallet size={14}/> Valeur & Fidélité</div>
                             <div className="crm2-wallet-grid">
                               <div className="crm2-wallet-item">
                                 <div className="crm2-wi-icon" style={{ background: '#EFF6FF', color: '#3B82F6' }}>
-                                  <CreditCard size={16}/>
+                                  <Receipt size={16}/>
                                 </div>
                                 <div>
-                                  <div className="crm2-wi-val">{selected.wallet}</div>
-                                  <div className="crm2-wi-label">Solde portefeuille</div>
+                                  <div className="crm2-wi-val">{selected.totalSpent}</div>
+                                  <div className="crm2-wi-label">CA Total généré</div>
                                 </div>
                               </div>
                               <div className="crm2-wallet-item">
@@ -493,7 +532,7 @@ const GuestCRM = () => {
                                   <Star size={16}/>
                                 </div>
                                 <div>
-                                  <div className="crm2-wi-val">{selected.points.toLocaleString()} pts</div>
+                                  <div className="crm2-wi-val">{selected.points.toLocaleString('fr-FR')} pts</div>
                                   <div className="crm2-wi-label">Points fidélité</div>
                                 </div>
                               </div>
@@ -509,18 +548,20 @@ const GuestCRM = () => {
                                     background: TIER_COLORS[selected.tier].bg }}/>
                               </div>
                             </div>
+                            <div className="crm2-channel-summary">
+                              <span className="crm2-cs-label">Canaux utilisés :</span>
+                              {selected.sources?.map(src => <SourceBadge key={src} source={src} size="lg"/>)}
+                            </div>
                           </div>
 
                           {/* Upsell */}
                           <div className="crm2-card full-width">
-                            <div className="crm2-card-title">
-                              <TrendingUp size={14}/> Opportunités d'upsell
-                            </div>
+                            <div className="crm2-card-title"><TrendingUp size={14}/> Opportunités d'upsell</div>
                             <div className="crm2-upsell-list">
                               {[
-                                { title: 'Spa & Bien-être', desc: 'Fréquence élevée détectée. Proposer abonnement mensuel.', gain: '+120 €', hot: true },
-                                { title: 'Early Check-in', desc: 'Arrive souvent le matin. Automatiser proposition.', gain: '+25 €', hot: false },
-                                { title: 'Suite upgrade', desc: selected.tier !== 'Platinum' ? 'Upgrade disponible pour son prochain séjour.' : 'Déjà en suite présidentielle.', gain: '+200 €', hot: selected.tier !== 'Platinum' },
+                                { title: 'Réservation directe', desc: selected.sources?.some(s => s !== 'Direct') ? `Client actif sur ${selected.sources?.filter(s => s !== 'Direct').join(', ')}. Proposer un code promo direct pour économiser la commission.` : 'Client déjà en direct. Proposer newsletter privilèges.', gain: '-15% commission', hot: selected.sources?.some(s => s !== 'Direct') },
+                                { title: 'Spa & Bien-être', desc: 'Fréquence de séjour détectée. Proposer package spa pré-séjour.', gain: '+120 €', hot: selected.visits >= 2 },
+                                { title: 'Suite upgrade', desc: selected.tier !== 'Platinum' ? 'Upgrade disponible pour son prochain séjour selon disponibilité.' : 'Déjà en suite présidentielle. Proposer services conciergerie.', gain: '+200 €', hot: selected.tier !== 'Platinum' && selected.visits >= 2 },
                               ].map((u, i) => (
                                 <div key={i} className={`crm2-upsell-item ${u.hot ? 'hot' : ''}`}>
                                   <div className="crm2-upsell-info">
@@ -540,34 +581,47 @@ const GuestCRM = () => {
                       </motion.div>
                     )}
 
-                    {/* ── Bookings tab ── */}
+                    {/* ── Bookings ── */}
                     {tab === 'bookings' && (
                       <motion.div key="bookings" className="crm2-tc"
                         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-                        <div className="crm2-bookings-list">
-                          {selected.bookings.map(b => {
-                            const sc = STATUS_CONFIG[b.status];
-                            return (
-                              <div key={b.id} className="crm2-booking-card">
-                                <div className="crm2-bk-left">
-                                  <div className="crm2-bk-id">{b.id}</div>
-                                  <div className="crm2-bk-room"><Bed size={12}/> {b.room}</div>
-                                  <div className="crm2-bk-dates"><Calendar size={12}/> {b.dates}</div>
+                        {selected.bookings?.length === 0 ? (
+                          <div className="crm2-empty-list" style={{ padding: '40px' }}>
+                            <Calendar size={28}/><p>Aucune réservation trouvée</p>
+                          </div>
+                        ) : (
+                          <div className="crm2-bookings-list">
+                            {selected.bookings?.map(b => {
+                              const sc = BOOKING_STATUS[b.status];
+                              const srcCfg = SOURCE_CFG[b.source] || {};
+                              return (
+                                <div key={b.id} className="crm2-booking-card">
+                                  <div className="crm2-bk-left">
+                                    <div className="crm2-bk-id-row">
+                                      <span className="crm2-bk-id">{b.id}</span>
+                                      <span className="crm2-source-badge"
+                                        style={{ background: srcCfg.bg, color: srcCfg.text }}>
+                                        {srcCfg.flag} {b.source}
+                                      </span>
+                                    </div>
+                                    <div className="crm2-bk-room"><Bed size={12}/> {b.room}</div>
+                                    <div className="crm2-bk-dates"><Calendar size={12}/> {b.dates}</div>
+                                  </div>
+                                  <div className="crm2-bk-right">
+                                    <div className="crm2-bk-amount">{b.amount}</div>
+                                    <span className="crm2-bk-status"
+                                      style={{ background: sc.bg, color: sc.color }}>{sc.label}</span>
+                                  </div>
                                 </div>
-                                <div className="crm2-bk-right">
-                                  <div className="crm2-bk-amount">{b.amount}</div>
-                                  <span className="crm2-bk-status"
-                                    style={{ background: sc.bg, color: sc.color }}>{sc.label}</span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </motion.div>
                     )}
 
-                    {/* ── Comms tab ── */}
+                    {/* ── Communications ── */}
                     {tab === 'comms' && (
                       <motion.div key="comms" className="crm2-tc"
                         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
@@ -583,12 +637,12 @@ const GuestCRM = () => {
                             {drafting ? (
                               <div className="crm2-drafting">
                                 <div className="crm2-drafting-dot"/>
-                                <span>Oracle analyse les préférences de {selected.name.split(' ')[0]}…</span>
+                                <span>Oracle analyse l'historique de {selected.name.split(' ')[0]}…</span>
                               </div>
                             ) : draft ? (
                               <>
                                 <textarea className="crm2-textarea" value={draft}
-                                  onChange={e => setDraft(e.target.value)} rows={9}/>
+                                  onChange={e => setDraft(e.target.value)} rows={10}/>
                                 <div className="crm2-composer-actions">
                                   <button className="crm2-btn-ghost">Brouillon</button>
                                   <button className="crm2-btn-primary"><Send size={13}/> Envoyer</button>
@@ -597,7 +651,7 @@ const GuestCRM = () => {
                             ) : (
                               <div className="crm2-composer-empty">
                                 <MessageCircle size={36}/>
-                                <p>Cliquez sur <strong>Générer avec IA</strong> pour rédiger un message personnalisé basé sur l'historique de {selected.name.split(' ')[0]}.</p>
+                                <p>Cliquez sur <strong>Générer avec IA</strong> pour rédiger un message personnalisé basé sur {selected.visits} réservation{selected.visits > 1 ? 's' : ''} et les canaux : {selected.sources?.join(', ')}.</p>
                               </div>
                             )}
                           </div>
@@ -605,15 +659,15 @@ const GuestCRM = () => {
                       </motion.div>
                     )}
 
-                    {/* ── History tab ── */}
+                    {/* ── History ── */}
                     {tab === 'history' && (
                       <motion.div key="history" className="crm2-tc"
                         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
                         <div className="crm2-card">
-                          <div className="crm2-card-title"><History size={14}/> Activité récente</div>
+                          <div className="crm2-card-title"><History size={14}/> Activité & Séjours</div>
                           <div className="crm2-timeline">
-                            {selected.timeline.map((ev, i) => (
+                            {selected.timeline?.map((ev, i) => (
                               <div key={i} className="crm2-tl-item">
                                 <TLIcon type={ev.icon}/>
                                 <div className="crm2-tl-line"/>
@@ -636,7 +690,11 @@ const GuestCRM = () => {
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="crm2-empty-icon"><Users2 size={40}/></div>
                 <h3>Sélectionnez un profil client</h3>
-                <p>Accédez aux insights Oracle AI, à l'historique complet et aux outils d'engagement personnalisé.</p>
+                <p>
+                  {allGuests.length} client{allGuests.length !== 1 ? 's' : ''} dérivé{allGuests.length !== 1 ? 's' : ''} automatiquement
+                  depuis {reservations.length} réservation{reservations.length !== 1 ? 's' : ''} —
+                  Booking.com, Airbnb, Expedia, Direct et autres canaux.
+                </p>
               </motion.div>
             )}
           </AnimatePresence>

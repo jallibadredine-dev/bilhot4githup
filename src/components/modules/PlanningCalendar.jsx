@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, ChevronRight, Plus, X, Calendar, User, CreditCard, Key,
@@ -6,6 +6,7 @@ import {
   LogOut, Filter, Search, Smartphone, Globe2, Zap, Star, BedDouble,
   Users, ArrowRight, RefreshCw, Building2, MoreHorizontal
 } from 'lucide-react';
+import { saveReservations, getReservations } from '../../lib/reservationStore';
 import './PlanningCalendar.css';
 
 /* ─── CONSTANTS ─────────────────────────────────────────── */
@@ -101,7 +102,10 @@ const StatusPill = ({ status }) => {
 const PlanningCalendar = () => {
   const [viewKey,   setViewKey]   = useState('bi');
   const [startDate, setStartDate] = useState(() => addDays(TODAY, -3));
-  const [reservas,  setResas]     = useState(INIT_RESA);
+  const [reservas,  setResas]     = useState(() => {
+    const stored = getReservations();
+    return stored.length > 0 ? stored : INIT_RESA;
+  });
   const [selected,  setSelected]  = useState(null);
   const [panelTab,  setPanelTab]  = useState('detail');
   const [creating,  setCreating]  = useState(false);
@@ -120,6 +124,11 @@ const PlanningCalendar = () => {
     guest:'', email:'', phone:'', roomId:'', checkIn: fmtISO(TODAY), checkOut: fmtISO(addDays(TODAY,2)),
     source:'Direct', status:'confirmed', price:'', notes:'', guests:'2',
   });
+
+  /* ─── Persist reservations to shared store on every change ─── */
+  useEffect(() => {
+    saveReservations(reservas);
+  }, [reservas]);
 
   /* ─── Navigation ─── */
   const goToday  = () => setStartDate(addDays(TODAY, -3));
