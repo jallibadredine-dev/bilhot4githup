@@ -103,6 +103,15 @@ export function useRealtimeSync() {
   }, []);
 }
 
+/* ─── Persist a reservation row to Supabase + write error log ─ */
+export async function persistReservation(row) {
+  if (!SUPABASE_READY) return;
+  const { error } = await supabase.from('reservations').upsert(row, { onConflict: 'id' });
+  if (error) {
+    writeSystemLog({ severity: 'error', module: 'reservations', message: `Failed to persist reservation ${row.id}`, details: error.message });
+  }
+}
+
 /* ─── Utility: write a system log entry via Supabase ────────── */
 export async function writeSystemLog({ severity = 'info', module = 'system', message, details = null }) {
   if (!SUPABASE_READY) return;

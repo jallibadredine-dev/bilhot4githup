@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Lock, Unlock, Wifi, Battery, Zap, Activity, ShieldCheck, 
@@ -7,21 +7,42 @@ import {
   List, Search, Plus, ArrowUpRight, Check, X, Shield,
   History, Settings, Bell, Info
 } from 'lucide-react';
+import { useAppStore } from '../../store/appStore';
 import './SmartAccess.css';
 
-const SmartAccess = () => {
-  const [locks, setLocks] = useState([
-    { id: '1', location: 'Appartement Marais', brand: 'TTLock', battery: 95, signal: 85, status: 'online', locked: true, lastSync: '2 min ago' },
-    { id: '2', location: 'Studio Eiffel', brand: 'TTLock', battery: 42, signal: 60, status: 'online', locked: false, lastSync: '10 min ago' },
-    { id: '3', location: 'Villa Sunrise', brand: 'Tuya', battery: 98, signal: 95, status: 'online', locked: true, lastSync: 'Just now' },
-    { id: '4', location: 'Ocean View 4A', brand: 'Tuya', battery: 15, signal: 20, status: 'offline', locked: true, lastSync: '1 hour ago' },
-  ]);
+const DEMO_LOCKS = [
+  { id: '1', location: 'Appartement Marais', brand: 'TTLock', battery: 95, signal: 85, status: 'online', locked: true, lastSync: '2 min ago' },
+  { id: '2', location: 'Studio Eiffel', brand: 'TTLock', battery: 42, signal: 60, status: 'online', locked: false, lastSync: '10 min ago' },
+  { id: '3', location: 'Villa Sunrise', brand: 'Tuya', battery: 98, signal: 95, status: 'online', locked: true, lastSync: 'Just now' },
+  { id: '4', location: 'Ocean View 4A', brand: 'Tuya', battery: 15, signal: 20, status: 'offline', locked: true, lastSync: '1 hour ago' },
+];
 
-  const [activities] = useState([
-    { id: 1, type: 'unlock', user: 'J. Doe', unit: 'Appartement Marais', time: '11:42 AM', status: 'success' },
-    { id: 2, type: 'alert', user: 'System', unit: 'Ocean View 4A', time: '11:15 AM', status: 'warning', msg: 'Low Battery' },
-    { id: 3, type: 'lock', user: 'S. Connor', unit: 'Studio Eiffel', time: '10:30 AM', status: 'success' },
-  ]);
+const DEMO_ACTIVITIES = [
+  { id: 1, type: 'unlock', user: 'J. Doe', unit: 'Appartement Marais', time: '11:42 AM', status: 'success' },
+  { id: 2, type: 'alert', user: 'System', unit: 'Ocean View 4A', time: '11:15 AM', status: 'warning', msg: 'Low Battery' },
+  { id: 3, type: 'lock', user: 'S. Connor', unit: 'Studio Eiffel', time: '10:30 AM', status: 'success' },
+];
+
+const SmartAccess = () => {
+  // Read access cards from the centralized store; fallback to demo data when store is empty
+  const accessCards = useAppStore(s => s.accessCards);
+  const upsertAccessCard = useAppStore(s => s.upsertAccessCard);
+
+  // Map store access cards to lock-display format, or use demo data
+  const locks = accessCards.length > 0
+    ? accessCards.map(c => ({
+        id:       String(c.id),
+        location: c.room_id || c.description || c.label || 'Room',
+        brand:    c.brand   || 'Smart Lock',
+        battery:  c.battery ?? 100,
+        signal:   c.signal  ?? 80,
+        status:   c.status  || 'online',
+        locked:   c.locked  !== false,
+        lastSync: c.last_sync || 'Unknown',
+      }))
+    : DEMO_LOCKS;
+
+  const activities = DEMO_ACTIVITIES;
 
   const [viewMode, setViewMode] = useState('grid');
   const [activeTab, setActiveTab] = useState('status');
@@ -34,7 +55,10 @@ const SmartAccess = () => {
   };
 
   const toggleLock = (id) => {
-    setLocks(locks.map(l => l.id === id ? { ...l, locked: !l.locked } : l));
+    if (accessCards.length > 0) {
+      const card = accessCards.find(c => String(c.id) === id);
+      if (card) upsertAccessCard({ ...card, locked: !card.locked });
+    }
   };
 
   return (

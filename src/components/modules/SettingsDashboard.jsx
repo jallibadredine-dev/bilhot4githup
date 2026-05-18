@@ -5,6 +5,7 @@ import {
   Eye, EyeOff, AlertTriangle, PlusCircle, Trash2, ChevronRight,
   Database, Key, BadgeCheck, Euro, ExternalLink
 } from 'lucide-react';
+import { useAppStore } from '../../store/appStore';
 import './SettingsDashboard.css';
 
 /* ── Helpers ────────────────────────────────────────────── */
@@ -55,14 +56,23 @@ const INTEGRATIONS = [
 
 /* ── Component ──────────────────────────────────────────── */
 const SettingsDashboard = () => {
+  // Centralized settings store — persisted via realtime and mergeSetting
+  const storeSettings = useAppStore(s => s.settings);
+  const mergeSetting  = useAppStore(s => s.mergeSetting);
+
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
   const [showPw, setShowPw] = useState(false);
-  const [lead,   setLead]   = useState('airbnb');
-  const [defView,setDefView]= useState('timeline');
-  const [notifs, setNotifs] = useState({ booking: true, checkin: true, message: true, review: false, report: true });
+  // Initialize UI state from store (fallback to defaults)
+  const [lead,   setLead]   = useState(() => storeSettings.lead    || 'airbnb');
+  const [defView,setDefView]= useState(() => storeSettings.defView || 'timeline');
+  const [notifs, setNotifs] = useState(() => storeSettings.notifs  || { booking: true, checkin: true, message: true, review: false, report: true });
 
   const handleSave = () => {
+    // Persist to centralized store on save
+    mergeSetting('lead',    lead);
+    mergeSetting('defView', defView);
+    mergeSetting('notifs',  notifs);
     setSaving(true);
     setTimeout(() => { setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500); }, 900);
   };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, Shield, Mail, Bell, Server, Wrench, Save, RefreshCw, AlertTriangle, CheckCircle, ToggleLeft, ToggleRight, Trash2, Download, Upload, Globe, Lock } from 'lucide-react';
+import { useAppStore } from '../../../store/appStore';
 
 const TABS_DEF = [
   {id:'general',  lbl:'Général',      Icon:Settings},
@@ -16,14 +17,29 @@ const Toggle = ({on,onToggle}) => (
 );
 
 export default function SystemSettings() {
+  // Centralized settings store — persisted via realtime and mergeSetting
+  const storeSettings  = useAppStore(s => s.settings);
+  const mergeSetting   = useAppStore(s => s.mergeSetting);
+
   const [tab,setTab]=useState('general');
   const [saved,setSaved]=useState(false);
-  const [general,setGeneral]=useState({name:'Hova PMS',url:'https://app.hova.io',supportEmail:'support@hova.io',timezone:'Africa/Casablanca',lang:'fr',currency:'MAD'});
-  const [security,setSecurity]=useState({twofa:false,sessionTimeout:30,maxLoginAttempts:5,ipWhitelist:false,auditLogs:true});
-  const [email,setEmail]=useState({provider:'emailjs',fromName:'Hova PMS',fromEmail:'noreply@hova.io',smtpHost:'',smtpPort:587,smtpUser:'',smtpPass:''});
-  const [notifs,setNotifs]=useState({newClient:true,payment:true,apiError:true,systemAlert:true,weeklyReport:false,slackWebhook:''});
 
-  const save=async()=>{setSaved(true);await new Promise(r=>setTimeout(r,700));setSaved(false);};
+  // Initialize from store with sensible defaults
+  const [general,setGeneral]=useState(() => storeSettings.general || {name:'Hova PMS',url:'https://app.hova.io',supportEmail:'support@hova.io',timezone:'Africa/Casablanca',lang:'fr',currency:'MAD'});
+  const [security,setSecurity]=useState(() => storeSettings.security || {twofa:false,sessionTimeout:30,maxLoginAttempts:5,ipWhitelist:false,auditLogs:true});
+  const [email,setEmail]=useState(() => storeSettings.email || {provider:'emailjs',fromName:'Hova PMS',fromEmail:'noreply@hova.io',smtpHost:'',smtpPort:587,smtpUser:'',smtpPass:''});
+  const [notifs,setNotifs]=useState(() => storeSettings.notifs || {newClient:true,payment:true,apiError:true,systemAlert:true,weeklyReport:false,slackWebhook:''});
+
+  const save=async()=>{
+    // Persist all settings sections to the centralized store
+    mergeSetting('general',  general);
+    mergeSetting('security', security);
+    mergeSetting('email',    email);
+    mergeSetting('notifs',   notifs);
+    setSaved(true);
+    await new Promise(r=>setTimeout(r,700));
+    setSaved(false);
+  };
 
   const Row=({label,sub,children})=>(
     <div className="sa2-settings-row">

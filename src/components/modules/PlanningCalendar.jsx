@@ -7,6 +7,7 @@ import {
   Users, ArrowRight, RefreshCw, Building2, MoreHorizontal
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
+import { persistReservation } from '../../store/realtime';
 import './PlanningCalendar.css';
 
 /* ─── CONSTANTS ─────────────────────────────────────────── */
@@ -177,14 +178,17 @@ const PlanningCalendar = () => {
       guests: parseInt(form.guests) || 1,
       hasKey: false,
     };
-    upsertResa(newR); // write to centralized store
+    upsertResa(newR);           // optimistic update in store
+    persistReservation(newR);  // persist to Supabase (fire-and-forget)
     setCreating(false);
   };
 
   const genPin = () => {
     setPin(`${Math.floor(1000+Math.random()*9000)}-${Math.floor(10+Math.random()*90)}`);
     if (selected) {
-      upsertResa({ ...selected, hasKey: true }); // write to store
+      const updated = { ...selected, hasKey: true };
+      upsertResa(updated);            // optimistic update in store
+      persistReservation(updated);   // persist to Supabase
       setSelected(s => ({ ...s, hasKey: true }));
     }
   };
