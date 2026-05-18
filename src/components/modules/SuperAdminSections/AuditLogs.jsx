@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Search, Download, RefreshCw, Filter, Clock, User, Shield, Settings, Database, CreditCard, Key, Eye } from 'lucide-react';
+import { adminFetch } from './adminUtils';
 
 const TYPE_CFG = {
   auth:    {col:'#3B82F6', Icon:Shield,   lbl:'Auth'},
@@ -31,7 +32,7 @@ export default function AuditLogs() {
   const [sel,setSel]       = useState(null);
 
   useEffect(()=>{
-    fetch('/api/admin/audit-logs').then(r=>r.json()).then(d=>{
+    adminFetch('/api/admin/audit-logs').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.logs) ? d.logs : []);
       setLogs(arr.length ? arr : MOCK_LOGS);
     }).catch(()=>setLogs(MOCK_LOGS)).finally(()=>setLoading(false));
@@ -39,7 +40,7 @@ export default function AuditLogs() {
 
   const reload = () => {
     setLoading(true);
-    fetch('/api/admin/audit-logs').then(r=>r.json()).then(d=>{
+    adminFetch('/api/admin/audit-logs').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.logs) ? d.logs : []);
       setLogs(arr.length ? arr : MOCK_LOGS);
     }).catch(()=>setLogs(MOCK_LOGS)).finally(()=>setLoading(false));

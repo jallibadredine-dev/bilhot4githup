@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, CreditCard, RefreshCw, Download, Search, Eye, CheckCircle, XCircle, Clock, AlertTriangle, BarChart3 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useAppStore } from '../../../store/appStore';
+import { adminFetch } from './adminUtils';
 
 const fmtEur = n => `${Number(n||0).toLocaleString('fr-FR')} €`;
 const MRR_DATA = [
@@ -33,7 +34,7 @@ export default function Payments() {
   const [q,setQ]             = useState('');
 
   useEffect(()=>{
-    fetch('/api/admin/payments').then(r=>r.json()).then(d=>{
+    adminFetch('/api/admin/payments').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.payments) ? d.payments : []);
       // Write to store only; component renders from store selector
       if (arr.length) setStorePayments(arr);

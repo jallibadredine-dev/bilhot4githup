@@ -184,10 +184,10 @@ export default function SystemHealth() {
           </button>
           <button
             onClick={() => { loadHealth(); loadLogs(); }}
-            disabled={healthLoading}
+            disabled={systemHealthLoading}
             style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 8, border: '1px solid var(--sa2-border)', background: 'transparent', color: 'var(--sa2-text-muted)', fontSize: '0.75rem', cursor: 'pointer' }}
           >
-            <RefreshCw size={12} style={{ animation: healthLoading ? 'spin 1s linear infinite' : 'none' }} />
+            <RefreshCw size={12} style={{ animation: systemHealthLoading ? 'spin 1s linear infinite' : 'none' }} />
             Actualiser
           </button>
         </div>
@@ -214,7 +214,7 @@ export default function SystemHealth() {
 
       {/* ── Provider grid ────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
-        {healthLoading && providers.length === 0
+        {systemHealthLoading && providers.length === 0
           ? [1,2,3,4,5,6].map(i => (
               <div key={i} style={{ background: 'var(--sa2-surface)', border: '1px solid var(--sa2-border)', borderRadius: 'var(--sa2-radius)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div className="sa2-skeleton" style={{ width: '60%', height: 14 }} />

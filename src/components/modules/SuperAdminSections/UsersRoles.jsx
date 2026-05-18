@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit3, Trash2, Search, Eye, XCircle, UserCheck, Shield, Crown, Save, RefreshCw, Check, X, Lock } from 'lucide-react';
 import { useAppStore } from '../../../store/appStore';
+import { adminFetch } from './adminUtils';
 
 const ROLES = ['super_admin','admin','manager','support','user'];
 const ROLE_COLORS = {super_admin:'#EF4444',admin:'#F59E0B',manager:'#3B82F6',support:'#8B5CF6',user:'#94A3B8'};
@@ -48,7 +49,7 @@ export default function UsersRoles() {
 
   const refresh = () => {
     setLoading(true);
-    fetch('/api/admin/users').then(r=>r.json()).then(d=>{
+    adminFetch('/api/admin/users').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.users) ? d.users : []);
       if (arr.length) setStoreProfiles(arr); // write only to store; render from store
     }).catch(()=>{}).finally(()=>setLoading(false));

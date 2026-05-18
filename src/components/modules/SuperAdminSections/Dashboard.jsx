@@ -59,8 +59,8 @@ export default function Dashboard() {
     setLoading(true);
     try {
       const [s, a, g] = await Promise.all([
-        fetch('/api/admin/stats').then(r=>r.json()).catch(()=>({})),
-        fetch('/api/admin/analytics').then(r=>r.json()).catch(()=>({})),
+        adminFetch('/api/admin/stats').then(r=>r.json()).catch(()=>({})),
+        adminFetch('/api/admin/analytics').then(r=>r.json()).catch(()=>({})),
         adminFetch('/api/admin/google-auth-stats').then(r=>r.json()).catch(()=>({})),
       ]);
       setStats({

@@ -92,13 +92,16 @@ function sbWriteLog({ severity = 'warn', module = 'health', message, details }) 
   }).catch(() => {});
 }
 
-/* ── GET /api/health — basic liveness ─────────────────────────── */
+/* ── GET /api/health — basic liveness (public) ─────────────────── */
 router.get('/', (_req, res) => {
   res.json({ ok: true, service: 'HosFlow API', ts: new Date().toISOString() });
 });
 
+/* All routes below require super-admin authentication */
+router.use(requireSuperAdmin);
+
 /* ── GET /api/health/providers — full provider health sweep ────── */
-router.get('/providers', requireSuperAdmin, async (_req, res) => {
+router.get('/providers', async (_req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
 
@@ -171,8 +174,8 @@ router.get('/providers', requireSuperAdmin, async (_req, res) => {
   res.json({ providers, checkedAt: new Date().toISOString() });
 });
 
-/* ── GET /api/health/logs — system_logs (super-admin only) ─────── */
-router.get('/logs', requireSuperAdmin, async (req, res) => {
+/* ── GET /api/health/logs — system_logs ─────────────────────────── */
+router.get('/logs', async (req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
   const { severity = '', module = '', limit = 50 } = req.query;
@@ -202,8 +205,8 @@ router.get('/logs', requireSuperAdmin, async (req, res) => {
   }
 });
 
-/* ── POST /api/health/logs — write a log (super-admin only) ────── */
-router.post('/logs', requireSuperAdmin, async (req, res) => {
+/* ── POST /api/health/logs — write a log ────────────────────────── */
+router.post('/logs', async (req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
   if (!SB_URL || !SB_KEY) return res.status(503).json({ error: 'Supabase non configuré.' });

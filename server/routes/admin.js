@@ -6,6 +6,8 @@ import { requireSuperAdmin } from '../middleware/requireSuperAdmin.js';
 
 const router = express.Router();
 
+router.use(requireSuperAdmin);
+
 function loadEnvFile() {
   try {
     const __dir = path.dirname(fileURLToPath(import.meta.url));
@@ -300,7 +302,7 @@ router.get('/audit-logs', async (req, res) => {
    GOOGLE OAUTH STATS
    ════════════════════════════════════════ */
 
-router.get('/google-auth-stats', requireSuperAdmin, async (req, res) => {
+router.get('/google-auth-stats', async (req, res) => {
   try {
     const r = await sbFetch('/auth/v1/admin/users?page=1&per_page=1000');
     if (!r.ok) return res.json({ googleUsers: 0, totalSignIns: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [], oauthErrors: [] });
