@@ -83,8 +83,10 @@ DROP POLICY IF EXISTS "service_role_card_events"  ON card_events;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS property_id text;
 
 -- ── access_cards policies (property-scoped, multi-staff safe) ───────
--- SELECT: staff can read cards in their property, or all if super_admin,
---         or all if property_id is not yet set (transition period).
+-- super_admin: unrestricted read/write across all properties.
+-- Staff: scoped strictly to their assigned property_id.
+--        Run: UPDATE profiles SET property_id = '<prop>' WHERE id = '<uid>'
+--        for each staff account after migration.
 CREATE POLICY "auth_read_access_cards"
   ON access_cards FOR SELECT TO authenticated
   USING (
@@ -93,13 +95,12 @@ CREATE POLICY "auth_read_access_cards"
       WHERE p.id = auth.uid()
         AND (
           p.role = 'super_admin'
-          OR p.property_id IS NULL
           OR p.property_id = access_cards.property_id
         )
     )
   );
 
--- INSERT: card must belong to caller's property; super_admin unrestricted.
+-- INSERT: card property_id must match caller's profile property_id.
 CREATE POLICY "auth_insert_access_cards"
   ON access_cards FOR INSERT TO authenticated
   WITH CHECK (
@@ -109,7 +110,6 @@ CREATE POLICY "auth_insert_access_cards"
       WHERE p.id = auth.uid()
         AND (
           p.role = 'super_admin'
-          OR p.property_id IS NULL
           OR p.property_id = access_cards.property_id
         )
     )
@@ -119,8 +119,7 @@ CREATE POLICY "auth_insert_access_cards"
 CREATE POLICY "auth_update_access_cards"
   ON access_cards FOR UPDATE TO authenticated
   USING (
-    created_by = auth.uid()
-    OR EXISTS (
+    EXISTS (
       SELECT 1 FROM profiles p
       WHERE p.id = auth.uid()
         AND (
@@ -136,7 +135,7 @@ CREATE POLICY "service_role_access_cards"
   USING (true) WITH CHECK (true);
 
 -- ── card_events policies (follow card property scope) ────────────────
--- SELECT: visible if caller can see the parent card's property.
+-- SELECT: visible if caller's property matches the parent card's property.
 CREATE POLICY "auth_read_card_events"
   ON card_events FOR SELECT TO authenticated
   USING (
@@ -146,13 +145,12 @@ CREATE POLICY "auth_read_card_events"
       WHERE ac.id = card_events.card_id
         AND (
           p.role = 'super_admin'
-          OR p.property_id IS NULL
           OR p.property_id = ac.property_id
         )
     )
   );
 
--- INSERT: caller must be able to see the parent card.
+-- INSERT: caller must have property access matching the parent card.
 CREATE POLICY "auth_insert_card_events"
   ON card_events FOR INSERT TO authenticated
   WITH CHECK (
@@ -162,7 +160,6 @@ CREATE POLICY "auth_insert_card_events"
       WHERE ac.id = card_id
         AND (
           p.role = 'super_admin'
-          OR p.property_id IS NULL
           OR p.property_id = ac.property_id
         )
     )

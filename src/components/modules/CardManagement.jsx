@@ -493,7 +493,7 @@ function IssueCardModal({ onClose, onIssued }) {
   const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
   const [form, setForm] = useState({
     guest_name: '', room_id: '101', lock_id: 'TTH-001',
-    reservation_id: '', activated_at: today, expires_at: nextWeek, notes: '', card_uid: '',
+    reservation_id: '', property_id: '', activated_at: today, expires_at: nextWeek, notes: '', card_uid: '',
   });
   const [submitting,   setSubmitting]   = useState(false);
   const [submitError,  setSubmitError]  = useState('');
@@ -582,6 +582,10 @@ function IssueCardModal({ onClose, onIssued }) {
                 {resvInfo.guestName ? ` · ${resvInfo.guestName}` : ''}
               </div>
             )}
+          </div>
+          <div className="rcm-field">
+            <label>ID propriété (super admin)</label>
+            <div className="rcm-input-wrap"><Building2 size={13} /><input placeholder="PROP-PARIS (résolu via profil pour le staff)" value={form.property_id} onChange={e => set('property_id', e.target.value)} /></div>
           </div>
           <div className="rcm-field">
             <label>Chambre *</label>

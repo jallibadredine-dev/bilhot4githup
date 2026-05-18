@@ -1,0 +1,100 @@
+Prompt pour Replit : Optimisation du parcours d’inscription client (Onboarding professionnel)
+
+Merci de modifier et optimiser le formulaire d’inscription du PMS HOVA pour rendre le parcours utilisateur plus professionnel, intelligent et automatisé.
+
+Objectif
+
+Créer un processus d’inscription en plusieurs étapes (step-by-step), fluide et moderne, qui permet de qualifier le client dès la première connexion et d’activer automatiquement un essai gratuit de 14 jours, sans demander immédiatement un abonnement payant.
+
+Étape 1 : Informations de base du compte
+
+Conserver les champs actuels et ajouter/améliorer :
+
+Nom complet
+Email professionnel
+Mot de passe
+Confirmation du mot de passe
+Étape 2 : Qualification du type d’établissement
+
+Ajouter une étape obligatoire pour identifier le type de client :
+
+Quel type d’établissement gérez-vous ?
+
+Hôtel
+Riad / Maison d’hôtes
+Appartement
+Hôtel-Appart
+Auberge
+Résidence touristique
+Autre (champ libre)
+Étape 3 : Nombre d’unités / chambres
+
+Afficher cette étape dynamiquement selon le type choisi :
+
+Si Hôtel / Riad / Hôtel-Appart / Résidence :
+→ demander Nombre de chambres
+
+Si Appartement :
+→ demander Nombre d’appartements
+
+Exemple :
+
+1–10
+11–30
+31–50
+51–100
+100+
+Étape 4 : Informations business
+
+Ajouter un formulaire professionnel avec :
+
+Nom de l’établissement / business
+Numéro de téléphone
+Adresse complète
+Pays
+Ville
+Code postal
+Site web (optionnel)
+Étape 5 : Qualification du besoin
+
+Ajouter une question :
+
+Quel est votre besoin principal ?
+
+Gestion des réservations
+Channel Manager
+Check-in / Check-out
+Serrures intelligentes / cartes RFID
+Facturation
+Housekeeping
+Solution complète PMS
+Autre
+Étape 6 : Activation automatique de l’essai gratuit
+
+Après validation de l’inscription :
+
+Créer automatiquement le compte
+Activer automatiquement un essai gratuit de 14 jours
+Donner accès complet à la plateforme
+Afficher un message :
+
+“Votre essai gratuit de 14 jours est activé. Aucun paiement requis pour le moment.”
+
+Gestion abonnement après période d’essai
+
+À la fin des 14 jours :
+
+Bloquer certaines fonctionnalités premium si aucun abonnement
+Afficher page de choix d’abonnement
+Permettre activation immédiate via paiement
+Amélioration UX/UI demandée
+
+Merci de rendre l’inscription :
+
+Plus moderne
+Multi-step avec barre de progression
+Responsive mobile + desktop
+Rapide et intuitive
+Validation automatique des champs
+Sauvegarde automatique des données
+Design premium cohérent avec HOVA PMS

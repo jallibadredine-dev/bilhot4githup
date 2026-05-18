@@ -128,18 +128,40 @@ const _tthotelDeactivate = async (lockId, cardUid) => {
 export async function issueCard(data) {
   const sb = await sbReady();
 
-  // Resolve created_by from the authenticated session so RLS INSERT check passes
-  let createdBy = data.created_by || null;
+  // Resolve created_by and property_id from the authenticated session.
+  // property_id must match the caller's profiles row for RLS INSERT to pass.
+  let createdBy        = data.created_by  || null;
+  let resolvedProperty = data.property_id || '';
   if (sb && supabase) {
     const { data: authData } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
     createdBy = authData?.user?.id || null;
+    if (createdBy) {
+      const { data: profile } = await supabase
+        .from('profiles').select('property_id, role').eq('id', createdBy).single()
+        .catch(() => ({ data: null }));
+      if (profile) {
+        if (profile.role === 'super_admin') {
+          // super_admin: use caller-supplied property_id (form field) or keep empty
+          resolvedProperty = data.property_id || '';
+        } else if (profile.property_id) {
+          // Staff: authoritative property from their profile; ignore form value
+          resolvedProperty = profile.property_id;
+        } else {
+          // Staff with no property assigned — fail before attempting RLS-blocked insert
+          throw new Error(
+            'Votre compte n\'est pas encore assigné à une propriété. ' +
+            'Contactez un super administrateur.'
+          );
+        }
+      }
+    }
   }
 
   const card = {
     id:             uid(),
     reservation_id: data.reservation_id || null,
     guest_id:       data.guest_id       || null,
-    property_id:    data.property_id    || '',
+    property_id:    resolvedProperty,
     room_id:        data.room_id,
     lock_id:        data.lock_id        || null,
     card_uid:       data.card_uid       || null,
