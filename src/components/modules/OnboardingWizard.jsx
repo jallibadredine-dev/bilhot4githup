@@ -486,7 +486,6 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
 
       clearDraft();
       setSubmitting(false);
-      setDone(true);
 
       setTimeout(() => { onComplete?.('trial'); }, 2200);
     } catch (err) {
@@ -546,26 +545,44 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation footer */}
-      {!isSuccessStep && (
+      {/* Navigation footer — hidden only on success (step 6 without error) */}
+      {(!isSuccessStep || submitError) && (
         <div className="ow-footer">
-          <button
-            type="button"
-            className="ow-btn-back"
-            onClick={handleBack}
-            disabled={step <= (googleMode ? 2 : 1)}
-          >
-            <ChevronLeft size={16}/> Retour
-          </button>
-
-          {isLastDataStep ? (
-            <button type="button" className="ow-btn-next primary" onClick={handleSubmit}>
-              <Sparkles size={15}/> Activer mon essai gratuit
-            </button>
+          {isSuccessStep && submitError ? (
+            /* Step 6 error state: give the user a way out */
+            <>
+              <button
+                type="button"
+                className="ow-btn-back"
+                onClick={() => { setStep(5); setSubmitError(''); }}
+              >
+                <ChevronLeft size={16}/> Retour
+              </button>
+              <button type="button" className="ow-btn-next primary" onClick={handleSubmit} disabled={submitting}>
+                <Sparkles size={15}/> Réessayer
+              </button>
+            </>
           ) : (
-            <button type="button" className="ow-btn-next" onClick={handleNext}>
-              Continuer <ChevronRight size={16}/>
-            </button>
+            <>
+              <button
+                type="button"
+                className="ow-btn-back"
+                onClick={handleBack}
+                disabled={step <= (googleMode ? 2 : 1)}
+              >
+                <ChevronLeft size={16}/> Retour
+              </button>
+
+              {isLastDataStep ? (
+                <button type="button" className="ow-btn-next primary" onClick={handleSubmit}>
+                  <Sparkles size={15}/> Activer mon essai gratuit
+                </button>
+              ) : (
+                <button type="button" className="ow-btn-next" onClick={handleNext}>
+                  Continuer <ChevronRight size={16}/>
+                </button>
+              )}
+            </>
           )}
         </div>
       )}
