@@ -41,6 +41,7 @@ const SmartLockHub = lazy(() => import('./components/modules/SmartLockHub'));
 const SmartInventory = lazy(() => import('./components/modules/SmartInventory'));
 const PropertiesManager = lazy(() => import('./components/modules/PropertiesManager'));
 const SuperAdmin = lazy(() => import('./components/modules/SuperAdmin'));
+const SuperAdminLogin = lazy(() => import('./components/modules/SuperAdminLogin'));
 const ClientPlans = lazy(() => import('./components/modules/ClientPlans'));
 const ReputationManager = lazy(() => import('./components/modules/ReputationManager'));
 const SettingsDashboard = lazy(() => import('./components/modules/SettingsDashboard'));
@@ -69,11 +70,12 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // ── Accès Super Admin direct via ?admin dans l'URL ──
     const params = new URLSearchParams(window.location.search);
+
+    // ── Accès Super Admin direct via ?admin dans l'URL (legacy bypass) ──
     if (params.has('admin')) {
       setPmsMode('pro');
-      setCurrentUser({ id: 'sa-local', email: 'admin@hova.app', user_metadata: { full_name: 'Super Admin' } });
+      setCurrentUser({ id: 'sa-local', email: 'admin@hosflow.com', user_metadata: { full_name: 'Super Admin' } });
       setIsAuthenticated(true);
       setActiveView('super-admin');
       setSessionChecked(true);
@@ -85,10 +87,25 @@ function App() {
       return;
     }
 
+    // Helper: check if a logged-in user is super_admin and redirect
+    const checkSuperAdmin = async (user) => {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        if (profile?.role === 'super_admin') {
+          setActiveView('super-admin');
+        }
+      } catch (_) {}
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setIsAuthenticated(true);
         setCurrentUser(session.user);
+        checkSuperAdmin(session.user);
       }
       setSessionChecked(true);
     });
@@ -97,6 +114,7 @@ function App() {
       if (session) {
         setIsAuthenticated(true);
         setCurrentUser(session.user);
+        checkSuperAdmin(session.user);
       } else {
         setIsAuthenticated(false);
         setCurrentUser(null);
@@ -251,6 +269,51 @@ function App() {
     return <LoadingFallback />;
   }
 
+  // ── Route dédiée Super Admin : ?superadmin ──────────────────────────────
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.has('superadmin')) {
+    // Already authenticated as super_admin → show panel directly
+    if (isAuthenticated && activeView === 'super-admin') {
+      return (
+        <Suspense fallback={<LoadingFallback />}>
+          <SuperAdmin onLogout={() => {
+            supabase.auth.signOut();
+            setIsAuthenticated(false);
+            setCurrentUser(null);
+            setActiveView('dashboard');
+            window.location.href = '/';
+          }} />
+        </Suspense>
+      );
+    }
+    // Not authenticated → show Super Admin login page
+    if (!isAuthenticated) {
+      return (
+        <Suspense fallback={<LoadingFallback />}>
+          <SuperAdminLogin onSuccess={(user, profile) => {
+            setCurrentUser(user);
+            setIsAuthenticated(true);
+            setActiveView('super-admin');
+          }} />
+        </Suspense>
+      );
+    }
+  }
+
+  // ── Super Admin full-screen (no PMS shell) — accessible from anywhere ──
+  if (isAuthenticated && activeView === 'super-admin') {
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        <SuperAdmin onLogout={() => {
+          supabase.auth.signOut();
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          setActiveView('dashboard');
+        }} />
+      </Suspense>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <Suspense fallback={<LoadingFallback />}>
@@ -261,7 +324,7 @@ function App() {
               setIsAuthenticated(true);
             } else if (mode === 'super-admin') {
               setPmsMode('pro');
-              setCurrentUser({ id: 'sa-local', email: 'admin@hova.app', user_metadata: { full_name: 'Super Admin' } });
+              setCurrentUser({ id: 'sa-local', email: 'admin@hosflow.com', user_metadata: { full_name: 'Super Admin' } });
               setIsAuthenticated(true);
               setActiveView('super-admin');
             } else {
