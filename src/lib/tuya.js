@@ -19,15 +19,27 @@ export const TUYA_REGIONS = {
   in: { label: 'Inde',     base: 'https://openapi.tuyain.com' },
 };
 
-// App-level credential keys managed by Super Admin → Integrations panel
-export const LS_TUYA_ID  = 'hova_tuya_client_id';
-export const LS_TUYA_SEC = 'hova_tuya_client_sec';
-export const LS_TUYA_REG = 'hova_tuya_region';
+// Platform-level defaults — injected at build time from Replit Secrets
+export const ENV_TUYA_ID   = import.meta.env.VITE_TUYA_CLIENT_ID     || '';
+export const ENV_TUYA_SEC  = import.meta.env.VITE_TUYA_CLIENT_SECRET  || '';
+export const ENV_TUYA_CODE = import.meta.env.VITE_TUYA_PROJECT_CODE   || '';
+
+// Per-client override keys (stored in localStorage by the client themselves)
+export const LS_TUYA_ID   = 'hova_tuya_client_id';
+export const LS_TUYA_SEC  = 'hova_tuya_client_sec';
+export const LS_TUYA_REG  = 'hova_tuya_region';
+export const LS_TUYA_CODE = 'hova_tuya_project_code';
 
 const _ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : '') || '';
-export const resolveTuyaId  = () => _ls(LS_TUYA_ID);
-export const resolveTuyaSec = () => _ls(LS_TUYA_SEC);
-export const resolveTuyaReg = () => _ls(LS_TUYA_REG) || 'eu';
+
+// Resolve: client override first, then platform default
+export const resolveTuyaId   = () => _ls(LS_TUYA_ID)  || ENV_TUYA_ID;
+export const resolveTuyaSec  = () => _ls(LS_TUYA_SEC) || ENV_TUYA_SEC;
+export const resolveTuyaReg  = () => _ls(LS_TUYA_REG) || 'eu';
+export const resolveTuyaCode = () => _ls(LS_TUYA_CODE) || ENV_TUYA_CODE;
+
+// True if using platform defaults (no client override)
+export const tuyaUsingDefaults = () => !_ls(LS_TUYA_ID) && !!ENV_TUYA_ID;
 
 /* ── Crypto helpers ────────────────────────────────────── */
 async function hmacSha256(secret, message) {

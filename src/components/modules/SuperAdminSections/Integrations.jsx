@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Globe, Plus, CheckCircle, XCircle, AlertTriangle, Settings, ExternalLink,
-         ToggleLeft, ToggleRight, Plug, Webhook, Link2, RefreshCw, Save, Eye, EyeOff, Key } from 'lucide-react';
-import { LS_TUYA_ID, LS_TUYA_SEC, LS_TUYA_REG, TUYA_REGIONS } from '../../../lib/tuya';
+         ToggleLeft, ToggleRight, Plug, Webhook, Link2, RefreshCw, Save, Eye, EyeOff, Key, Lock, ShieldCheck } from 'lucide-react';
+import { LS_TUYA_ID, LS_TUYA_SEC, LS_TUYA_REG, LS_TUYA_CODE, TUYA_REGIONS,
+         ENV_TUYA_ID, ENV_TUYA_SEC, ENV_TUYA_CODE } from '../../../lib/tuya';
 
 /* ── Global TTLock app-credential keys (shared with SmartLockHub) ── */
 const TT_CLIENT_ID_KEY  = 'hova_ttlock_client_id';
@@ -109,18 +110,14 @@ function TTLockConfig() {
   );
 }
 
-/* ── Tuya-specific config panel ── */
+/* ── Tuya-specific config panel (Super Admin) ── */
 function TuyaConfig() {
-  const [cid,   setCid]   = useState(() => localStorage.getItem(LS_TUYA_ID)  || '');
-  const [csec,  setCsec]  = useState(() => localStorage.getItem(LS_TUYA_SEC) || '');
-  const [reg,   setReg]   = useState(() => localStorage.getItem(LS_TUYA_REG) || 'eu');
-  const [showS, setShowS] = useState(false);
+  const [reg, setReg] = useState(() => localStorage.getItem(LS_TUYA_REG) || 'eu');
   const [saved, setSaved] = useState(false);
 
-  const save = () => {
-    if (!cid.trim() || !csec.trim()) return;
-    localStorage.setItem(LS_TUYA_ID,  cid.trim());
-    localStorage.setItem(LS_TUYA_SEC, csec.trim());
+  const hasEnvCreds = !!(ENV_TUYA_ID && ENV_TUYA_SEC);
+
+  const saveRegion = () => {
     localStorage.setItem(LS_TUYA_REG, reg);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -128,54 +125,99 @@ function TuyaConfig() {
 
   return (
     <div className="sa2-int-config">
-      <div style={{ fontSize: '0.7rem', color: '#718096', marginBottom: 10, lineHeight: 1.5 }}>
-        Credentials d'application Tuya — obtenus sur{' '}
-        <a href="https://iot.tuya.com" target="_blank" rel="noreferrer" style={{ color: '#059669' }}>iot.tuya.com</a>
-        {' '}→ Développement Cloud → Créer un projet. Ces credentials sont partagés avec tous les utilisateurs.
-      </div>
-      <div className="sa2-form-row">
-        <label>Client ID (Access ID)</label>
-        <input
-          type="text"
-          value={cid}
-          onChange={e => setCid(e.target.value)}
-          placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-          className="sa2-input"
-          style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
-        />
-      </div>
-      <div className="sa2-form-row">
-        <label>Client Secret</label>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <input
-            type={showS ? 'text' : 'password'}
-            value={csec}
-            onChange={e => setCsec(e.target.value)}
-            placeholder="••••••••••••••••••••••••••••••••"
-            className="sa2-input"
-            style={{ fontFamily: 'monospace', fontSize: '0.75rem', flex: 1 }}
-          />
-          <button onClick={() => setShowS(v => !v)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '0 4px' }}>
-            {showS ? <EyeOff size={13}/> : <Eye size={13}/>}
-          </button>
+      {/* Platform credentials banner */}
+      <div style={{
+        background: hasEnvCreds ? '#F0FDF4' : '#FFF7ED',
+        border: `1px solid ${hasEnvCreds ? '#BBF7D0' : '#FED7AA'}`,
+        borderRadius: 8, padding: '10px 12px', marginBottom: 12,
+        display: 'flex', alignItems: 'flex-start', gap: 8
+      }}>
+        {hasEnvCreds
+          ? <ShieldCheck size={15} style={{ color: '#16A34A', marginTop: 1, flexShrink: 0 }}/>
+          : <AlertTriangle size={15} style={{ color: '#F59E0B', marginTop: 1, flexShrink: 0 }}/>
+        }
+        <div style={{ fontSize: '0.72rem', lineHeight: 1.55, color: hasEnvCreds ? '#166534' : '#92400E' }}>
+          {hasEnvCreds ? (
+            <>
+              <strong>Credentials plateforme actifs</strong> — injectés via les secrets Replit.<br/>
+              Les clients qui ne configurent pas leurs propres identifiants utiliseront automatiquement ces credentials partagés.
+            </>
+          ) : (
+            <>
+              <strong>Aucun credential plateforme détecté.</strong><br/>
+              Ajoutez <code>VITE_TUYA_CLIENT_ID</code>, <code>VITE_TUYA_CLIENT_SECRET</code> et <code>VITE_TUYA_PROJECT_CODE</code> dans les secrets Replit.
+            </>
+          )}
         </div>
       </div>
+
+      {/* Read-only display of platform credentials */}
+      {hasEnvCreds && (
+        <>
+          <div className="sa2-form-row">
+            <label>Access ID / Client ID</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input
+                type="text"
+                readOnly
+                value={ENV_TUYA_ID.slice(0,6) + '••••••••••••' + ENV_TUYA_ID.slice(-4)}
+                className="sa2-input"
+                style={{ fontFamily: 'monospace', fontSize: '0.75rem', background: '#F8FAFC', color: '#64748B', flex: 1 }}
+              />
+              <Lock size={12} style={{ color: '#94A3B8', flexShrink: 0 }}/>
+            </div>
+          </div>
+          <div className="sa2-form-row">
+            <label>Access Secret / Client Secret</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input
+                type="password"
+                readOnly
+                value={ENV_TUYA_SEC}
+                className="sa2-input"
+                style={{ fontFamily: 'monospace', fontSize: '0.75rem', background: '#F8FAFC', color: '#64748B', flex: 1 }}
+              />
+              <Lock size={12} style={{ color: '#94A3B8', flexShrink: 0 }}/>
+            </div>
+          </div>
+          {ENV_TUYA_CODE && (
+            <div className="sa2-form-row">
+              <label>Project Code</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={ENV_TUYA_CODE}
+                  className="sa2-input"
+                  style={{ fontFamily: 'monospace', fontSize: '0.75rem', background: '#F8FAFC', color: '#64748B', flex: 1 }}
+                />
+                <Lock size={12} style={{ color: '#94A3B8', flexShrink: 0 }}/>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Editable: region */}
       <div className="sa2-form-row">
-        <label>Région Cloud</label>
+        <label>Région Cloud (défaut)</label>
         <select value={reg} onChange={e => setReg(e.target.value)} className="sa2-input" style={{ fontSize: '0.8rem' }}>
           {Object.entries(TUYA_REGIONS).map(([k, v]) => (
             <option key={k} value={k}>{v.label} — {v.base.replace('https://','')}</option>
           ))}
         </select>
       </div>
+
+      <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginBottom: 8, lineHeight: 1.5 }}>
+        Les clients peuvent surcharger ces credentials avec les leurs dans <strong>Serrures Intelligentes → Connexion Tuya</strong>.
+      </div>
+
       <button
         className="sa2-btn sa2-btn-primary sa2-btn-sm"
-        onClick={save}
-        disabled={!cid.trim() || !csec.trim()}
+        onClick={saveRegion}
         style={{ marginTop: 4 }}
       >
-        {saved ? <><CheckCircle size={11}/> Sauvegardé</> : <><Save size={11}/> Sauvegarder</>}
+        {saved ? <><CheckCircle size={11}/> Sauvegardé</> : <><Save size={11}/> Sauvegarder la région</>}
       </button>
     </div>
   );
