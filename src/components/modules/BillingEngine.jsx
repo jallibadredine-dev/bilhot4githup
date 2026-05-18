@@ -148,7 +148,11 @@ const BillingEngine = ({ pmsMode }) => {
 
   const getStatusCls = (s) => ({ Paid: 'status-paid', Overdue: 'status-overdue', Proforma: 'status-proforma', Draft: 'status-draft' }[s] || '');
 
-  const sourceOf = (src) => SOURCE_CFG[src] || { label: src || 'Direct', color: '#64748B', bg: '#F1F5F9' };
+  const sourceOf = (src) => {
+    const cfg = SOURCE_CFG[src];
+    if (cfg) return { label: src, color: cfg.text, bg: cfg.bg, abbr: cfg.abbr };
+    return { label: src || 'Direct', color: '#64748B', bg: '#F1F5F9', abbr: '?' };
+  };
 
   const simulateDownload = (id) => {
     setDownloading(true);
@@ -242,8 +246,8 @@ const BillingEngine = ({ pmsMode }) => {
               const cnt = invoicesList.filter(i => i.source === k).length;
               if (!cnt) return null;
               return (
-                <div key={k} className="be-kpi-ch" style={{ background: v.bg, color: v.color }}>
-                  {v.label.split('.')[0]} <strong>{cnt}</strong>
+                <div key={k} className="be-kpi-ch" style={{ background: v.bg, color: v.text }}>
+                  {v.abbr} <strong>{cnt}</strong>
                 </div>
               );
             })}
