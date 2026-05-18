@@ -325,7 +325,7 @@ const Step5 = ({ data, onChange, errors }) => (
 );
 
 /* ─── Step 6: Trial activation ───────────────────────────── */
-const Step6 = ({ userName, submitting, error, deferred }) => (
+const Step6 = ({ userName, submitting, error }) => (
   <div className="ow-step-body ow-step-success">
     {submitting ? (
       <>
@@ -344,34 +344,6 @@ const Step6 = ({ userName, submitting, error, deferred }) => (
         <div className="ow-step-icon red"><AlertCircle size={22}/></div>
         <h2>Oups — une erreur est survenue</h2>
         <p className="ow-step-sub ow-err-text">{error}</p>
-      </>
-    ) : deferred ? (
-      /* Email confirmation required — profile will be finalized post-login */
-      <>
-        <motion.div
-          className="ow-success-badge"
-          style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
-          initial={{ scale: 0, rotate: -15 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 220, damping: 16 }}
-        >
-          <Mail size={38} color="white"/>
-        </motion.div>
-        <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          Vérifiez votre email
-        </motion.h2>
-        <motion.p className="ow-step-sub" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
-          Un lien de confirmation vous a été envoyé à <strong>{deferred}</strong>.<br/>
-          Cliquez sur le lien pour activer votre essai gratuit et accéder au PMS.
-        </motion.p>
-        <motion.div className="ow-trial-banner" style={{ background: 'rgba(245,158,11,0.12)', borderColor: 'rgba(245,158,11,0.3)' }}
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-          <Sparkles size={18} color="#d97706"/>
-          <div>
-            <strong>Vos données sont enregistrées</strong>
-            <span>Votre profil sera finalisé dès confirmation de l'email</span>
-          </div>
-        </motion.div>
       </>
     ) : (
       <>
@@ -433,7 +405,6 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [deferred, setDeferred] = useState(null); // email address when confirmation is required
   const [direction, setDirection] = useState(1);
 
   const onChange = useCallback((field, value) => {
@@ -561,10 +532,10 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
         };
 
         if (emailConfirmationRequired) {
-          // Session not yet active — store qualification data for deferred upsert.
+          // Session not yet active — store qualification data silently for deferred upsert.
           // App.jsx ensureUserProfile will pick it up on the next SIGNED_IN event.
+          // No email confirmation screen shown — user goes directly to success/account.
           try { sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload)); } catch {}
-          setDeferred(data.email.trim());
         } else {
           const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
           if (upsertErr) {
@@ -637,7 +608,7 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
           {step === 3 && <Step3 data={data} onChange={onChange} errors={errors}/>}
           {step === 4 && <Step4 data={data} onChange={onChange} onBlur={onBlurField} errors={errors}/>}
           {step === 5 && <Step5 data={data} onChange={onChange} errors={errors}/>}
-          {step === 6 && <Step6 userName={data.name} submitting={submitting} error={submitError} deferred={deferred}/>}
+          {step === 6 && <Step6 userName={data.name} submitting={submitting} error={submitError}/>}
         </motion.div>
       </AnimatePresence>
 
