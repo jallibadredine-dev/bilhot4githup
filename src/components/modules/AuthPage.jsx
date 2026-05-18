@@ -87,7 +87,11 @@ const LoginForm = ({ onLogin, onSwitchRegister }) => {
       if (error) throw error;
     } catch {
       setGoogleLoading(false);
-      setAuthError('Connexion Google impossible. Vérifiez que le provider est activé dans Supabase.');
+      setAuthError(
+        'Connexion Google impossible. Assurez-vous que le provider Google est activé dans Supabase Dashboard ' +
+        '(Authentication > Providers > Google) et que les credentials OAuth Google sont configurés. ' +
+        'Consultez docs/google-oauth-setup.md pour le guide complet.'
+      );
     }
   };
 

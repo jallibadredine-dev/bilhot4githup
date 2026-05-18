@@ -507,6 +507,9 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
 
     try {
       let userId = googleUser?.id || null;
+      // emailConfirmationRequired: true when Supabase returns a user but no session
+      // (project has email confirmation enabled). In that case profile upsert will 42501.
+      let emailConfirmationRequired = false;
 
       if (!googleMode) {
         const { data: authData, error: signUpErr } = await supabase.auth.signUp({
@@ -516,6 +519,8 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
         });
         if (signUpErr) throw signUpErr;
         userId = authData?.user?.id;
+        // No session means email confirmation is required before the user can authenticate
+        emailConfirmationRequired = Boolean(authData?.user && !authData?.session);
       }
 
       const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -542,19 +547,23 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
           avatar_url: googleUser?.user_metadata?.avatar_url || null,
           created_at: new Date().toISOString(),
         };
-        const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-        if (upsertErr) {
-          if (upsertErr.code === '42703' || upsertErr.code === '42501') {
-            // Column missing (migration pending) or session not yet authenticated
-            // (email confirmation required). Store qualification data for deferred upsert:
-            // App.jsx ensureUserProfile will pick it up on the next SIGNED_IN event.
-            try {
-              sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload));
-            } catch {}
-            console.warn('[Hova] Profile upsert deferred — qualification data stored for post-login retry', upsertErr.message);
-            setDeferred(data.email.trim() || googleUser?.email || '');
-          } else {
-            throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
+
+        if (emailConfirmationRequired) {
+          // Session not yet active — store qualification data for deferred upsert.
+          // App.jsx ensureUserProfile will pick it up on the next SIGNED_IN event.
+          try { sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload)); } catch {}
+          setDeferred(data.email.trim());
+        } else {
+          const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+          if (upsertErr) {
+            if (upsertErr.code === '42703') {
+              // Column missing (migration pending) — store for deferred retry
+              try { sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload)); } catch {}
+              console.warn('[Hova] Profile upsert deferred (migration pending) — will retry via ensureUserProfile');
+            } else {
+              // Genuine error (RLS misconfiguration, server fault, etc.) — surface to user
+              throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
+            }
           }
         }
       }
