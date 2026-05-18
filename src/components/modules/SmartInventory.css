@@ -425,6 +425,7 @@
 .si-batt-sync { font-size: 0.6rem; color: #94A3B8; font-weight: 500; flex-shrink: 0; }
 
 .si-lock-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.si-lock-controls > :first-child { grid-column: 1 / -1; }
 
 .si-lock-toggle {
   display: flex; align-items: center; justify-content: center; gap: 6px;

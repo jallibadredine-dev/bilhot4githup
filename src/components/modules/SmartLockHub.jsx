@@ -16,6 +16,7 @@ import { handleApiError } from '../../lib/errorHandler';
 import { toast } from '../../lib/toast';
 import { secureStorage } from '../../lib/secureStorage';
 import CardEncoderModal from './CardEncoderModal';
+import CardAccessModal from './CardAccessModal';
 import './SmartLockHub.css';
 
 /* ════════════════════════════════════════════════════════════
@@ -149,9 +150,10 @@ const SmartLockHub = () => {
   const [pinLoading,  setPinLoading]  = useState(false);
   const [pinSuccess,  setPinSuccess]  = useState(false);
   const [pinCopied,   setPinCopied]   = useState(false);
-  const [showPin,     setShowPin]     = useState(false);
-  const [showEncoder, setShowEncoder] = useState(false);
-  const [encoderData, setEncoderData] = useState({});
+  const [showPin,        setShowPin]        = useState(false);
+  const [showEncoder,    setShowEncoder]    = useState(false);
+  const [encoderData,    setEncoderData]    = useState({});
+  const [showCardAccess, setShowCardAccess] = useState(false);
 
   /* ════ TTLock fetch ════ */
   const fetchTTLock = useCallback(async (token = ttToken) => {
@@ -900,7 +902,10 @@ const SmartLockHub = () => {
                           {selectedLock.locked ? <><Unlock size={16}/> Déverrouiller</> : <><Lock size={16}/> Verrouiller</>}
                         </button>
                         <button className="slh-pin-open-btn" onClick={() => { setShowPin(true); setPinValue(genPin()); setPinSuccess(false); }}>
-                          <Key size={14}/> Générer PIN
+                          <Key size={14}/> Code PIN
+                        </button>
+                        <button className="slh-pin-open-btn" style={{ background: '#F5F3FF', color: '#6D28D9', border: '1.5px solid #DDD6FE' }} onClick={() => setShowCardAccess(true)}>
+                          <CreditCard size={14}/> Carte d'accès
                         </button>
                       </div>
                     </div>
@@ -1066,6 +1071,25 @@ const SmartLockHub = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* ══ CARD ACCESS MODAL ═══════════════════════════════ */}
+      {showCardAccess && selectedLock && (() => {
+        const assignedRoom = assignments[selectedLock.id] || '';
+        const roomInfo     = PROPERTY_ROOMS.find(r => r.number === assignedRoom);
+        return (
+          <CardAccessModal
+            open={showCardAccess}
+            onClose={() => setShowCardAccess(false)}
+            roomId={assignedRoom || selectedLock.id}
+            roomName={roomInfo ? `Chambre ${roomInfo.number} — ${roomInfo.label}` : selectedLock.name}
+            lockId={selectedLock.id}
+            floor={roomInfo?.floor || ''}
+            guestName={pinName}
+            checkIn={pinStart ? pinStart.slice(0, 10) : ''}
+            checkOut={pinEnd   ? pinEnd.slice(0, 10)   : ''}
+          />
+        );
+      })()}
     </div>
   );
 };

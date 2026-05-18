@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './SmartInventory.css';
 import { persistInventory, getInventoryBuildings } from '../../lib/inventoryStore';
 import { secureStorage } from '../../lib/secureStorage';
+import CardAccessModal from './CardAccessModal';
 
 /* ─── CONSTANTS ─────────────────────────────────────────────── */
 const LOCK_PROVIDERS = {
@@ -126,6 +127,7 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
   const [searchQ,        setSearchQ]        = useState('');
   const [filterStatus,   setFilterStatus]   = useState('all');
   const [generating,     setGenerating]     = useState(false);
+  const [showCardModal,  setShowCardModal]  = useState(false);
 
   /* ── Add Building wizard ── */
   const [newBldFloorDefs, setNewBldFloorDefs] = useState([]);
@@ -693,7 +695,14 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                               onClick={() => handleGeneratePin(selectedRoom.buildingId, selectedRoom.floorId, selectedRoom.id)}
                               disabled={generating}
                             >
-                              {generating ? <><RefreshCw size={14} className="spin-icon"/> Génération…</> : <><Key size={14}/> Générer PIN</>}
+                              {generating ? <><RefreshCw size={14} className="spin-icon"/> Génération…</> : <><Key size={14}/> Code PIN</>}
+                            </button>
+                            <button
+                              className="si-gen-pin-btn"
+                              style={{ background: '#F5F3FF', color: '#6D28D9', border: '1.5px solid #DDD6FE' }}
+                              onClick={() => setShowCardModal(true)}
+                            >
+                              <CreditCard size={14}/> Carte d'accès
                             </button>
                           </div>
 
@@ -1136,6 +1145,25 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* ══ CARD ACCESS MODAL ═══════════════════════════════ */}
+      {showCardModal && selectedRoom?.lock && (() => {
+        const guest = GUEST_MAP[selectedRoom.number];
+        const prov  = LOCK_PROVIDERS[selectedRoom.lock.provider];
+        return (
+          <CardAccessModal
+            open={showCardModal}
+            onClose={() => setShowCardModal(false)}
+            roomId={selectedRoom.number}
+            roomName={`Chambre ${selectedRoom.number}`}
+            lockId={selectedRoom.lock.devId}
+            floor={''}
+            guestName={guest?.name || ''}
+            checkIn={guest?.checkIn || ''}
+            checkOut={guest?.checkOut || ''}
+          />
+        );
+      })()}
     </div>
   );
 };
