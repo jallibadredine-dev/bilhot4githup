@@ -77,7 +77,7 @@ const StepIndicator = ({ current, total }) => (
 );
 
 /* ─── Step 1: Account ────────────────────────────────────── */
-const Step1 = ({ data, onChange, errors }) => {
+const Step1 = ({ data, onChange, onBlur, errors }) => {
   const [showPw, setShowPw] = useState(false);
   const [showCpw, setShowCpw] = useState(false);
 
@@ -91,14 +91,18 @@ const Step1 = ({ data, onChange, errors }) => {
         <div className={`ow-field ${errors.name ? 'error' : ''}`}>
           <label><User size={13}/> Nom complet *</label>
           <input placeholder="Mohamed Al Fassi"
-            value={data.name} onChange={e => onChange('name', e.target.value)}/>
+            value={data.name}
+            onChange={e => onChange('name', e.target.value)}
+            onBlur={() => onBlur('name', data)}/>
           {errors.name && <span className="ow-field-err">{errors.name}</span>}
         </div>
 
         <div className={`ow-field ${errors.email ? 'error' : ''}`}>
           <label><Mail size={13}/> Email professionnel *</label>
           <input type="email" placeholder="contact@monhotel.com"
-            value={data.email} onChange={e => onChange('email', e.target.value)}/>
+            value={data.email}
+            onChange={e => onChange('email', e.target.value)}
+            onBlur={() => onBlur('email', data)}/>
           {errors.email && <span className="ow-field-err">{errors.email}</span>}
         </div>
 
@@ -107,7 +111,9 @@ const Step1 = ({ data, onChange, errors }) => {
             <label><Lock size={13}/> Mot de passe *</label>
             <div className="ow-pw-wrap">
               <input type={showPw ? 'text' : 'password'} placeholder="••••••••"
-                value={data.password} onChange={e => onChange('password', e.target.value)}/>
+                value={data.password}
+                onChange={e => onChange('password', e.target.value)}
+                onBlur={() => onBlur('password', data)}/>
               <button type="button" className="ow-pw-eye" onClick={() => setShowPw(v => !v)}>
                 {showPw ? <EyeOff size={14}/> : <Eye size={14}/>}
               </button>
@@ -119,7 +125,9 @@ const Step1 = ({ data, onChange, errors }) => {
             <label><Lock size={13}/> Confirmation *</label>
             <div className="ow-pw-wrap">
               <input type={showCpw ? 'text' : 'password'} placeholder="••••••••"
-                value={data.confirm} onChange={e => onChange('confirm', e.target.value)}/>
+                value={data.confirm}
+                onChange={e => onChange('confirm', e.target.value)}
+                onBlur={() => onBlur('confirm', data)}/>
               <button type="button" className="ow-pw-eye" onClick={() => setShowCpw(v => !v)}>
                 {showCpw ? <EyeOff size={14}/> : <Eye size={14}/>}
               </button>
@@ -207,7 +215,7 @@ const Step3 = ({ data, onChange, errors }) => {
 };
 
 /* ─── Step 4: Business info ──────────────────────────────── */
-const Step4 = ({ data, onChange, errors }) => (
+const Step4 = ({ data, onChange, onBlur, errors }) => (
   <div className="ow-step-body">
     <div className="ow-step-icon orange"><Briefcase size={22}/></div>
     <h2>Informations de l'établissement</h2>
@@ -218,7 +226,8 @@ const Step4 = ({ data, onChange, errors }) => (
         <label><Building2 size={13}/> Nom de l'établissement *</label>
         <input placeholder="Hôtel Les Jardins de Marrakech"
           value={data.business_name || ''}
-          onChange={e => onChange('business_name', e.target.value)}/>
+          onChange={e => onChange('business_name', e.target.value)}
+          onBlur={() => onBlur('business_name', data)}/>
         {errors.business_name && <span className="ow-field-err">{errors.business_name}</span>}
       </div>
 
@@ -227,7 +236,8 @@ const Step4 = ({ data, onChange, errors }) => (
           <label><Phone size={13}/> Téléphone *</label>
           <input placeholder="+212 6XX XXX XXX"
             value={data.phone || ''}
-            onChange={e => onChange('phone', e.target.value)}/>
+            onChange={e => onChange('phone', e.target.value)}
+            onBlur={() => onBlur('phone', data)}/>
           {errors.phone && <span className="ow-field-err">{errors.phone}</span>}
         </div>
         <div className="ow-field">
@@ -242,7 +252,8 @@ const Step4 = ({ data, onChange, errors }) => (
         <label><MapPin size={13}/> Adresse *</label>
         <input placeholder="123 Rue des Roses, Guéliz"
           value={data.address || ''}
-          onChange={e => onChange('address', e.target.value)}/>
+          onChange={e => onChange('address', e.target.value)}
+          onBlur={() => onBlur('address', data)}/>
         {errors.address && <span className="ow-field-err">{errors.address}</span>}
       </div>
 
@@ -251,7 +262,8 @@ const Step4 = ({ data, onChange, errors }) => (
           <label>Ville *</label>
           <input placeholder="Marrakech"
             value={data.city || ''}
-            onChange={e => onChange('city', e.target.value)}/>
+            onChange={e => onChange('city', e.target.value)}
+            onBlur={() => onBlur('city', data)}/>
           {errors.city && <span className="ow-field-err">{errors.city}</span>}
         </div>
         <div className="ow-field">
@@ -390,6 +402,26 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
     setErrors(prev => ({ ...prev, [field]: undefined }));
   }, []);
 
+  // Real-time blur validation for individual fields
+  const onBlurField = useCallback((field, currentData) => {
+    const e = {};
+    if (field === 'name' && !currentData.name.trim()) e.name = 'Nom requis';
+    if (field === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentData.email)) e.email = 'Email invalide';
+    if (field === 'password' && currentData.password.length < 6 && currentData.password.length > 0) {
+      e.password = 'Minimum 6 caractères';
+    }
+    if (field === 'confirm' && currentData.confirm && currentData.confirm !== currentData.password) {
+      e.confirm = 'Les mots de passe ne correspondent pas';
+    }
+    if (field === 'business_name' && !currentData.business_name?.trim()) e.business_name = 'Nom de l\'établissement requis';
+    if (field === 'phone' && !currentData.phone?.trim()) e.phone = 'Téléphone requis';
+    if (field === 'address' && !currentData.address?.trim()) e.address = 'Adresse requise';
+    if (field === 'city' && !currentData.city?.trim()) e.city = 'Ville requise';
+    if (Object.keys(e).length > 0) {
+      setErrors(prev => ({ ...prev, ...e }));
+    }
+  }, []);
+
   /* ── Validation per step ── */
   const validate = (s) => {
     const e = {};
@@ -458,7 +490,7 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
       const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
       if (userId && SUPABASE_READY) {
-        const { error: upsertErr } = await supabase.from('profiles').upsert({
+        const profilePayload = {
           id: userId,
           full_name: data.name.trim() || googleUser?.user_metadata?.full_name || '',
           email: data.email.trim() || googleUser?.email || '',
@@ -478,9 +510,17 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
           primary_need: data.primary_need,
           avatar_url: googleUser?.user_metadata?.avatar_url || null,
           created_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
+        };
+        const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
         if (upsertErr) {
-          throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
+          // If the column doesn't exist yet (migration pending) or session not yet established
+          // (email confirmation required), treat as non-fatal — ensureUserProfile in App.jsx
+          // will complete the profile when the authenticated session is available.
+          if (upsertErr.code === '42703' || upsertErr.code === '42501') {
+            console.warn('[Hova] Profile upsert partial — will retry via ensureUserProfile', upsertErr.message);
+          } else {
+            throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
+          }
         }
       }
 
@@ -536,10 +576,10 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
           transition={{ duration: 0.28, ease: 'easeInOut' }}
           className="ow-step-wrapper"
         >
-          {step === 1 && <Step1 data={data} onChange={onChange} errors={errors}/>}
+          {step === 1 && <Step1 data={data} onChange={onChange} onBlur={onBlurField} errors={errors}/>}
           {step === 2 && <Step2 data={data} onChange={onChange} errors={errors}/>}
           {step === 3 && <Step3 data={data} onChange={onChange} errors={errors}/>}
-          {step === 4 && <Step4 data={data} onChange={onChange} errors={errors}/>}
+          {step === 4 && <Step4 data={data} onChange={onChange} onBlur={onBlurField} errors={errors}/>}
           {step === 5 && <Step5 data={data} onChange={onChange} errors={errors}/>}
           {step === 6 && <Step6 userName={data.name} submitting={submitting} error={submitError}/>}
         </motion.div>
