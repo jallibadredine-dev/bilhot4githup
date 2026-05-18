@@ -8,7 +8,7 @@ import {
   User, Mail, Lock, Eye, EyeOff, Check, AlertCircle,
   ChevronRight, ChevronLeft, Building2, Home, Hotel,
   Layers, Star, MapPin, Phone, Globe, Briefcase,
-  BarChart2, Key, Zap, CheckCircle2, Sparkles, X
+  BarChart2, Key, Zap, CheckCircle2, Sparkles
 } from 'lucide-react';
 import { supabase, SUPABASE_READY } from '../../lib/supabase';
 import './OnboardingWizard.css';

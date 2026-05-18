@@ -268,6 +268,11 @@ function App() {
         setTrialBannerDismissed(false);
         setShowGoogleOnboarding(false);
         setGoogleOnboardingUser(null);
+        // Clear onboarding sessionStorage keys to prevent draft leakage on shared devices
+        try {
+          sessionStorage.removeItem('hova_onboarding_draft');
+          sessionStorage.removeItem('hova_onboarding_pending');
+        } catch {}
         if (_event === 'SIGNED_OUT') {
           writeSystemLog({ severity: 'info', module: 'auth', message: 'User signed out' });
         }
