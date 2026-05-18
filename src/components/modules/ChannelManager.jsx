@@ -147,8 +147,8 @@ const loadOTAConns = () => {
 const ChannelManager = ({ pmsMode = 'pro' }) => {
 
   /* ── View & tabs ── */
-  const hasAnyOTA = OTA_DEFS.some(o => !!localStorage.getItem(`cm_ota_${o.id}`));
-  const hasChannex = !!localStorage.getItem('channex_token');
+  const hasAnyOTA = isAuthenticated() && OTA_DEFS.some(o => !!localStorage.getItem(`cm_ota_${o.id}`));
+  const hasChannex = isAuthenticated() && !!localStorage.getItem('channex_token');
   const [view, setView]           = useState(hasAnyOTA || hasChannex ? 'main' : 'setup');
   const [activeTab, setActiveTab] = useState(hasAnyOTA || hasChannex ? 'overview' : 'otas');
 

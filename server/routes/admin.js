@@ -106,6 +106,7 @@ router.get('/users', async (req, res) => {
     if (plan) data = data.filter(u => u.plan === plan);
     res.json({ users: data, total: data.length });
   } catch (err) {
+    logger.error('admin.users', 'Failed to fetch users', { message: err.message });
     res.status(500).json({ error: err.message });
   }
 });
@@ -123,6 +124,7 @@ router.get('/users/:id', async (req, res) => {
     if (!profiles.length) return res.status(404).json({ error: 'Profil introuvable.' });
     res.json({ user: profiles[0], properties: Array.isArray(props) ? props : [] });
   } catch (err) {
+    logger.error('admin.users.get', 'Failed to fetch user by id', { message: err.message });
     res.status(500).json({ error: err.message });
   }
 });
@@ -222,6 +224,7 @@ router.get('/stats', async (req, res) => {
       byRole,
     });
   } catch (err) {
+    logger.error('admin.stats', 'Failed to fetch admin stats', { message: err.message });
     res.status(500).json({ error: err.message });
   }
 });
@@ -258,6 +261,7 @@ router.get('/analytics', async (req, res) => {
 
     res.json({ signupTrend, planDist, roleDist, totalUsers: safeUsers.length, totalProps: Array.isArray(props) ? props.length : 0 });
   } catch (err) {
+    logger.error('admin.analytics', 'Failed to fetch analytics', { message: err.message });
     res.status(500).json({ error: err.message });
   }
 });
@@ -297,6 +301,7 @@ router.get('/payments', async (req, res) => {
     const totalRevenue = payments.filter(p => p.status === 'succeeded').reduce((s, p) => s + p.amount, 0);
     res.json({ payments, subscriptions, totalRevenue });
   } catch (err) {
+    logger.error('admin.payments', 'Failed to fetch payments', { message: err.message });
     res.status(500).json({ error: err.message, payments: [], subscriptions: [] });
   }
 });
@@ -318,6 +323,7 @@ router.get('/audit-logs', async (req, res) => {
     const data = await r.json();
     res.json({ logs: Array.isArray(data) ? data : [] });
   } catch (err) {
+    logger.error('admin.audit-logs', 'Failed to fetch audit logs', { message: err.message });
     res.json({ logs: [], error: err.message });
   }
 });
@@ -374,6 +380,7 @@ router.get('/google-auth-stats', async (req, res) => {
 
     res.json({ googleUsers: googleUsers.length, totalSignIns, googleSignups30d, activeSessions24h, recentUsers, oauthErrors });
   } catch (err) {
+    logger.error('admin.google-auth', 'Failed to fetch Google auth stats', { message: err.message });
     res.json({ googleUsers: 0, totalSignIns: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [], oauthErrors: [], error: err.message });
   }
 });
@@ -391,6 +398,7 @@ router.get('/plans', async (req, res) => {
     }
     res.json({ plans: [] });
   } catch (err) {
+    logger.error('admin.plans', 'Failed to fetch plans', { message: err.message });
     res.json({ plans: [] });
   }
 });

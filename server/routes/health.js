@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { requireSuperAdmin } from '../middleware/requireSuperAdmin.js';
+import { logger } from '../logger.js';
 
 const router = express.Router();
 
@@ -208,6 +209,7 @@ router.get('/logs', async (req, res) => {
     const total = countHeader ? parseInt(countHeader.split('/')[1]) || 0 : (Array.isArray(data) ? data.length : 0);
     res.json({ logs: Array.isArray(data) ? data : [], total });
   } catch (err) {
+    logger.error('health.logs', 'Failed to fetch system logs', { message: err.message });
     res.json({ logs: [], total: 0, error: err.message });
   }
 });
@@ -235,6 +237,7 @@ router.post('/logs', async (req, res) => {
     const data = r.ok ? await r.json() : [];
     res.json({ ok: r.ok, log: Array.isArray(data) ? data[0] : data });
   } catch (err) {
+    logger.error('health.logs', 'Failed to write system log', { message: err.message });
     res.status(500).json({ error: err.message });
   }
 });

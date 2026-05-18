@@ -14,6 +14,7 @@ import { tthotelAPI } from '../../lib/tthotel';
 import { tuyaAPI, TUYA_REGIONS } from '../../lib/tuya';
 import { handleApiError } from '../../lib/errorHandler';
 import { toast } from '../../lib/toast';
+import { secureStorage } from '../../lib/secureStorage';
 import CardEncoderModal from './CardEncoderModal';
 import './SmartLockHub.css';
 
@@ -73,51 +74,51 @@ const BattBar = ({ level }) => (
 const SmartLockHub = () => {
 
   /* ── View state ── */
-  const anyConnected = !!(sessionStorage.getItem('ttlock_token') || localStorage.getItem('slh_tthotel') || localStorage.getItem('slh_tuya'));
+  const anyConnected = !!(sessionStorage.getItem('ttlock_token') || secureStorage.getSensitive('slh_tthotel') || secureStorage.getSensitive('slh_tuya'));
   const [view, setView]     = useState(anyConnected ? 'devices' : 'setup'); // 'setup' | 'devices'
   const [syncing, setSyncing] = useState(false);
 
   /* ── Provider auth ── */
   const [connTTLock,  setConnTTLock]  = useState(!!sessionStorage.getItem('ttlock_token'));
-  const [connTTHotel, setConnTTHotel] = useState(!!localStorage.getItem('slh_tthotel'));
-  const [connTuya,    setConnTuya]    = useState(!!localStorage.getItem('slh_tuya'));
+  const [connTTHotel, setConnTTHotel] = useState(!!secureStorage.getSensitive('slh_tthotel'));
+  const [connTuya,    setConnTuya]    = useState(!!secureStorage.getSensitive('slh_tuya'));
 
   // TTLock
-  const [ttUser,   setTtUser]   = useState(localStorage.getItem('ttlock_user') || '');
+  const [ttUser,   setTtUser]   = useState(secureStorage.getSensitive('ttlock_user', ''));
   const [ttPass,   setTtPass]   = useState('');
   const [ttToken,  setTtToken]  = useState(sessionStorage.getItem('ttlock_token') || '');
   const [ttShowPw, setTtShowPw] = useState(false);
   const [ttLoading,setTtLoading]= useState(false);
   const [ttErr,    setTtErr]    = useState('');
 
-  // TTHotel
-  const [tthUser,     setTthUser]     = useState(localStorage.getItem('slh_tthotel_user')  || '');
+  // TTHotel — all reads auth-gated via secureStorage
+  const [tthUser,     setTthUser]     = useState(secureStorage.getSensitive('slh_tthotel_user',    ''));
   const [tthPass,     setTthPass]     = useState('');
   const [tthShowPw,   setTthShowPw]   = useState(false);
   const [tthLoading,  setTthLoading]  = useState(false);
   const [tthErr,      setTthErr]      = useState('');
-  const [tthToken,    setTthToken]    = useState(localStorage.getItem('slh_tthotel_token') || '');
-  const [tthRefresh,  setTthRefresh]  = useState(localStorage.getItem('slh_tthotel_refresh') || '');
-  const [tthDemoMode, setTthDemoMode] = useState(localStorage.getItem('slh_tthotel_demo') === '1');
+  const [tthToken,    setTthToken]    = useState(secureStorage.getSensitive('slh_tthotel_token',   ''));
+  const [tthRefresh,  setTthRefresh]  = useState(secureStorage.getSensitive('slh_tthotel_refresh', ''));
+  const [tthDemoMode, setTthDemoMode] = useState(secureStorage.getFlag('slh_tthotel_demo'));
 
-  // Tuya
-  const [tuyaId,      setTuyaId]      = useState(localStorage.getItem('slh_tuya_id')     || '');
-  const [tuyaSec,     setTuyaSec]     = useState(localStorage.getItem('slh_tuya_secret') || '');
+  // Tuya — all reads auth-gated via secureStorage
+  const [tuyaId,      setTuyaId]      = useState(secureStorage.getSensitive('slh_tuya_id',     ''));
+  const [tuyaSec,     setTuyaSec]     = useState(secureStorage.getSensitive('slh_tuya_secret', ''));
   const [tuyaShowPw,  setTuyaShowPw]  = useState(false);
   const [tuyaLoading, setTuyaLoading] = useState(false);
-  const [tuyaReg,     setTuyaReg]     = useState(localStorage.getItem('slh_tuya_region') || 'eu');
+  const [tuyaReg,     setTuyaReg]     = useState(secureStorage.getSensitive('slh_tuya_region', 'eu'));
   const [tuyaErr,     setTuyaErr]     = useState('');
-  const [tuyaToken,   setTuyaToken]   = useState(localStorage.getItem('slh_tuya_token')  || '');
-  const [tuyaDemoMode,setTuyaDemoMode]= useState(localStorage.getItem('slh_tuya_demo')   === '1');
+  const [tuyaToken,   setTuyaToken]   = useState(secureStorage.getSensitive('slh_tuya_token',  ''));
+  const [tuyaDemoMode,setTuyaDemoMode]= useState(secureStorage.getFlag('slh_tuya_demo'));
 
   /* ── TTHotel / Tuya imported devices ── */
   const [tthotelDevices, setTthotelDevices] = useState(() => {
-    try { const s = localStorage.getItem('slh_tthotel_devices'); return s ? JSON.parse(s) : (localStorage.getItem('slh_tthotel') ? TTHOTEL_DEMO_LOCKS : []); }
-    catch { return localStorage.getItem('slh_tthotel') ? TTHOTEL_DEMO_LOCKS : []; }
+    const devices = secureStorage.parseJSON('slh_tthotel_devices', null);
+    return devices ?? (secureStorage.getSensitive('slh_tthotel') ? TTHOTEL_DEMO_LOCKS : []);
   });
   const [tuyaDevices, setTuyaDevices] = useState(() => {
-    try { const s = localStorage.getItem('slh_tuya_devices'); return s ? JSON.parse(s) : (localStorage.getItem('slh_tuya') ? TUYA_DEMO_LOCKS : []); }
-    catch { return localStorage.getItem('slh_tuya') ? TUYA_DEMO_LOCKS : []; }
+    const devices = secureStorage.parseJSON('slh_tuya_devices', null);
+    return devices ?? (secureStorage.getSensitive('slh_tuya') ? TUYA_DEMO_LOCKS : []);
   });
 
   /* ── Devices ── */
@@ -126,10 +127,7 @@ const SmartLockHub = () => {
   const [lastSync, setLastSync] = useState(null);
 
   /* ── Assignments { lockId: roomNumber } ── */
-  const [assignments, setAssignments] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('slh_assignments') || '{}'); }
-    catch { return {}; }
-  });
+  const [assignments, setAssignments] = useState(() => secureStorage.parseJSON('slh_assignments', {}));
 
   /* ── Inline assign state { lockId: pendingRoom } ── */
   const [assignDraft, setAssignDraft] = useState({});
