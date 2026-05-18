@@ -109,7 +109,7 @@ export default function CardManagement() {
     const updated = await reEncodeCard(card.id);
     await load();
     openCard(updated);
-    setEncoderData({ cardId: updated.id, guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10) || '', checkOut: card.expires_at?.slice(0,10) || '', pin: '' });
+    setEncoderData({ cardId: updated.id, activatedAt: card.activated_at, guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10) || '', checkOut: card.expires_at?.slice(0,10) || '', pin: '' });
     setShowEncoder(true);
   };
 
@@ -317,7 +317,7 @@ export default function CardManagement() {
                 )}
                 {(selected.status === 'active' || selected.status === 'pending') && (
                   <button className="rcm-act-btn indigo" onClick={() => {
-                    setEncoderData({ cardId: selected.id, guestName: selected.guest_name, room: selected.room_id, checkIn: selected.activated_at?.slice(0,10)||'', checkOut: selected.expires_at?.slice(0,10)||'', pin: '' });
+                    setEncoderData({ cardId: selected.id, activatedAt: selected.activated_at, guestName: selected.guest_name, room: selected.room_id, checkIn: selected.activated_at?.slice(0,10)||'', checkOut: selected.expires_at?.slice(0,10)||'', pin: '' });
                     setShowEncoder(true);
                   }}>
                     <CreditCard size={13} /> Encoder
@@ -437,7 +437,7 @@ export default function CardManagement() {
               setShowIssue(false);
               await load();
               openCard(card);
-              setEncoderData({ cardId: card.id, guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10)||'', checkOut: card.expires_at?.slice(0,10)||'', pin: '' });
+              setEncoderData({ cardId: card.id, activatedAt: card.activated_at, guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10)||'', checkOut: card.expires_at?.slice(0,10)||'', pin: '' });
               setShowEncoder(true);
             }}
           />
@@ -454,11 +454,20 @@ export default function CardManagement() {
             onEncoded={async (uid) => {
               if (encoderData.cardId) {
                 await _wrapOp(async () => {
-                  await updateCard(encoderData.cardId, { card_uid: uid, status: CARD_STATUS.ACTIVE });
+                  // Only promote to active if the activation date is now or in the past;
+                  // if the check-in is future, leave status as pending so that
+                  // autoActivateCards() handles the transition on arrival day.
+                  const activatedAt = encoderData.activatedAt ? new Date(encoderData.activatedAt) : null;
+                  const patch = {
+                    card_uid:   uid,
+                    encoded_at: new Date().toISOString(),
+                    ...(activatedAt && activatedAt <= new Date() ? { status: CARD_STATUS.ACTIVE } : {}),
+                  };
+                  await updateCard(encoderData.cardId, patch);
                   await logEvent({ card_id: encoderData.cardId, event_type: CARD_EVENT.ENCODED, details: { card_uid: uid } });
                 });
                 await load();
-                if (selected?.id === encoderData.cardId) openCard({ ...selected, card_uid: uid, status: CARD_STATUS.ACTIVE });
+                if (selected?.id === encoderData.cardId) openCard({ ...selected, card_uid: uid });
               }
             }}
           />

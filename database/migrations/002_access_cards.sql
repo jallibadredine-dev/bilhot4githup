@@ -75,30 +75,58 @@ DROP POLICY IF EXISTS "auth_read_card_events"     ON card_events;
 DROP POLICY IF EXISTS "auth_insert_card_events"   ON card_events;
 DROP POLICY IF EXISTS "service_role_card_events"  ON card_events;
 
--- ── access_cards policies (staff-scoped) ──────────────────────────
--- All authenticated hotel staff can read all cards.
--- INSERT is scoped to the authenticated user (created_by must match).
--- UPDATE is scoped to creator or super_admin.
--- NOTE: For true multi-property isolation, add profiles.property_id
---       and scope SELECT/UPDATE using:
---       property_id IN (SELECT property_id FROM profiles WHERE id = auth.uid())
+-- ── Property scoping on profiles ────────────────────────────────────
+-- Extend profiles with property_id so that RLS can be scoped per hotel.
+-- Staff with property_id set can only see/modify cards in their property.
+-- Staff without property_id (super_admin or pre-migration accounts) have
+-- broader access controlled by their role column.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS property_id text;
+
+-- ── access_cards policies (property-scoped, multi-staff safe) ───────
+-- SELECT: staff can read cards in their property, or all if super_admin,
+--         or all if property_id is not yet set (transition period).
 CREATE POLICY "auth_read_access_cards"
   ON access_cards FOR SELECT TO authenticated
-  USING (auth.uid() IS NOT NULL);
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles p
+      WHERE p.id = auth.uid()
+        AND (
+          p.role = 'super_admin'
+          OR p.property_id IS NULL
+          OR p.property_id = access_cards.property_id
+        )
+    )
+  );
 
--- Staff can insert cards they own; property_id and created_by must match caller.
+-- INSERT: card must belong to caller's property; super_admin unrestricted.
 CREATE POLICY "auth_insert_access_cards"
   ON access_cards FOR INSERT TO authenticated
-  WITH CHECK (created_by = auth.uid());
+  WITH CHECK (
+    created_by = auth.uid()
+    AND EXISTS (
+      SELECT 1 FROM profiles p
+      WHERE p.id = auth.uid()
+        AND (
+          p.role = 'super_admin'
+          OR p.property_id IS NULL
+          OR p.property_id = access_cards.property_id
+        )
+    )
+  );
 
--- Staff can update only cards they created; super_admin can update any.
+-- UPDATE: card creator or same-property staff or super_admin.
 CREATE POLICY "auth_update_access_cards"
   ON access_cards FOR UPDATE TO authenticated
   USING (
     created_by = auth.uid()
     OR EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'super_admin'
+      SELECT 1 FROM profiles p
+      WHERE p.id = auth.uid()
+        AND (
+          p.role = 'super_admin'
+          OR (p.property_id IS NOT NULL AND p.property_id = access_cards.property_id)
+        )
     )
   );
 
@@ -107,21 +135,36 @@ CREATE POLICY "service_role_access_cards"
   ON access_cards TO service_role
   USING (true) WITH CHECK (true);
 
--- ── card_events policies (follow card visibility) ─────────────────
--- All authenticated staff can read card events (follows card read policy)
+-- ── card_events policies (follow card property scope) ────────────────
+-- SELECT: visible if caller can see the parent card's property.
 CREATE POLICY "auth_read_card_events"
   ON card_events FOR SELECT TO authenticated
-  USING (auth.uid() IS NOT NULL);
+  USING (
+    EXISTS (
+      SELECT 1 FROM access_cards ac
+      JOIN profiles p ON p.id = auth.uid()
+      WHERE ac.id = card_events.card_id
+        AND (
+          p.role = 'super_admin'
+          OR p.property_id IS NULL
+          OR p.property_id = ac.property_id
+        )
+    )
+  );
 
+-- INSERT: caller must be able to see the parent card.
 CREATE POLICY "auth_insert_card_events"
   ON card_events FOR INSERT TO authenticated
   WITH CHECK (
     EXISTS (
       SELECT 1 FROM access_cards ac
-      WHERE ac.id = card_id AND ac.created_by = auth.uid()
-    )
-    OR EXISTS (
-      SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin'
+      JOIN profiles p ON p.id = auth.uid()
+      WHERE ac.id = card_id
+        AND (
+          p.role = 'super_admin'
+          OR p.property_id IS NULL
+          OR p.property_id = ac.property_id
+        )
     )
   );
 

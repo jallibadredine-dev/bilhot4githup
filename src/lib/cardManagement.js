@@ -23,7 +23,8 @@ export const CARD_STATUS = {
 
 /* ── Event type enum ─────────────────────────────────────────── */
 export const CARD_EVENT = {
-  ENCODED:        'encoded',
+  ISSUED:         'issued',         // Card record created in system (before physical encoding)
+  ENCODED:        'encoded',        // Card physically encoded on hardware encoder
   ACTIVATED:      'activated',
   DEACTIVATED:    'deactivated',
   EXPIRED:        'expired',
@@ -165,8 +166,8 @@ export async function issueCard(data) {
     _lsSaveCards(cards);
   }
 
-  await logEvent({ card_id: card.id, lock_id: card.lock_id, event_type: CARD_EVENT.ENCODED,
-    details: { guest_name: card.guest_name, room_id: card.room_id } });
+  await logEvent({ card_id: card.id, lock_id: card.lock_id, event_type: CARD_EVENT.ISSUED,
+    details: { guest_name: card.guest_name, room_id: card.room_id, reservation_id: card.reservation_id } });
 
   // TTHotel API stub — fire-and-forget
   if (card.lock_id) {
