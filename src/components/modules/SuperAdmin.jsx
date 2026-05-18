@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Building2, Key, Globe, FileText,
   Package, CreditCard, Users, ClipboardList, Settings,
   LogOut, ChevronLeft, ChevronRight, Menu, X, HeartPulse,
+  ScanLine,
 } from 'lucide-react';
 
 import Dashboard     from './SuperAdminSections/Dashboard.jsx';
@@ -16,6 +17,7 @@ import UsersRoles    from './SuperAdminSections/UsersRoles.jsx';
 import AuditLogs     from './SuperAdminSections/AuditLogs.jsx';
 import SystemSettings from './SuperAdminSections/Settings.jsx';
 import SystemHealth  from './SuperAdminSections/SystemHealth.jsx';
+import AccessCards   from './SuperAdminSections/AccessCards.jsx';
 
 import './SuperAdmin.css';
 
@@ -24,6 +26,7 @@ const NAV = [
   { id:'pms',          label:'Gestion PMS',            Icon:Building2,       group:'core'   },
   { id:'api',          label:'API Manager',            Icon:Key,             group:'core'   },
   { id:'integrations', label:'Intégrations',           Icon:Globe,           group:'core'   },
+  { id:'cards',        label:'Cartes d\'Accès',        Icon:ScanLine,        group:'core'   },
   { id:'cms',          label:'CMS — Site Web',         Icon:FileText,        group:'content'},
   { id:'plans',        label:'Plans & Abonnements',    Icon:Package,         group:'business'},
   { id:'payments',     label:'Paiements & Finance',    Icon:CreditCard,      group:'business'},
@@ -45,6 +48,7 @@ const SECTION_MAP = {
   pms:          PMSManager,
   api:          APIManager,
   integrations: Integrations,
+  cards:        AccessCards,
   cms:          CMSEditor,
   plans:        PlansManager,
   payments:     Payments,

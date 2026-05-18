@@ -40,6 +40,7 @@ const StaffHub = lazy(() => import('./components/modules/StaffHub'));
 const AuthPage = lazy(() => import('./components/modules/AuthPage'));
 const LandingPage = lazy(() => import('./components/modules/LandingPage'));
 const SmartLockHub = lazy(() => import('./components/modules/SmartLockHub'));
+const CardManagement = lazy(() => import('./components/modules/CardManagement'));
 const SmartInventory = lazy(() => import('./components/modules/SmartInventory'));
 const PropertiesManager = lazy(() => import('./components/modules/PropertiesManager'));
 const SuperAdmin = lazy(() => import('./components/modules/SuperAdmin'));
@@ -298,6 +299,8 @@ function App() {
         return <StaffHub onNavigate={setActiveView} />;
       case 'locks':
         return <SmartLockHub />;
+      case 'card-management':
+        return <CardManagement />;
       case 'inventory':
         return <SmartInventory roomFolios={roomFolios} clearFolioCharge={clearFolioCharge} />;
       case 'affiliate':

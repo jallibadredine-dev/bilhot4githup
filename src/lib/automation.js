@@ -13,6 +13,7 @@
 import { channexAPI } from './channex';
 import { ttlockAPI } from './ttlock';
 import { sendPinNotifications } from './notifications';
+import { autoExpireCards, autoActivateCards } from './cardManagement';
 
 const STORAGE_KEY = 'hosflow_automation_log';
 const MAPPING_KEY = 'hosflow_property_lock_map';
@@ -97,6 +98,23 @@ let engineRunning = false;
 
 export const AutomationEngine = {
   get isRunning() { return engineRunning; },
+
+  async runCardLifecycle() {
+    try {
+      const expired   = await autoExpireCards();
+      const activated = await autoActivateCards();
+      if (expired > 0 || activated > 0) {
+        addLogEntry({
+          type:    'card-lifecycle',
+          status:  'info',
+          message: `Cartes : ${activated} activée(s), ${expired} expirée(s) automatiquement`,
+        });
+        automationEvents.emit('card-lifecycle', { expired, activated });
+      }
+    } catch (err) {
+      addLogEntry({ type: 'error', status: 'error', message: `Cycle cartes: ${err.message}` });
+    }
+  },
 
   async runOnce(channexToken, ttlockToken) {
     if (!channexToken || !ttlockToken) return;
@@ -262,8 +280,10 @@ export const AutomationEngine = {
 
     // Run immediately, then on interval
     this.runOnce(channexToken, ttlockToken);
+    this.runCardLifecycle();
     engineInterval = setInterval(() => {
       this.runOnce(channexToken, ttlockToken);
+      this.runCardLifecycle();
     }, intervalMinutes * 60 * 1000);
   },
 

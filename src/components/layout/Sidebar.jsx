@@ -4,7 +4,7 @@ import {
   Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database,
   CreditCard, Bot, Building2, Star, XCircle,
   UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code,
-  Workflow, ClipboardList, Home
+  Workflow, ClipboardList, Home, ScanLine
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -65,6 +65,7 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
             <SidebarItem id="frontdesk"        icon={Monitor}       label="Front Desk"             activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="inventory"        icon={Layers}        label="Gestion Inventaire"     activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="locks"            icon={Key}           label="Serrures Connectées"    activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="card-management" icon={ScanLine}      label="Cartes d'Accès RFID"    activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="services-hub"     icon={UtensilsCrossed} label="Hub de Services"      activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="housekeeping"     icon={ClipboardCheck} label="Housekeeping"          activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="checkin-manager"  icon={ClipboardList} label="Check-in Digital"      activeView={activeView} setActiveView={setActiveView} />
