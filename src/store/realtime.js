@@ -49,10 +49,9 @@ const TABLE_CONFIGS = [
     remove: () => {},
   },
   {
-    // permissions table has no dedicated store slice; ignore events silently
     table: 'permissions', required: false,
-    upsert: () => {},
-    remove: () => {},
+    upsert: (row) => row.id && useAppStore.getState().upsertPermission(row),
+    remove: (row) => row.id && useAppStore.getState().removePermission(row.id),
   },
   {
     table: 'system_logs', required: false,

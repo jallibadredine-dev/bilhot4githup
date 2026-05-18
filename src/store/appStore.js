@@ -79,6 +79,16 @@ export const useAppStore = create(
     }),
     removePayment: (id) => set((s) => ({ payments: s.payments.filter(p => p.id !== id) })),
 
+    /* ── Permissions ────────────────────────────────────────── */
+    permissions: [],
+    setPermissions: (permissions) => set({ permissions }),
+    upsertPermission: (row) => set((s) => {
+      const idx = s.permissions.findIndex(p => p.id === row.id);
+      if (idx >= 0) { const a = [...s.permissions]; a[idx] = { ...a[idx], ...row }; return { permissions: a }; }
+      return { permissions: [row, ...s.permissions] };
+    }),
+    removePermission: (id) => set((s) => ({ permissions: s.permissions.filter(p => p.id !== id) })),
+
     /* ── Settings ───────────────────────────────────────────── */
     settings: {},
     setSettings: (settings) => set({ settings }),

@@ -141,9 +141,9 @@ export default function SystemHealth() {
 
   useEffect(() => {
     if (!autoRefresh) return;
-    const id = setInterval(() => { loadHealth(); }, 30000);
+    const id = setInterval(() => { loadHealth(); loadLogs(); }, 30000);
     return () => clearInterval(id);
-  }, [autoRefresh, loadHealth]);
+  }, [autoRefresh, loadHealth, loadLogs]);
 
   const upCount       = providers.filter(p => p.status === 'up').length;
   const degradedCount = providers.filter(p => p.status === 'degraded' || p.status === 'timeout').length;

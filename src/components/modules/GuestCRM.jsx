@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Search, Filter, Phone, Mail, MessageCircle, MoreVertical,
   Star, TrendingUp, TrendingDown, Zap, Sparkles,
@@ -10,11 +10,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  getReservations,
   deriveGuestsFromReservations,
   SOURCE_CFG,
-  RES_KEY,
 } from '../../lib/reservationStore';
+import { useAppStore } from '../../store/appStore';
 import './GuestCRM.css';
 
 /* ─── KPI header (static, could be derived) ──────────────── */
@@ -116,7 +115,9 @@ const SourceBadge = ({ source, size = 'sm' }) => {
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════ */
 const GuestCRM = () => {
-  const [reservations, setReservations] = useState(() => getReservations());
+  // Read directly from the centralized store — reactive to realtime updates
+  const reservations = useAppStore(s => s.reservations);
+
   const [selected,     setSelected]     = useState(null);
   const [tab,          setTab]          = useState('overview');
   const [search,       setSearch]       = useState('');
@@ -126,17 +127,6 @@ const GuestCRM = () => {
   const [drafting,     setDrafting]     = useState(false);
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [refreshing,   setRefreshing]   = useState(false);
-
-  /* ── Reactivity: re-read store when calendar saves ─────── */
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === RES_KEY || !e.key) {
-        setReservations(getReservations());
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
 
   /* ── Derive guests from reservations ────────────────────── */
   const allGuests = useMemo(
@@ -169,13 +159,10 @@ const GuestCRM = () => {
     setMenuOpen(false);
   }, []);
 
-  /* ── Refresh manually ──────────────────────────────────── */
+  /* ── Refresh manually — store is already kept live by realtime ─ */
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setReservations(getReservations());
-      setRefreshing(false);
-    }, 600);
+    setTimeout(() => setRefreshing(false), 600);
   };
 
   /* ── Generate draft ─────────────────────────────────────── */

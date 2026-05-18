@@ -6,7 +6,7 @@ import {
   LogOut, Filter, Search, Smartphone, Globe2, Zap, Star, BedDouble,
   Users, ArrowRight, RefreshCw, Building2, MoreHorizontal
 } from 'lucide-react';
-import { saveReservations, getReservations } from '../../lib/reservationStore';
+import { useAppStore } from '../../store/appStore';
 import './PlanningCalendar.css';
 
 /* ─── CONSTANTS ─────────────────────────────────────────── */
@@ -100,12 +100,14 @@ const StatusPill = ({ status }) => {
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════ */
 const PlanningCalendar = () => {
+  // Read directly from the centralized store — reactive to realtime updates
+  const storeResas    = useAppStore(s => s.reservations);
+  const upsertResa    = useAppStore(s => s.upsertReservation);
+  // Fallback to built-in demo data when store is empty (no Supabase connection)
+  const reservas      = storeResas.length > 0 ? storeResas : INIT_RESA;
+
   const [viewKey,   setViewKey]   = useState('bi');
   const [startDate, setStartDate] = useState(() => addDays(TODAY, -3));
-  const [reservas,  setResas]     = useState(() => {
-    const stored = getReservations();
-    return stored.length > 0 ? stored : INIT_RESA;
-  });
   const [selected,  setSelected]  = useState(null);
   const [panelTab,  setPanelTab]  = useState('detail');
   const [creating,  setCreating]  = useState(false);
@@ -125,10 +127,7 @@ const PlanningCalendar = () => {
     source:'Direct', status:'confirmed', price:'', notes:'', guests:'2',
   });
 
-  /* ─── Persist reservations to shared store on every change ─── */
-  useEffect(() => {
-    saveReservations(reservas);
-  }, [reservas]);
+  /* reservas is derived from the global store — no local persistence needed */
 
   /* ─── Navigation ─── */
   const goToday  = () => setStartDate(addDays(TODAY, -3));
@@ -178,14 +177,14 @@ const PlanningCalendar = () => {
       guests: parseInt(form.guests) || 1,
       hasKey: false,
     };
-    setResas(p => [...p, newR]);
+    upsertResa(newR); // write to centralized store
     setCreating(false);
   };
 
   const genPin = () => {
     setPin(`${Math.floor(1000+Math.random()*9000)}-${Math.floor(10+Math.random()*90)}`);
     if (selected) {
-      setResas(p => p.map(r => r.id === selected.id ? { ...r, hasKey: true } : r));
+      upsertResa({ ...selected, hasKey: true }); // write to store
       setSelected(s => ({ ...s, hasKey: true }));
     }
   };
