@@ -118,7 +118,7 @@ export const AutomationEngine = {
    */
   async runCardDateHooks() {
     let processed = {};
-    try { processed = getProcessedBookings(); } catch { return; }
+    try { processed = _getProcessedBookings(); } catch { return; }
     const todayStr = new Date().toISOString().split('T')[0];
     const { activateCardsForReservation, deactivateCardsForReservation } = await import('./cardManagement.js');
 
@@ -175,7 +175,7 @@ export const AutomationEngine = {
   async runOnce(channexToken, ttlockToken) {
     if (!channexToken || !ttlockToken) return;
 
-    const processed = getProcessedBookings();
+    const processed = _getProcessedBookings();
     const mappings = getPropertyLockMap();
 
     let newBookings = 0;

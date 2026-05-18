@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { logWarn } from '../../lib/errorHandler';
 import {
   Share2, Globe, Settings, Server, CheckCircle2, RefreshCcw,
   Home, Calendar, Activity, MessageSquare, Star, Tag, Zap, Key,
@@ -137,7 +138,7 @@ const loadOTAConns = () => {
     const raw = secureStorage.getSensitive(`cm_ota_${o.id}`);
     if (raw) {
       try { result[o.id] = JSON.parse(raw); } catch (err) {
-        console.warn(`[loadOTAConns] Failed to parse credentials for OTA ${o.id}:`, err);
+        logWarn('ChannelManager', `Failed to parse credentials for OTA ${o.id}`, { err });
       }
     }
   });
@@ -173,7 +174,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
     OTA_DEFS.forEach(o => {
       const raw = secureStorage.getSensitive(`cm_prods_${o.id}`);
       if (raw) try { r[o.id] = JSON.parse(raw); } catch (err) {
-        console.warn(`[otaProducts init] Failed to parse products for OTA ${o.id}:`, err);
+        logWarn('ChannelManager', `Failed to parse products for OTA ${o.id}`, { err });
       }
     });
     return r;

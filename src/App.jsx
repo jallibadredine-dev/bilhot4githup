@@ -354,6 +354,7 @@ function App() {
       return (
         <Suspense fallback={<LoadingFallback />}>
           <SuperAdminLogin onSuccess={(user, profile) => {
+            setAuthState(true);
             setCurrentUser(user);
             setIsAuthenticated(true);
             setActiveView('super-admin');
