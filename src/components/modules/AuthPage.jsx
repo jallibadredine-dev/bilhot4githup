@@ -26,6 +26,55 @@ const GoogleIcon = () => (
   </svg>
 );
 
+/* ── Google signup CTA shown in register tab ── */
+const GoogleSignupCTA = ({ onSwitchToLogin }) => {
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const handleGoogle = async () => {
+    setErr(null);
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+    } catch {
+      setLoading(false);
+      setErr('Provider Google non configuré. Consultez docs/google-oauth-setup.md.');
+    }
+  };
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <button
+        type="button"
+        onClick={handleGoogle}
+        disabled={loading}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 10, padding: '10px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0',
+          background: '#fff', cursor: loading ? 'not-allowed' : 'pointer',
+          fontWeight: 500, fontSize: 14, color: '#1e293b', opacity: loading ? 0.7 : 1,
+          transition: 'border-color 0.2s, box-shadow 0.2s',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = '#a78bfa'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(139,92,246,0.1)'; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = 'none'; }}
+      >
+        <GoogleIcon/>
+        {loading ? 'Redirection…' : "S'inscrire avec Google"}
+      </button>
+      {err && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 6, textAlign: 'center' }}>{err}</p>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+        <div style={{ flex: 1, height: 1, background: '#e2e8f0' }}/>
+        <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>ou créez un compte par email</span>
+        <div style={{ flex: 1, height: 1, background: '#e2e8f0' }}/>
+      </div>
+    </div>
+  );
+};
+
 /* ══════════════════════════════════════════════
    Login form — standalone sub-component
 ══════════════════════════════════════════════ */
@@ -267,6 +316,10 @@ const AuthPage = ({ onLogin, onClose }) => {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.22 }}
               >
+                {/* Google signup shortcut — visible before wizard steps begin */}
+                <div style={{ padding: '0 0 4px' }}>
+                  <GoogleSignupCTA onSwitchToLogin={switchToLogin}/>
+                </div>
                 <OnboardingWizard
                   onComplete={(plan) => onLogin(plan || 'trial')}
                   onSwitchToLogin={switchToLogin}

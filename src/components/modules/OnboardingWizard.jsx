@@ -605,8 +605,8 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
         </div>
       )}
 
-      {/* Progress */}
-      {!isSuccessStep && <StepIndicator current={step} total={TOTAL_STEPS}/>}
+      {/* Progress — always visible, including step 6 success */}
+      <StepIndicator current={step} total={TOTAL_STEPS}/>
 
       {/* Step content */}
       <AnimatePresence mode="wait" custom={direction}>
