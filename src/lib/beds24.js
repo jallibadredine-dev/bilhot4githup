@@ -3,6 +3,9 @@
  * Handles bidirectional synchronization between HosFlow (PMS) and OTAs.
  */
 
+import { secureStorage } from './secureStorage';
+import { logError } from './errorHandler';
+
 const BEDS24_API_BASE = 'https://api.beds24.com/v2';
 
 export const beds24 = {
@@ -38,15 +41,15 @@ export const beds24 = {
       const response = await fetch(`${BEDS24_API_BASE}/inventory/calendar`, {
         method: 'POST',
         headers: {
-          'token': localStorage.getItem('beds24_token'),
-          'invite-token': localStorage.getItem('beds24_invite_token'),
+          'token': secureStorage.getSensitive('beds24_token'),
+          'invite-token': secureStorage.getSensitive('beds24_invite_token'),
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
       });
       return await response.json();
     } catch (error) {
-      console.error('Beds24 Sync Error:', error);
+      logError('beds24', 'Sync inventory error', { message: error.message });
       throw error;
     }
   },
@@ -60,14 +63,14 @@ export const beds24 = {
       const response = await fetch(`${BEDS24_API_BASE}/bookings?${queryString}`, {
         method: 'GET',
         headers: {
-          'token': localStorage.getItem('beds24_token'),
-          'invite-token': localStorage.getItem('beds24_invite_token'),
+          'token': secureStorage.getSensitive('beds24_token'),
+          'invite-token': secureStorage.getSensitive('beds24_invite_token'),
           'Content-Type': 'application/json'
         }
       });
       return await response.json();
     } catch (error) {
-      console.error('Beds24 Booking Import Error:', error);
+      logError('beds24', 'Get bookings error', { message: error.message });
       throw error;
     }
   },
@@ -80,14 +83,14 @@ export const beds24 = {
       const response = await fetch(`${BEDS24_API_BASE}/properties`, {
         method: 'GET',
         headers: {
-          'token': localStorage.getItem('beds24_token'),
-          'invite-token': localStorage.getItem('beds24_invite_token'),
+          'token': secureStorage.getSensitive('beds24_token'),
+          'invite-token': secureStorage.getSensitive('beds24_invite_token'),
           'Content-Type': 'application/json'
         }
       });
       return await response.json();
     } catch (error) {
-      console.error('Beds24 Properties Error:', error);
+      logError('beds24', 'Get properties error', { message: error.message });
       throw error;
     }
   },
@@ -100,14 +103,14 @@ export const beds24 = {
       const response = await fetch(`${BEDS24_API_BASE}/rooms?propId=${propId}`, {
         method: 'GET',
         headers: {
-          'token': localStorage.getItem('beds24_token'),
-          'invite-token': localStorage.getItem('beds24_invite_token'),
+          'token': secureStorage.getSensitive('beds24_token'),
+          'invite-token': secureStorage.getSensitive('beds24_invite_token'),
           'Content-Type': 'application/json'
         }
       });
       return await response.json();
     } catch (error) {
-      console.error('Beds24 Rooms Error:', error);
+      logError('beds24', 'Get rooms error', { message: error.message });
       throw error;
     }
   },

@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { channexAPI } from '../../lib/channex';
 import { logError } from '../../lib/errorHandler';
 import { toast } from '../../lib/toast';
+import { secureStorage } from '../../lib/secureStorage';
 import './UnifiedInbox.css';
 
 /* ─── OTA DEFINITIONS (mirroring ChannelManager) ─────────── */
@@ -161,8 +162,8 @@ const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
   const messagesEndRef  = useRef(null);
 
   /* ── Read connected state from localStorage ── */
-  const channexToken   = localStorage.getItem('channex_token');
-  const connectedOTAs  = OTA_DEFS.filter(o => localStorage.getItem(`cm_ota_${o.id}`));
+  const channexToken   = secureStorage.getSensitive('channex_token');
+  const connectedOTAs  = OTA_DEFS.filter(o => secureStorage.getSensitive(`cm_ota_${o.id}`));
   const hasAnyConnection = !!channexToken || connectedOTAs.length > 0;
 
   /* ── Build conversations on mount ── */

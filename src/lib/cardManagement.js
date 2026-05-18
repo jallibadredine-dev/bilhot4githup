@@ -7,6 +7,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 import { supabase, SUPABASE_READY } from './supabase';
+import { secureStorage } from './secureStorage';
 
 /* ── Storage keys (localStorage fallback) ─────────────────────── */
 const LS_CARDS  = 'hova_access_cards';
@@ -87,7 +88,7 @@ const _lsAddEvent = (event) => {
 
 /** Stub: ask TTHotel to encode a card on a specific lock */
 const _tthotelEncode = async (lockId, cardData) => {
-  const tok = localStorage.getItem('slh_tthotel_token');
+  const tok = secureStorage.getSensitive('slh_tthotel_token');
   if (!tok || !lockId) return { ok: false, stub: true };
   try {
     const { tthotelAPI } = await import('./tthotel');
@@ -104,7 +105,7 @@ const _tthotelEncode = async (lockId, cardData) => {
 
 /** Stub: ask TTHotel to deactivate a card */
 const _tthotelDeactivate = async (lockId, cardUid) => {
-  const tok = localStorage.getItem('slh_tthotel_token');
+  const tok = secureStorage.getSensitive('slh_tthotel_token');
   if (!tok || !lockId || !cardUid) return { ok: false, stub: true };
   try {
     const { tthotelAPI } = await import('./tthotel');

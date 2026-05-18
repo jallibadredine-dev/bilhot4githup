@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { channexAPI } from '../../lib/channex';
 import { logError } from '../../lib/errorHandler';
+import { secureStorage } from '../../lib/secureStorage';
 import './ReputationManager.css';
 
 /* ─── OTA DEFINITIONS ─────────────────────────────────────── */
@@ -123,8 +124,8 @@ const ReputationManager = ({ pmsMode, setActiveView }) => {
   const [generating,    setGenerating]    = useState(false);
   const [submitting,    setSubmitting]    = useState(false);
 
-  const channexToken   = localStorage.getItem('channex_token');
-  const connectedOTAs  = OTA_DEFS.filter(o => localStorage.getItem(`cm_ota_${o.id}`));
+  const channexToken   = secureStorage.getSensitive('channex_token');
+  const connectedOTAs  = OTA_DEFS.filter(o => secureStorage.getSensitive(`cm_ota_${o.id}`));
   const hasAnyConn     = !!channexToken || connectedOTAs.length > 0;
 
   /* ── Build review list ── */

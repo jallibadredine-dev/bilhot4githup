@@ -382,10 +382,12 @@ function App() {
             if (mode === 'demo') {
               setPmsMode('pro');
               setCurrentUser({ id: 'demo', email: 'demo@hova.app', user_metadata: { full_name: 'Mode Démo' } });
+              setAuthState(true);
               setIsAuthenticated(true);
             } else if (mode === 'super-admin') {
               setPmsMode('pro');
               setCurrentUser({ id: 'sa-local', email: 'admin@hosflow.com', user_metadata: { full_name: 'Super Admin' } });
+              setAuthState(true);
               setIsAuthenticated(true);
               setActiveView('super-admin');
             } else {

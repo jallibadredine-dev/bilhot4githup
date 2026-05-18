@@ -26,6 +26,7 @@ import {
 import { channexAPI } from '../../lib/channex';
 import { logError } from '../../lib/errorHandler';
 import { toast } from '../../lib/toast';
+import { secureStorage } from '../../lib/secureStorage';
 import './AutomationHub.css';
 
 const AutomationHub = () => {
@@ -39,7 +40,7 @@ const AutomationHub = () => {
   const [interval, setIntervalMin] = useState(5);
 
   // Tokens
-  const channexToken = localStorage.getItem('channex_token') || '';
+  const channexToken = secureStorage.getSensitive('channex_token', '');
   const ttlockToken = sessionStorage.getItem('ttlock_token') || '';
   const hasChannex = !!channexToken;
   const hasTTLock = !!ttlockToken;

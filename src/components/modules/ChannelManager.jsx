@@ -13,6 +13,7 @@ import { getInventoryRooms, roomsToOTAProducts, INVENTORY_STATUS_CFG } from '../
 import StatusBadge from '../common/StatusBadge';
 import { toast } from '../../lib/toast';
 import { isAuthenticated } from '../../lib/authState';
+import { secureStorage } from '../../lib/secureStorage';
 import './ChannelManager.css';
 
 /* ════════════════════════════════════════════════════════════
@@ -153,7 +154,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
   const [activeTab, setActiveTab] = useState(hasAnyOTA || hasChannex ? 'overview' : 'otas');
 
   /* ── Channex credentials ── */
-  const [channexToken, setChannexToken] = useState(localStorage.getItem('channex_token') || '');
+  const [channexToken, setChannexToken] = useState(secureStorage.getSensitive('channex_token', ''));
   const [showChannexToken, setShowChannexToken] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -165,6 +166,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
   const [otaErrors, setOtaErrors]       = useState({});
   const [otaExpanded, setOtaExpanded]   = useState({});
   const [otaProducts, setOtaProducts]   = useState(() => {
+    if (!isAuthenticated()) return {};
     const r = {};
     OTA_DEFS.forEach(o => {
       const raw = localStorage.getItem(`cm_prods_${o.id}`);
