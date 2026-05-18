@@ -221,3 +221,53 @@
   .mobile-hamburger  { display: none !important; }
   .mobile-bottom-nav { display: none !important; }
 }
+
+/* ═══ RESPONSIVE: SMALL MOBILE 480px ══════════════════════ */
+@media (max-width: 480px) {
+  .app-header.glass-panel {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .app-full-module {
+    padding: 0 !important;
+  }
+
+  /* Prevent content overflow on narrow screens */
+  .glass-panel, .card, [class*="panel"] {
+    border-radius: 0 !important;
+  }
+
+  /* Ensure tables scroll horizontally */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Minimum touch target size (WCAG 2.5.5) */
+  button, [role="button"], a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent text overflow in headers */
+  h1, h2, h3 {
+    word-break: break-word;
+  }
+}
+
+/* ═══ RESPONSIVE: EXTRA SMALL 360px ═══════════════════════ */
+@media (max-width: 360px) {
+  .mobile-bottom-nav button span {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    height: calc(52px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-content-grid {
+    padding-bottom: calc(52px + env(safe-area-inset-bottom, 0px));
+  }
+}

@@ -10,8 +10,8 @@ import { useAppStore } from './store/appStore';
 // Core Layout & Common Components (Eager Load)
 import Sidebar from './components/layout/Sidebar';
 import TopHeader from './components/layout/TopHeader';
-import ActivitySidePanel from './components/views/ActivitySidePanel';
 import OracleAssistant from './components/common/OracleAssistant';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Lazy-loaded Views (Performance Optimization)
 const TaskListView = lazy(() => import('./components/views/TaskListView'));
@@ -21,8 +21,6 @@ const TimelineView = lazy(() => import('./components/views/TimelineView'));
 const SmartAccess = lazy(() => import('./components/modules/SmartAccess'));
 const ChannelManager = lazy(() => import('./components/modules/ChannelManager'));
 const GuestJourneyDiagram = lazy(() => import('./components/modules/GuestJourneyDiagram'));
-const AperçuGlobal = lazy(() => import('./components/modules/AperçuGlobal'));
-const PropertyGallery = lazy(() => import('./components/modules/PropertyGallery'));
 const ReportsDashboard = lazy(() => import('./components/modules/ReportsDashboard'));
 const WebsiteBuilder = lazy(() => import('./components/modules/WebsiteBuilder'));
 const WorkflowBuilder = lazy(() => import('./components/modules/WorkflowBuilder'));
@@ -80,18 +78,6 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-
-    // ── Accès Super Admin direct via ?admin dans l'URL (legacy bypass) ──
-    if (params.has('admin')) {
-      setPmsMode('pro');
-      setCurrentUser({ id: 'sa-local', email: 'admin@hosflow.com', user_metadata: { full_name: 'Super Admin' } });
-      setIsAuthenticated(true);
-      setActiveView('super-admin');
-      setSessionChecked(true);
-      return;
-    }
-
     if (!SUPABASE_READY) {
       setSessionChecked(true);
       return;
@@ -451,17 +437,19 @@ function App() {
           />
         </header>
 
-        {/* Dynamic Content Wrapped in Suspense */}
+        {/* Dynamic Content Wrapped in Suspense + ErrorBoundary */}
         <div className="app-content-grid">
-          <Suspense fallback={<LoadingFallback />}>
-            {activeView === 'timeline' ? (
-              renderModule()
-            ) : (
-              <section className="app-full-module" style={{ flex: 1, overflowY: 'auto' }}>
-                {renderModule()}
-              </section>
-            )}
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingFallback />}>
+              {activeView === 'timeline' ? (
+                renderModule()
+              ) : (
+                <section className="app-full-module" style={{ flex: 1, overflowY: 'auto' }}>
+                  {renderModule()}
+                </section>
+              )}
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </main>
       

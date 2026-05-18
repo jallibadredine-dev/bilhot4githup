@@ -130,8 +130,14 @@ router.post('/checkout', async (req, res) => {
 
 /* ─── POST /api/stripe/portal ─── customer portal ─── */
 router.post('/portal', async (req, res) => {
+  const { customerId, returnUrl } = req.body;
+  if (!customerId || typeof customerId !== 'string' || !customerId.startsWith('cus_')) {
+    return res.status(400).json({ error: 'customerId Stripe invalide.' });
+  }
+  if (!returnUrl || typeof returnUrl !== 'string' || !/^https?:\/\//i.test(returnUrl)) {
+    return res.status(400).json({ error: 'returnUrl invalide.' });
+  }
   try {
-    const { customerId, returnUrl } = req.body;
     const stripe = await getUncachableStripeClient();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,

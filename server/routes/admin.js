@@ -8,6 +8,25 @@ const router = express.Router();
 
 router.use(requireSuperAdmin);
 
+/* ─── Validation helpers ─── */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidUUID(v) { return typeof v === 'string' && UUID_RE.test(v); }
+function isValidEmail(v) { return typeof v === 'string' && EMAIL_RE.test(v) && v.length <= 254; }
+function safeInt(v, def, min, max) {
+  const n = parseInt(v, 10);
+  if (isNaN(n)) return def;
+  return Math.min(Math.max(n, min), max);
+}
+
+const ALLOWED_PATCH_FIELDS = new Set([
+  'full_name', 'role', 'plan', 'company', 'phone', 'avatar_url', 'status', 'notes',
+]);
+
+const ALLOWED_ROLES = new Set(['user', 'admin', 'super_admin']);
+const ALLOWED_PLANS = new Set(['starter', 'standard', 'integral', 'lifetime']);
+
 function loadEnvFile() {
   try {
     const __dir = path.dirname(fileURLToPath(import.meta.url));
@@ -74,7 +93,9 @@ async function logAudit({ user_email, action, resource, type = 'user' }) {
    ════════════════════════════════════════ */
 
 router.get('/users', async (req, res) => {
-  const { search = '', role = '', plan = '', limit = 100, offset = 0 } = req.query;
+  const { search = '', role = '', plan = '' } = req.query;
+  const limit  = safeInt(req.query.limit,  100, 1, 500);
+  const offset = safeInt(req.query.offset, 0,   0, 100000);
   try {
     let url = `/rest/v1/profiles?select=*&order=created_at.desc&limit=${limit}&offset=${offset}`;
     const r = await sbFetch(url);
@@ -95,6 +116,7 @@ router.get('/users', async (req, res) => {
 
 router.get('/users/:id', async (req, res) => {
   const { id } = req.params;
+  if (!isValidUUID(id)) return res.status(400).json({ error: 'ID utilisateur invalide.' });
   try {
     const [profileR, propsR] = await Promise.all([
       sbFetch(`/rest/v1/profiles?id=eq.${id}&select=*`),
@@ -112,6 +134,12 @@ router.get('/users/:id', async (req, res) => {
 router.post('/create-user', async (req, res) => {
   const { email, name, plan = 'starter', role = 'user', company = '', phone = '' } = req.body;
   if (!email || !name) return res.status(400).json({ error: 'email et name requis.' });
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'Format email invalide.' });
+  if (typeof name !== 'string' || name.trim().length < 1 || name.length > 120) {
+    return res.status(400).json({ error: 'Nom invalide (1-120 caractères).' });
+  }
+  if (role && !ALLOWED_ROLES.has(role)) return res.status(400).json({ error: 'Rôle invalide.' });
+  if (plan && !ALLOWED_PLANS.has(plan)) return res.status(400).json({ error: 'Plan invalide.' });
   try {
     const password = 'Hova' + Math.random().toString(36).slice(2, 8).toUpperCase() + '!';
     const createRes = await sbFetch('/auth/v1/admin/users', {
@@ -135,7 +163,14 @@ router.post('/create-user', async (req, res) => {
 
 router.patch('/users/:id', async (req, res) => {
   const { id } = req.params;
-  const { email: _e, ...fields } = req.body;
+  if (!isValidUUID(id)) return res.status(400).json({ error: 'ID utilisateur invalide.' });
+  const { email: _e, ...raw } = req.body;
+  const fields = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (ALLOWED_PATCH_FIELDS.has(k)) fields[k] = v;
+  }
+  if (fields.role && !ALLOWED_ROLES.has(fields.role)) return res.status(400).json({ error: 'Rôle invalide.' });
+  if (fields.plan && !ALLOWED_PLANS.has(fields.plan)) return res.status(400).json({ error: 'Plan invalide.' });
   try {
     fields.updated_at = new Date().toISOString();
     const r = await sbFetch(`/rest/v1/profiles?id=eq.${id}`, {
@@ -154,6 +189,7 @@ router.patch('/users/:id', async (req, res) => {
 
 router.delete('/users/:id', async (req, res) => {
   const { id } = req.params;
+  if (!isValidUUID(id)) return res.status(400).json({ error: 'ID utilisateur invalide.' });
   try {
     await sbFetch(`/rest/v1/profiles?id=eq.${id}`, { method: 'DELETE' });
     const delAuth = await sbFetch(`/auth/v1/admin/users/${id}`, { method: 'DELETE' });
@@ -283,7 +319,8 @@ router.get('/payments', async (req, res) => {
    ════════════════════════════════════════ */
 
 router.get('/audit-logs', async (req, res) => {
-  const { limit = 50, type = '' } = req.query;
+  const limit = safeInt(req.query.limit, 50, 1, 500);
+  const type  = typeof req.query.type === 'string' ? req.query.type.replace(/[^a-zA-Z0-9_-]/g, '') : '';
   try {
     let url = `/rest/v1/audit_logs?select=*&order=created_at.desc&limit=${limit}`;
     if (type) url += `&type=eq.${type}`;
