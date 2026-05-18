@@ -129,6 +129,7 @@ export async function issueCard(data) {
     id:             uid(),
     reservation_id: data.reservation_id || null,
     guest_id:       data.guest_id       || null,
+    property_id:    data.property_id    || '',
     room_id:        data.room_id,
     lock_id:        data.lock_id        || null,
     card_uid:       data.card_uid       || null,
@@ -355,7 +356,7 @@ export async function getAllCardEvents({ limit = 100 } = {}) {
 }
 
 export async function getCardStats() {
-  const cards = await getAllCards();
+  const cards = await getAllCards({ limit: 2000 });
   return {
     total:       cards.length,
     active:      cards.filter(c => c.status === CARD_STATUS.ACTIVE).length,
@@ -363,7 +364,65 @@ export async function getCardStats() {
     expired:     cards.filter(c => c.status === CARD_STATUS.EXPIRED).length,
     deactivated: cards.filter(c => c.status === CARD_STATUS.DEACTIVATED).length,
     lost:        cards.filter(c => c.status === CARD_STATUS.LOST).length,
+    byProperty:  _groupByProperty(cards),
   };
+}
+
+function _groupByProperty(cards) {
+  const map = {};
+  for (const c of cards) {
+    const pid = c.property_id || 'unknown';
+    if (!map[pid]) map[pid] = { property_id: pid, total: 0, active: 0, pending: 0, expired: 0, deactivated: 0, lost: 0 };
+    map[pid].total++;
+    if (c.status === CARD_STATUS.ACTIVE)      map[pid].active++;
+    if (c.status === CARD_STATUS.PENDING)     map[pid].pending++;
+    if (c.status === CARD_STATUS.EXPIRED)     map[pid].expired++;
+    if (c.status === CARD_STATUS.DEACTIVATED) map[pid].deactivated++;
+    if (c.status === CARD_STATUS.LOST)        map[pid].lost++;
+  }
+  return Object.values(map).sort((a, b) => b.total - a.total);
+}
+
+/**
+ * getCardsByProperty(propertyId) — all cards for one property
+ */
+export async function getCardsByProperty(propertyId) {
+  if (await sbReady()) {
+    const { data } = await supabase.from('access_cards').select('*')
+      .eq('property_id', propertyId).order('created_at', { ascending: false });
+    return data || [];
+  }
+  return _lsGetCards().filter(c => c.property_id === propertyId);
+}
+
+/**
+ * activateCardsForReservation(reservationId)
+ * Called on check-in day: activates all pending/encoded cards for a booking.
+ * Returns count of activated cards.
+ */
+export async function activateCardsForReservation(reservationId) {
+  const cards = await getCardsForReservation(reservationId);
+  const toActivate = cards.filter(c => c.status === CARD_STATUS.PENDING);
+  for (const c of toActivate) {
+    await activateCard(c.id);
+  }
+  return toActivate.length;
+}
+
+/**
+ * deactivateCardsForReservation(reservationId)
+ * Called on checkout day: immediately revokes all active cards for a booking.
+ * Returns count of deactivated cards.
+ */
+export async function deactivateCardsForReservation(reservationId) {
+  const cards = await getCardsForReservation(reservationId);
+  const toDeactivate = cards.filter(c =>
+    c.status === CARD_STATUS.ACTIVE || c.status === CARD_STATUS.PENDING
+  );
+  for (const c of toDeactivate) {
+    await deactivateCard(c.id, 'auto-checkout');
+  }
+  return toDeactivate.length;
 }
 
 /* ── LOGGING ─────────────────────────────────────────────────────── */
@@ -395,12 +454,12 @@ export function seedDemoCards() {
   const d = (days) => { const dt = new Date(today); dt.setDate(dt.getDate() + days); return fmt(dt); };
 
   const cards = [
-    { id: uid(), room_id: '101', guest_name: 'Marie Dupont',   status: 'active',      activated_at: d(-1),  expires_at: d(3),  encoded_at: fmt(today), card_uid: 'A1:B2:C3:D4', lock_id: 'TTH-001', reservation_id: 'RES-001', created_at: fmt(today), updated_at: fmt(today) },
-    { id: uid(), room_id: '202', guest_name: 'Robert Chen',    status: 'active',      activated_at: d(-2),  expires_at: d(5),  encoded_at: fmt(today), card_uid: 'E5:F6:G7:H8', lock_id: 'TTH-002', reservation_id: 'RES-002', created_at: fmt(today), updated_at: fmt(today) },
-    { id: uid(), room_id: '304', guest_name: 'Sara Martins',   status: 'expired',     activated_at: d(-10), expires_at: d(-2), encoded_at: fmt(today), card_uid: 'I9:J0:K1:L2', lock_id: 'TTH-003', reservation_id: 'RES-003', created_at: fmt(today), updated_at: fmt(today) },
-    { id: uid(), room_id: '103', guest_name: 'Ahmed Benzara',  status: 'deactivated', activated_at: d(-5),  expires_at: d(-1), encoded_at: fmt(today), card_uid: 'M3:N4:O5:P6', lock_id: 'TTH-001', reservation_id: 'RES-004', created_at: fmt(today), updated_at: fmt(today) },
-    { id: uid(), room_id: '201', guest_name: 'Julie Lambert',  status: 'lost',        activated_at: d(-3),  expires_at: d(2),  encoded_at: fmt(today), card_uid: null,           lock_id: 'TTH-002', reservation_id: 'RES-005', created_at: fmt(today), updated_at: fmt(today) },
-    { id: uid(), room_id: '102', guest_name: 'Carlos Reyes',   status: 'pending',     activated_at: d(1),   expires_at: d(7),  encoded_at: fmt(today), card_uid: 'Q7:R8:S9:T0', lock_id: 'TTH-003', reservation_id: 'RES-006', created_at: fmt(today), updated_at: fmt(today) },
+    { id: uid(), property_id: 'PROP-PARIS',  room_id: '101', guest_name: 'Marie Dupont',   status: 'active',      activated_at: d(-1),  expires_at: d(3),  encoded_at: fmt(today), card_uid: 'A1:B2:C3:D4', lock_id: 'TTH-001', reservation_id: 'RES-001', created_at: fmt(today), updated_at: fmt(today) },
+    { id: uid(), property_id: 'PROP-PARIS',  room_id: '202', guest_name: 'Robert Chen',    status: 'active',      activated_at: d(-2),  expires_at: d(5),  encoded_at: fmt(today), card_uid: 'E5:F6:G7:H8', lock_id: 'TTH-002', reservation_id: 'RES-002', created_at: fmt(today), updated_at: fmt(today) },
+    { id: uid(), property_id: 'PROP-PARIS',  room_id: '304', guest_name: 'Sara Martins',   status: 'expired',     activated_at: d(-10), expires_at: d(-2), encoded_at: fmt(today), card_uid: 'I9:J0:K1:L2', lock_id: 'TTH-003', reservation_id: 'RES-003', created_at: fmt(today), updated_at: fmt(today) },
+    { id: uid(), property_id: 'PROP-LYON',   room_id: '103', guest_name: 'Ahmed Benzara',  status: 'deactivated', activated_at: d(-5),  expires_at: d(-1), encoded_at: fmt(today), card_uid: 'M3:N4:O5:P6', lock_id: 'TTH-001', reservation_id: 'RES-004', created_at: fmt(today), updated_at: fmt(today) },
+    { id: uid(), property_id: 'PROP-LYON',   room_id: '201', guest_name: 'Julie Lambert',  status: 'lost',        activated_at: d(-3),  expires_at: d(2),  encoded_at: fmt(today), card_uid: null,           lock_id: 'TTH-002', reservation_id: 'RES-005', created_at: fmt(today), updated_at: fmt(today) },
+    { id: uid(), property_id: 'PROP-NICE',   room_id: '102', guest_name: 'Carlos Reyes',   status: 'pending',     activated_at: d(1),   expires_at: d(7),  encoded_at: fmt(today), card_uid: 'Q7:R8:S9:T0', lock_id: 'TTH-003', reservation_id: 'RES-006', created_at: fmt(today), updated_at: fmt(today) },
   ];
   _lsSaveCards(cards);
 }

@@ -159,3 +159,22 @@
   animation: sac-pulse 1.5s ease-in-out infinite;
 }
 @keyframes sac-pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+/* ── PER-PROPERTY BREAKDOWN ──────────────────────────────────── */
+.sac-property-table-wrap {
+  margin-bottom: 20px;
+}
+.sac-section-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+.sac-property-table td {
+  font-size: 0.82rem;
+}

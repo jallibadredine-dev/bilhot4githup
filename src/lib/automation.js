@@ -246,6 +246,51 @@ export const AutomationEngine = {
           });
         }
       }
+
+      // ── Event-driven card lifecycle hooks ───────────────────────────
+      // Run for ALL bookings (processed or not) since arrival/departure
+      // checks must fire on the right date regardless of prior cycles.
+      const todayStr = today.toISOString().split('T')[0];
+      for (const booking of bookings) {
+        const bAttr = booking.attributes || {};
+        const bArrival   = bAttr.arrival_date;
+        const bDeparture = bAttr.departure_date;
+
+        // Check-in day: activate all pending cards for this reservation
+        if (bArrival === todayStr) {
+          try {
+            const { activateCardsForReservation } = await import('./cardManagement');
+            const count = await activateCardsForReservation(booking.id);
+            if (count > 0) {
+              addLogEntry({
+                type: 'card-checkin',
+                status: 'success',
+                bookingId: booking.id,
+                message: `${count} carte(s) activée(s) automatiquement à l'arrivée — Rés. ${booking.id.slice(0, 8)}`,
+              });
+              automationEvents.emit('card-activated', { reservationId: booking.id, count });
+            }
+          } catch (_) {}
+        }
+
+        // Checkout day: immediately revoke all active cards (access revocation)
+        if (bDeparture === todayStr) {
+          try {
+            const { deactivateCardsForReservation } = await import('./cardManagement');
+            const count = await deactivateCardsForReservation(booking.id);
+            if (count > 0) {
+              addLogEntry({
+                type: 'card-checkout',
+                status: 'info',
+                bookingId: booking.id,
+                message: `${count} carte(s) désactivée(s) automatiquement au départ — Rés. ${booking.id.slice(0, 8)}`,
+              });
+              automationEvents.emit('card-deactivated', { reservationId: booking.id, count });
+            }
+          } catch (_) {}
+        }
+      }
+
     } catch (err) {
       errors++;
       addLogEntry({

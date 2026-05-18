@@ -97,6 +97,31 @@ export default function AccessCards() {
         ))}
       </div>
 
+      {/* ── PER-PROPERTY BREAKDOWN ── */}
+      {stats.byProperty && stats.byProperty.length > 0 && (
+        <div className="sac-property-table-wrap">
+          <div className="sac-section-title"><Building2 size={13} /> Répartition par propriété</div>
+          <table className="sac-table sac-property-table">
+            <thead>
+              <tr>{['Propriété','Total','Actives','En attente','Expirées','Désactivées','Perdues'].map(h=><th key={h}>{h}</th>)}</tr>
+            </thead>
+            <tbody>
+              {stats.byProperty.map(p => (
+                <tr key={p.property_id} className="sac-tr">
+                  <td><span className="sac-room-badge"><Building2 size={10}/> {p.property_id || 'Non assignée'}</span></td>
+                  <td style={{ fontWeight: 700 }}>{p.total}</td>
+                  <td style={{ color: '#10B981' }}>{p.active}</td>
+                  <td style={{ color: '#F59E0B' }}>{p.pending}</td>
+                  <td style={{ color: '#6B7280' }}>{p.expired}</td>
+                  <td style={{ color: '#EF4444' }}>{p.deactivated}</td>
+                  <td style={{ color: '#8B5CF6' }}>{p.lost}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* ── TABS ── */}
       <div className="sac-tabs">
         {[['cards','Toutes les cartes'],['events','Journal des événements']].map(([k,l]) => (

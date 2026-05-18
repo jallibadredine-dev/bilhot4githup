@@ -4,11 +4,12 @@ import {
   CreditCard, Plus, RefreshCw, Search, Filter, X,
   CheckCircle2, XCircle, Clock, AlertTriangle, Key,
   Trash2, RotateCcw, ShieldOff, History, Building2,
-  Calendar, User, Lock, Info, ChevronDown, Copy, Check
+  Calendar, User, Lock, Info, ChevronDown, Copy, Check,
+  Wifi, WifiOff
 } from 'lucide-react';
 import {
   issueCard, activateCard, deactivateCard, markCardLost,
-  reEncodeCard, renewCard, getAllCards, getCardEvents,
+  reEncodeCard, renewCard, getAllCards, getCardEvents, getAllCardEvents,
   getCardStats, seedDemoCards, CARD_STATUS, CARD_EVENT
 } from '../../lib/cardManagement';
 import CardEncoderModal from './CardEncoderModal';
@@ -58,14 +59,21 @@ export default function CardManagement() {
   const [showEncoder, setShowEncoder] = useState(false);
   const [encoderData, setEncoderData] = useState({});
   const [copied,      setCopied]      = useState('');
+  const [activeTab,   setActiveTab]   = useState('cards');
+  const [doorEvents,  setDoorEvents]  = useState([]);
 
   /* ── Load ── */
   const load = useCallback(async () => {
     setLoading(true);
     seedDemoCards();
-    const [all, st] = await Promise.all([getAllCards(), getCardStats()]);
+    const [all, st, evts] = await Promise.all([
+      getAllCards(), getCardStats(), getAllCardEvents({ limit: 200 }),
+    ]);
     setCards(all);
     setStats(st);
+    setDoorEvents(evts.filter(e =>
+      e.event_type === CARD_EVENT.ACCESS_GRANTED || e.event_type === CARD_EVENT.ACCESS_DENIED
+    ));
     setLoading(false);
   }, []);
 
@@ -159,8 +167,15 @@ export default function CardManagement() {
         </div>
       </div>
 
-      {/* ── LAYOUT ── */}
-      <div className="rcm-layout">
+      {/* ── TAB BAR ── */}
+      <div className="rcm-tab-bar">
+        {[['cards', "Cartes d'accès"], ['locks', 'Serrures & Accès']].map(([k, l]) => (
+          <button key={k} className={`rcm-tab ${activeTab === k ? 'active' : ''}`} onClick={() => setActiveTab(k)}>{l}</button>
+        ))}
+      </div>
+
+      {/* ── CARDS TAB ── */}
+      {activeTab === 'cards' && <div className="rcm-layout">
         {/* ── TABLE ── */}
         <div className="rcm-table-wrap">
           {loading ? (
@@ -337,7 +352,66 @@ export default function CardManagement() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </div>}
+
+      {/* ── LOCKS & DOOR EVENTS TAB ── */}
+      {activeTab === 'locks' && (
+        <div className="rcm-locks-panel">
+          {/* Lock status grid */}
+          <div className="rcm-locks-section">
+            <div className="rcm-section-title"><Lock size={13} /> État des serrures TTHotel / TTLock</div>
+            <div className="rcm-locks-grid">
+              {LOCKS.map(lock => (
+                <div key={lock.id} className="rcm-lock-card">
+                  <div className="rcm-lock-head">
+                    <div className="rcm-lock-icon-wrap"><Lock size={15} /></div>
+                    <div>
+                      <div className="rcm-lock-name">{lock.label}</div>
+                      <code className="rcm-lock-id">{lock.id}</code>
+                    </div>
+                  </div>
+                  <div className="rcm-lock-meta">
+                    <span className="rcm-lock-status-chip online"><Wifi size={10} /> Connectée</span>
+                    <span className="rcm-lock-battery">🔋 —</span>
+                  </div>
+                  <p className="rcm-lock-stub">Statut en temps réel disponible après connexion TTLock configurée.</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Door access event log */}
+          <div className="rcm-locks-section">
+            <div className="rcm-section-title"><History size={13} /> Journal d'accès (accordé / refusé)</div>
+            {doorEvents.length === 0 ? (
+              <div className="rcm-events-empty" style={{ margin: '16px 0', padding: '24px', background: '#F9FAFB', borderRadius: '10px' }}>
+                Aucun événement d'accès physique enregistré.<br />
+                <span style={{ fontSize: '0.8rem', color: '#9CA3AF' }}>Les passages TTLock/TTHotel apparaîtront ici une fois l'encodeur connecté.</span>
+              </div>
+            ) : (
+              <table className="rcm-table" style={{ marginTop: 8 }}>
+                <thead>
+                  <tr>{['Événement', 'Serrure', 'Client', 'Date'].map(h => <th key={h}>{h}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {doorEvents.map((evt, i) => {
+                    const card = cards.find(c => c.id === evt.card_id);
+                    const ec = EVENT_LABELS[evt.event_type] || { label: evt.event_type, color: '#6B7280' };
+                    return (
+                      <tr key={evt.id || i} className="rcm-tr">
+                        <td><span style={{ color: ec.color, fontWeight: 600, fontSize: '0.8rem' }}>{ec.label}</span></td>
+                        <td><span className="rcm-room-badge"><Lock size={10} /> {evt.lock_id || '—'}</span></td>
+                        <td><code className="rcm-uid">{card?.guest_name || evt.card_id?.slice(0, 8) || '—'}</code></td>
+                        <td className="rcm-date-cell">{fmtDateTime(evt.created_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── ISSUE CARD MODAL ── */}
       <AnimatePresence>
