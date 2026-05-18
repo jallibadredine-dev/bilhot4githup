@@ -3,6 +3,7 @@ import cors from 'cors';
 import stripeRouter from './routes/stripe.js';
 import adminRouter  from './routes/admin.js';
 import healthRouter from './routes/health.js';
+import authRouter   from './routes/auth.js';
 import { WebhookHandlers } from './webhookHandlers.js';
 
 const app = express();
@@ -38,5 +39,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/stripe', stripeRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
 
 export default app;

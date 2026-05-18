@@ -490,20 +490,35 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
 
     try {
       let userId = googleUser?.id || null;
-      // emailConfirmationRequired: true when Supabase returns a user but no session
-      // (project has email confirmation enabled). In that case profile upsert will 42501.
-      let emailConfirmationRequired = false;
 
       if (!googleMode) {
-        const { data: authData, error: signUpErr } = await supabase.auth.signUp({
+        // Use the backend admin endpoint to create the user with email confirmation
+        // bypassed — the user gets a real session immediately after signing in.
+        const signupRes = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email.trim(),
+            password: data.password,
+            name: data.name.trim(),
+          }),
+        });
+        const signupJson = await signupRes.json();
+        if (!signupRes.ok) {
+          if (signupJson.error === 'already_registered') {
+            throw new Error('Cet email est déjà utilisé. Connectez-vous plutôt.');
+          }
+          throw new Error(signupJson.error || 'Erreur lors de la création du compte.');
+        }
+        userId = signupJson.userId;
+
+        // Sign in immediately — backend already confirmed the email, so this works instantly.
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
           email: data.email.trim(),
           password: data.password,
-          options: { data: { full_name: data.name.trim() } },
         });
-        if (signUpErr) throw signUpErr;
-        userId = authData?.user?.id;
-        // No session means email confirmation is required before the user can authenticate
-        emailConfirmationRequired = Boolean(authData?.user && !authData?.session);
+        if (signInErr) throw signInErr;
+        userId = signInData?.user?.id || userId;
       }
 
       const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -531,22 +546,14 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
           created_at: new Date().toISOString(),
         };
 
-        if (emailConfirmationRequired) {
-          // Session not yet active — store qualification data silently for deferred upsert.
-          // App.jsx ensureUserProfile will pick it up on the next SIGNED_IN event.
-          // No email confirmation screen shown — user goes directly to success/account.
-          try { sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload)); } catch {}
-        } else {
-          const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
-          if (upsertErr) {
-            if (upsertErr.code === '42703') {
-              // Column missing (migration pending) — store for deferred retry
-              try { sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload)); } catch {}
-              console.warn('[Hova] Profile upsert deferred (migration pending) — will retry via ensureUserProfile');
-            } else {
-              // Genuine error (RLS misconfiguration, server fault, etc.) — surface to user
-              throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
-            }
+        const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+        if (upsertErr) {
+          if (upsertErr.code === '42703') {
+            // Column missing (migration pending) — store for deferred retry via ensureUserProfile
+            try { sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload)); } catch {}
+            console.warn('[Hova] Profile upsert deferred (migration pending) — will retry via ensureUserProfile');
+          } else {
+            throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
           }
         }
       }
@@ -554,7 +561,9 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
       clearDraft();
       setSubmitting(false);
 
-      setTimeout(() => { onComplete?.('trial'); }, 2200);
+      // onAuthStateChange already fired SIGNED_IN → App.jsx sets isAuthenticated(true)
+      // and navigates to the dashboard. The brief success animation plays in parallel.
+      setTimeout(() => { onComplete?.('trial'); }, 1500);
     } catch (err) {
       setSubmitting(false);
       let msg = err.message || 'Une erreur est survenue. Réessayez.';

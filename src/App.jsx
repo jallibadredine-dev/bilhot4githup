@@ -535,19 +535,18 @@ function App() {
               setIsAuthenticated(true);
               setActiveView('super-admin');
             } else if (mode === 'trial') {
-              // Signup complete — check if Supabase already created a session
+              // Signup complete — check if Supabase already has a session
               // (happens immediately when email confirmation is disabled).
-              // If a real session exists, navigate to dashboard right away.
+              // onAuthStateChange also handles SIGNED_IN and calls ensureUserProfile.
               setPmsMode('pro');
               supabase.auth.getSession().then(({ data: { session } }) => {
                 if (session?.user) {
                   setCurrentUser(session.user);
                   setAuthState(true);
                   setIsAuthenticated(true);
-                  ensureUserProfile(session.user);
+                  // ensureUserProfile is scoped to the useEffect — onAuthStateChange
+                  // already fired SIGNED_IN and handled profile creation at this point.
                 }
-                // If no session (email confirmation required), onAuthStateChange
-                // will handle it when the user confirms their email.
               });
             } else {
               setPmsMode(mode || 'pro');
