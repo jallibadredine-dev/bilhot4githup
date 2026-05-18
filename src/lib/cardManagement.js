@@ -471,7 +471,7 @@ export async function logEvent({ card_id, lock_id = null, event_type, performed_
   if (await sbReady()) {
     const { error } = await supabase.from('card_events').insert(event);
     if (error) {
-      console.warn('[CardMgmt] event insert failed, logging to localStorage:', error.message);
+      // event insert failed, fallback to localStorage (non-critical, Supabase may be unavailable)
       _lsAddEvent(event);
     }
   } else {

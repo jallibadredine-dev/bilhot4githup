@@ -525,7 +525,7 @@ const SmartLockHub = () => {
             {connTTHotel ? (
               <div className="slh-setup-connected-info">
                 <Wifi size={14} color="#16A34A"/>
-                <span>Connecté en tant que <strong>{tthUser || localStorage.getItem('slh_tthotel_user')}</strong></span>
+                <span>Connecté en tant que <strong>{tthUser || secureStorage.getSensitive('slh_tthotel_user', '')}</strong></span>
                 <span className="slh-setup-dev-count">{tthotelDevices.length} appareil{tthotelDevices.length !== 1 ? 's' : ''}</span>
                 {tthDemoMode && <span className="slh-demo-badge">Mode Démo</span>}
                 <button className="slh-setup-disconnect" onClick={() => disconnect('tthotel')}><Unlink size={12}/> Déconnecter</button>
@@ -567,7 +567,7 @@ const SmartLockHub = () => {
             {connTuya ? (
               <div className="slh-setup-connected-info">
                 <Wifi size={14} color="#16A34A"/>
-                <span>Client ID <strong>{(tuyaId || localStorage.getItem('slh_tuya_id') || '').slice(0,10)}…</strong></span>
+                <span>Client ID <strong>{(tuyaId || secureStorage.getSensitive('slh_tuya_id', '')).slice(0,10)}…</strong></span>
                 <span className="slh-setup-dev-count">{tuyaDevices.length} appareil{tuyaDevices.length !== 1 ? 's' : ''}</span>
                 {tuyaDemoMode && <span className="slh-demo-badge">Mode Démo</span>}
                 <button className="slh-setup-disconnect" onClick={() => disconnect('tuya')}><Unlink size={12}/> Déconnecter</button>

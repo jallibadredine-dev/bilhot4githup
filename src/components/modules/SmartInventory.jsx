@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import './SmartInventory.css';
 import { persistInventory, getInventoryBuildings } from '../../lib/inventoryStore';
+import { secureStorage } from '../../lib/secureStorage';
 
 /* ─── CONSTANTS ─────────────────────────────────────────────── */
 const LOCK_PROVIDERS = {
@@ -97,14 +98,10 @@ const BattIcon = ({ level, size = 14 }) => {
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════════ */
 const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
-  const [cleaningStatus, setCleaningStatus] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('sh_cleaning_status') || '{}'); } catch { return {}; }
-  });
+  const [cleaningStatus, setCleaningStatus] = useState(() => secureStorage.parseJSON('sh_cleaning_status', {}));
 
   useEffect(() => {
-    const sync = () => {
-      try { setCleaningStatus(JSON.parse(localStorage.getItem('sh_cleaning_status') || '{}')); } catch {}
-    };
+    const sync = () => { setCleaningStatus(secureStorage.parseJSON('sh_cleaning_status', {})); };
     window.addEventListener('storage', sync);
     const t = setInterval(sync, 4000);
     return () => { window.removeEventListener('storage', sync); clearInterval(t); };

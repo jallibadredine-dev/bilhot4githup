@@ -26,7 +26,7 @@ export const beds24 = {
       });
       return await response.json();
     } catch (error) {
-      console.error('Beds24 Auth Error:', error);
+      logError('beds24', 'Auth validation error', { message: error.message });
       throw error;
     }
   },

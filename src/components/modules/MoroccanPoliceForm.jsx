@@ -9,14 +9,13 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import PolicePrintTemplate from './PolicePrintTemplate';
 import { getAllCheckins } from '../../lib/checkin';
+import { secureStorage } from '../../lib/secureStorage';
 import './MoroccanPoliceForm.css';
 
 /* ── Local declarations store ─────────────────────── */
 const DECL_KEY = 'hosflow_police_declarations';
 
-const getDeclarations = () => {
-  try { return JSON.parse(localStorage.getItem(DECL_KEY) || '[]'); } catch { return []; }
-};
+const getDeclarations = () => secureStorage.parseJSON(DECL_KEY, []);
 
 const saveDeclaration = (data) => {
   const list = getDeclarations();

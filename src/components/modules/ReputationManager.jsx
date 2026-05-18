@@ -409,7 +409,7 @@ const ReputationManager = ({ pmsMode, setActiveView }) => {
               <h3><Globe size={14}/> Sources connectées</h3>
               <div className="rm-platforms-grid">
                 {OTA_DEFS.map(ota => {
-                  const isConn = !!localStorage.getItem(`cm_ota_${ota.id}`);
+                  const isConn = !!secureStorage.getSensitive(`cm_ota_${ota.id}`);
                   const revCount = reviews.filter(r => r.source === ota.id).length;
                   return (
                     <div key={ota.id} className={`rm-platform-card ${isConn ? 'connected' : ''}`}>

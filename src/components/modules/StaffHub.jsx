@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import EmptyState from '../common/EmptyState';
+import { secureStorage } from '../../lib/secureStorage';
 import {
   Users, Search, Plus, Star, TrendingUp, Clock, FileText, Shield,
   MessageSquare, Award, X, Calendar, Activity, Check, Mail,
@@ -121,8 +122,8 @@ const newStaffDefault = () => ({
 ════════════════════════════════════════════════════════════ */
 const StaffHub = ({ onNavigate }) => {
   const [activeTab,      setActiveTab]      = useState('team');
-  const [staffList,      setStaffList]      = useState(() => { try { return JSON.parse(localStorage.getItem('sh_staff')) || DEFAULT_STAFF; } catch { return DEFAULT_STAFF; } });
-  const [cleaningTasks,  setCleaningTasks]  = useState(() => { try { return JSON.parse(localStorage.getItem('sh_cleaning_status')) || DEFAULT_CLEANING; } catch { return DEFAULT_CLEANING; } });
+  const [staffList,      setStaffList]      = useState(() => secureStorage.parseJSON('sh_staff', null) ?? DEFAULT_STAFF);
+  const [cleaningTasks,  setCleaningTasks]  = useState(() => secureStorage.parseJSON('sh_cleaning_status', null) ?? DEFAULT_CLEANING);
   const [selectedStaff,  setSelectedStaff]  = useState(null);
   const [isAddOpen,      setIsAddOpen]      = useState(false);
   const [addStep,        setAddStep]        = useState(1);
