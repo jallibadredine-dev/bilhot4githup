@@ -230,6 +230,11 @@ function App() {
         setIsAuthenticated(false);
         setCurrentUser(null);
         clearSensitiveLocalState();
+        // Reset all session-scoped UI state to prevent cross-user leakage
+        setTrialInfo(null);
+        setTrialBannerDismissed(false);
+        setShowGoogleOnboarding(false);
+        setGoogleOnboardingUser(null);
         if (_event === 'SIGNED_OUT') {
           writeSystemLog({ severity: 'info', module: 'auth', message: 'User signed out' });
         }
@@ -492,9 +497,11 @@ function App() {
               setIsAuthenticated(true);
               setActiveView('super-admin');
             } else if (mode === 'trial') {
+              // Signup complete — let Supabase SIGNED_IN event handle auth state.
+              // Do NOT set isAuthenticated here; the session may not exist yet
+              // (e.g., email confirmation required). The onAuthStateChange listener
+              // calls ensureUserProfile and sets isAuthenticated when a real session arrives.
               setPmsMode('pro');
-              setTrialInfo({ daysLeft: 14, expired: false });
-              setIsAuthenticated(true);
             } else {
               setPmsMode(mode || 'pro');
             }

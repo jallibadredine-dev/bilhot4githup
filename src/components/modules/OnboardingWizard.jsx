@@ -2,14 +2,13 @@
  * OnboardingWizard — Parcours d'inscription multi-étapes HOVA PMS
  * 6 étapes : Compte → Type d'établissement → Unités → Business → Besoin → Activation
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Mail, Lock, Eye, EyeOff, Check, AlertCircle,
   ChevronRight, ChevronLeft, Building2, Home, Hotel,
   Layers, Star, MapPin, Phone, Globe, Briefcase,
-  BarChart2, Key, Zap, CheckCircle2, Sparkles, X,
-  ArrowRight, RefreshCw
+  BarChart2, Key, Zap, CheckCircle2, Sparkles, X
 } from 'lucide-react';
 import { supabase, SUPABASE_READY } from '../../lib/supabase';
 import './OnboardingWizard.css';
@@ -380,7 +379,6 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [done, setDone] = useState(false);
   const [direction, setDirection] = useState(1);
 
   const onChange = useCallback((field, value) => {
