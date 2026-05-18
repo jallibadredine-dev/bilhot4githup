@@ -55,20 +55,40 @@ const getProcessedBookings = () => {
   try { return JSON.parse(localStorage.getItem('hosflow_processed_bookings') || '{}'); } catch { return {}; }
 };
 
-const markBookingProcessed = (bookingId, pin, lockId) => {
+const hashPin = async (pin) => {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+};
+
+const markBookingProcessed = async (bookingId, pin, lockId) => {
   const processed = getProcessedBookings();
-  processed[bookingId] = { pin, lockId, processedAt: new Date().toISOString() };
+  const pinHash = pin ? await hashPin(pin) : null;
+  processed[bookingId] = { pinHash, lockId, processedAt: new Date().toISOString() };
   localStorage.setItem('hosflow_processed_bookings', JSON.stringify(processed));
 };
 
 // ── PIN Generator ─────────────────────────────────────────────────────────────
-const generatePinForGuest = (guestName, arrivalDate) => {
-  // 6-digit PIN: first 2 letters of name (ascii) + 4 digits from date
-  const letterPart = (guestName || 'XX').toUpperCase().replace(/[^A-Z]/g, 'X').slice(0, 2);
-  const num1 = letterPart.charCodeAt(0) % 10;
-  const num2 = letterPart.charCodeAt(1) % 10;
-  const datePart = (arrivalDate || '').replace(/-/g, '').slice(4, 8) || '0101';
-  return `${num1}${num2}${datePart}`;
+const generatePinForGuest = async () => {
+  const processedHashes = new Set(
+    Object.values(getProcessedBookings())
+      .map(r => r.pinHash)
+      .filter(Boolean)
+  );
+
+  const MAX_ATTEMPTS = 20;
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    const bytes = new Uint32Array(1);
+    crypto.getRandomValues(bytes);
+    // Range: 100000-999999 (6-digit PIN that never starts with 0)
+    const pin = String(100000 + (bytes[0] % 900000));
+    const pinHash = await hashPin(pin);
+    if (!processedHashes.has(pinHash)) return pin;
+  }
+
+  // Extremely unlikely fallback: extend to 8 digits to avoid collision
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return String(10000000 + (bytes[0] % 90000000));
 };
 
 // ── Core Engine ───────────────────────────────────────────────────────────────
@@ -142,7 +162,7 @@ export const AutomationEngine = {
         }
 
         // Generate PIN
-        const pin = generatePinForGuest(guestName, arrivalDate);
+        const pin = await generatePinForGuest();
         const startMs = new Date(arrivalDate + 'T14:00:00').getTime();
         const endMs = new Date(departureDate + 'T12:00:00').getTime();
 
@@ -155,7 +175,7 @@ export const AutomationEngine = {
             type: 1,
           });
 
-          markBookingProcessed(booking.id, pin, mapping.ttlockLockId);
+          await markBookingProcessed(booking.id, pin, mapping.ttlockLockId);
           pinsCreated++;
 
           addLogEntry({
@@ -163,12 +183,11 @@ export const AutomationEngine = {
             status: 'success',
             bookingId: booking.id,
             guestName,
-            pin,
             lockId: mapping.ttlockLockId,
             lockName: mapping.lockName || `Lock ${mapping.ttlockLockId}`,
             arrivalDate,
             departureDate,
-            message: `PIN ${pin} créé pour ${guestName} · Arrivée ${arrivalDate} → Départ ${departureDate}`,
+            message: `Code d'accès créé pour ${guestName} · Arrivée ${arrivalDate} → Départ ${departureDate}`,
           });
 
           // Fire notifications (email + WhatsApp) — best effort, don't fail the loop
@@ -204,7 +223,6 @@ export const AutomationEngine = {
             status: 'error',
             bookingId: booking.id,
             guestName,
-            pin,
             lockId: mapping.ttlockLockId,
             message: `Échec création PIN pour ${guestName}: ${err.message}`,
           });

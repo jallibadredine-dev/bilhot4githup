@@ -4,13 +4,12 @@
  * Base: https://euapi.ttlock.com (EU server)
  *
  * Authentication: All requests use access_token obtained via OAuth2
- * client_id: 8754dc08eaad4c76877674e762b1b43d
- * client_secret: 30d4e5a1e244ac0b7cbcba10a7c091b9
+ * Credentials: VITE_TTLOCK_CLIENT_ID and VITE_TTLOCK_CLIENT_SECRET env vars
  */
 
 const BASE = import.meta.env.VITE_TTLOCK_API_URL || 'https://euapi.ttlock.com';
-const CLIENT_ID = '8754dc08eaad4c76877674e762b1b43d';
-const CLIENT_SECRET = '30d4e5a1e244ac0b7cbcba10a7c091b9';
+const CLIENT_ID = import.meta.env.VITE_TTLOCK_CLIENT_ID || '';
+const CLIENT_SECRET = import.meta.env.VITE_TTLOCK_CLIENT_SECRET || '';
 
 const getDate = () => Date.now();
 

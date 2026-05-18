@@ -70,19 +70,19 @@ const BattBar = ({ level }) => (
 const SmartLockHub = () => {
 
   /* ── View state ── */
-  const anyConnected = !!(localStorage.getItem('ttlock_token') || localStorage.getItem('slh_tthotel') || localStorage.getItem('slh_tuya'));
+  const anyConnected = !!(sessionStorage.getItem('ttlock_token') || localStorage.getItem('slh_tthotel') || localStorage.getItem('slh_tuya'));
   const [view, setView]     = useState(anyConnected ? 'devices' : 'setup'); // 'setup' | 'devices'
   const [syncing, setSyncing] = useState(false);
 
   /* ── Provider auth ── */
-  const [connTTLock,  setConnTTLock]  = useState(!!localStorage.getItem('ttlock_token'));
+  const [connTTLock,  setConnTTLock]  = useState(!!sessionStorage.getItem('ttlock_token'));
   const [connTTHotel, setConnTTHotel] = useState(!!localStorage.getItem('slh_tthotel'));
   const [connTuya,    setConnTuya]    = useState(!!localStorage.getItem('slh_tuya'));
 
   // TTLock
   const [ttUser,   setTtUser]   = useState(localStorage.getItem('ttlock_user') || '');
   const [ttPass,   setTtPass]   = useState('');
-  const [ttToken,  setTtToken]  = useState(localStorage.getItem('ttlock_token') || '');
+  const [ttToken,  setTtToken]  = useState(sessionStorage.getItem('ttlock_token') || '');
   const [ttShowPw, setTtShowPw] = useState(false);
   const [ttLoading,setTtLoading]= useState(false);
   const [ttErr,    setTtErr]    = useState('');
@@ -313,7 +313,7 @@ const SmartLockHub = () => {
     try {
       const data = await ttlockAPI.getToken(ttUser, ttPass);
       if (data?.access_token) {
-        localStorage.setItem('ttlock_token', data.access_token);
+        sessionStorage.setItem('ttlock_token', data.access_token);
         localStorage.setItem('ttlock_user', ttUser);
         setTtToken(data.access_token); setConnTTLock(true); setTtPass('');
         await fetchTTLock(data.access_token);
@@ -431,7 +431,7 @@ const SmartLockHub = () => {
   };
 
   const disconnect = (prov) => {
-    if (prov === 'ttlock')  { ['ttlock_token','ttlock_user'].forEach(k => localStorage.removeItem(k)); setTtToken(''); setTtlockDevices([]); setConnTTLock(false); }
+    if (prov === 'ttlock')  { sessionStorage.removeItem('ttlock_token'); localStorage.removeItem('ttlock_user'); setTtToken(''); setTtlockDevices([]); setConnTTLock(false); }
     if (prov === 'tthotel') { ['slh_tthotel','slh_tthotel_user','slh_tthotel_token','slh_tthotel_refresh','slh_tthotel_devices','slh_tthotel_demo'].forEach(k => localStorage.removeItem(k)); setTthotelDevices([]); setTthToken(''); setTthRefresh(''); setTthDemoMode(false); setConnTTHotel(false); }
     if (prov === 'tuya')    { ['slh_tuya','slh_tuya_id','slh_tuya_secret','slh_tuya_token','slh_tuya_devices','slh_tuya_demo'].forEach(k => localStorage.removeItem(k)); setTuyaDevices([]); setTuyaToken(''); setTuyaDemoMode(false); setConnTuya(false); }
     if (selectedLock?.provider === prov) setSelectedLock(null);
@@ -492,7 +492,7 @@ const SmartLockHub = () => {
                     <button type="button" className="slh-sf-eye" onClick={() => setTtShowPw(v => !v)}>{ttShowPw ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
                   </div>
                 </div>
-                <div className="slh-sf-hint"><Shield size={11}/> OAuth2 · Client ID: {import.meta.env.VITE_TTLOCK_CLIENT_ID?.slice(0,8) || '8754dc08'}…</div>
+                <div className="slh-sf-hint"><Shield size={11}/> OAuth2 · Connexion sécurisée TTLock</div>
                 <button type="submit" className="slh-sf-submit" style={{ background: '#2563EB' }} disabled={ttLoading}>
                   {ttLoading ? <><RefreshCcw size={13} className="slh-spin"/> Connexion…</> : <><Wifi size={13}/> Connecter TTLock</>}
                 </button>

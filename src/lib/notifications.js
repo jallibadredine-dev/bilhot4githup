@@ -124,7 +124,6 @@ export const sendEmailNotification = async (notifData) => {
       status: 'sent',
       to: notifData.guestEmail,
       guestName: notifData.guestName,
-      pin: notifData.pin,
       bookingId: notifData.bookingId,
     });
 

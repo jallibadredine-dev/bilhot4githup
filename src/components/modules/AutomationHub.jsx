@@ -38,7 +38,7 @@ const AutomationHub = () => {
 
   // Tokens
   const channexToken = localStorage.getItem('channex_token') || '';
-  const ttlockToken = localStorage.getItem('ttlock_token') || '';
+  const ttlockToken = sessionStorage.getItem('ttlock_token') || '';
   const hasChannex = !!channexToken;
   const hasTTLock = !!ttlockToken;
   const isReady = hasChannex && hasTTLock;
