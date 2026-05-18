@@ -625,17 +625,19 @@ const PlanningCalendar = () => {
                 <div className="pc-modal-main">
 
                   {createStep===1&&(<>
-                    {/* Row 1 — 5 columns */}
-                    <div className="pc-form-row-top5">
-                      <div className="pc-form-group pc-fg-dates">
-                        <label>Plage de dates</label>
-                        <div className="pc-date-pair">
-                          <Calendar size={13} className="pc-date-pair-icon"/>
-                          <input type="date" className="pc-input pc-input-date" value={form.checkIn} onChange={e=>setForm(f=>({...f,checkIn:e.target.value}))}/>
-                          <span className="pc-date-sep">–</span>
-                          <input type="date" className="pc-input pc-input-date" value={form.checkOut} onChange={e=>setForm(f=>({...f,checkOut:e.target.value}))}/>
-                        </div>
+                    {/* Row 1 — Date range full width */}
+                    <div className="pc-form-group">
+                      <label>Plage de dates</label>
+                      <div className="pc-date-pair pc-date-pair-full">
+                        <Calendar size={14} className="pc-date-pair-icon"/>
+                        <input type="date" className="pc-input pc-input-date" value={form.checkIn} onChange={e=>setForm(f=>({...f,checkIn:e.target.value}))}/>
+                        <span className="pc-date-sep">→</span>
+                        <input type="date" className="pc-input pc-input-date" value={form.checkOut} onChange={e=>setForm(f=>({...f,checkOut:e.target.value}))}/>
                       </div>
+                    </div>
+
+                    {/* Row 2 — 4 dropdowns */}
+                    <div className="pc-form-row-4">
                       <div className="pc-form-group">
                         <label>Plan tarifaire</label>
                         <select className="pc-input" value={form.pricingPlan} onChange={e=>setForm(f=>({...f,pricingPlan:e.target.value}))}>
@@ -667,7 +669,7 @@ const PlanningCalendar = () => {
                         <label>Canaux de vente</label>
                         <select className="pc-input" value={form.source} onChange={e=>setForm(f=>({...f,source:e.target.value}))}>
                           {Object.keys(SOURCE_CFG).map(s=><option key={s} value={s}>{s}</option>)}
-                          <option value="Private">Private reserva…</option>
+                          <option value="Private">Private</option>
                         </select>
                       </div>
                     </div>
