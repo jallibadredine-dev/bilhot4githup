@@ -27,7 +27,11 @@ const getSbAnon = () => process.env.VITE_SB_ANON_KEY || dotEnv.VITE_SB_ANON_KEY 
 export async function requireSuperAdmin(req, res, next) {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
-  if (!SB_URL || !SB_KEY) return next(); // dev/test mode: skip
+  if (!SB_URL || !SB_KEY) {
+    // Fail closed by default; only bypass with explicit env flag in development
+    if (process.env.SKIP_ADMIN_AUTH === 'true') return next();
+    return res.status(503).json({ error: 'Auth backend not configured. Admin access unavailable.' });
+  }
 
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;

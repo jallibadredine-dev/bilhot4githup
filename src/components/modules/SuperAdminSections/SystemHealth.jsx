@@ -108,7 +108,7 @@ export default function SystemHealth() {
   const loadHealth = useCallback(async () => {
     setHealthLoading(true);
     try {
-      const r = await fetch('/api/health/providers');
+      const r = await adminFetch('/api/health/providers');
       if (r.ok) {
         const d = await r.json();
         setProviders(d.providers || []);

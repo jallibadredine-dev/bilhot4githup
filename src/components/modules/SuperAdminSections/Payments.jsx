@@ -24,25 +24,24 @@ const StatusBadge = ({s}) => {
 };
 
 export default function Payments() {
+  // Render directly from the global store — realtime updates propagate automatically
   const storePayments    = useAppStore(s => s.payments);
   const setStorePayments = useAppStore(s => s.setPayments);
 
-  const [payments,setPayments] = useState(() => storePayments.length ? storePayments : []); // pre-populate from store
-  const [loading,setLoading]   = useState(storePayments.length === 0);
-  const [tab,setTab]           = useState('overview');
-  const [q,setQ]               = useState('');
+  const [loading,setLoading] = useState(true);
+  const [tab,setTab]         = useState('overview');
+  const [q,setQ]             = useState('');
 
   useEffect(()=>{
     fetch('/api/admin/payments').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.payments) ? d.payments : []);
-      const result = arr.length ? arr : MOCK_TXN;
-      setPayments(result);
-      if (arr.length) setStorePayments(arr); // keep global store in sync
-    }).catch(()=>setPayments(storePayments.length ? storePayments : MOCK_TXN))
-      .finally(()=>setLoading(false));
+      // Write to store only; component renders from store selector
+      if (arr.length) setStorePayments(arr);
+    }).catch(()=>{}).finally(()=>setLoading(false));
   },[]);
 
-  const txns = (payments.length ? payments : MOCK_TXN).filter(t =>
+  // Rendered from store — reactive to realtime upsert/remove events
+  const txns = (storePayments.length ? storePayments : MOCK_TXN).filter(t =>
     !q || (t.customer||t.description||t.id||'').toLowerCase().includes(q.toLowerCase())
   );
 

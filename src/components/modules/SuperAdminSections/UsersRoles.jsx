@@ -35,27 +35,29 @@ const RolePill = ({role}) => {
 };
 
 export default function UsersRoles() {
-  const storeProfiles    = useAppStore(s => s.profiles);
+  // Render directly from the global store — realtime updates propagate automatically
+  const profiles         = useAppStore(s => s.profiles);
   const setStoreProfiles = useAppStore(s => s.setProfiles);
 
-  const [tab,setTab]     = useState('users');
-  const [users,setUsers] = useState(() => storeProfiles); // pre-populate from global store
-  const [loading,setLoading] = useState(storeProfiles.length === 0);
-  const [q,setQ]         = useState('');
-  const [sel,setSel]     = useState(null);
-  const [perms,setPerms] = useState(DEFAULT_PERMS);
+  const [tab,setTab]         = useState('users');
+  const [loading,setLoading] = useState(true);
+  const [q,setQ]             = useState('');
+  const [sel,setSel]         = useState(null);
+  const [perms,setPerms]     = useState(DEFAULT_PERMS);
   const [permsSaved,setPermsSaved] = useState(false);
 
-  useEffect(()=>{
+  const refresh = () => {
+    setLoading(true);
     fetch('/api/admin/users').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.users) ? d.users : []);
-      setUsers(arr);
-      if (arr.length) setStoreProfiles(arr); // keep global store in sync
-    }).catch(()=>{ if (!storeProfiles.length) setUsers([]); })
-      .finally(()=>setLoading(false));
-  },[]);
+      if (arr.length) setStoreProfiles(arr); // write only to store; render from store
+    }).catch(()=>{}).finally(()=>setLoading(false));
+  };
 
-  const filtered = users.filter(u=>
+  useEffect(()=>{ refresh(); },[]);
+
+  // Computed from store — reactive to realtime updates
+  const filtered = profiles.filter(u=>
     !q||[u.full_name,u.email,u.role,u.plan,u.company].some(v=>(v||'').toLowerCase().includes(q.toLowerCase()))
   );
 
@@ -86,7 +88,7 @@ export default function UsersRoles() {
           <div>
             <div className="sa2-toolbar">
               <div className="sa2-search-box"><Search size={13}/><input placeholder="Nom, email, plan, rôle…" value={q} onChange={e=>setQ(e.target.value)}/></div>
-              <button className="sa2-btn sa2-btn-ghost" onClick={()=>{setLoading(true);fetch('/api/admin/users').then(r=>r.json()).then(d=>setUsers(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false));}}><RefreshCw size={13}/> Rafraîchir</button>
+              <button className="sa2-btn sa2-btn-ghost" onClick={refresh}><RefreshCw size={13}/> Rafraîchir</button>
             </div>
 
             {loading ? (
