@@ -39,9 +39,9 @@ const PLANS = [
       { text: 'Calendrier des réservations',          ok: true },
       { text: 'Facturation & Taxes',                  ok: true },
       { text: 'Support par email',                    ok: true },
+      { text: 'Serrures connectées',                  ok: true  },
       { text: 'Channel Manager',                      ok: false },
       { text: 'Revenue AI',                           ok: false },
-      { text: 'Serrures connectées',                  ok: false },
     ],
   },
   {
@@ -60,9 +60,9 @@ const PLANS = [
       { text: 'Channel Manager (Channex)',             ok: true },
       { text: 'Messagerie OTA unifiée',               ok: true },
       { text: 'Revenue AI & Yield',                   ok: true },
+      { text: 'Serrures connectées',                  ok: true  },
       { text: 'Automatisations avancées',              ok: true },
       { text: 'Support prioritaire',                  ok: true },
-      { text: 'Serrures connectées',                  ok: false },
     ],
   },
   {

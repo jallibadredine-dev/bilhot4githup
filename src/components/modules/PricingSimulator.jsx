@@ -13,7 +13,7 @@ const PLANS = [
     unitLabel: '35 MAD/ch',
     formula: (rooms) => rooms * 35,
     color: '#3B82F6',
-    features: ['PMS Cloud', 'Calendrier', 'Facturation', 'Support email'],
+    features: ['PMS Cloud', 'Calendrier', 'Facturation', 'Serrures connectées'],
   },
   {
     id: 'pro',
