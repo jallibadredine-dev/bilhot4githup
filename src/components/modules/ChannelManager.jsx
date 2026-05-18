@@ -11,6 +11,8 @@ import {
 import { channexAPI } from '../../lib/channex';
 import { getInventoryRooms, roomsToOTAProducts, INVENTORY_STATUS_CFG } from '../../lib/inventoryStore';
 import StatusBadge from '../common/StatusBadge';
+import { toast } from '../../lib/toast';
+import { isAuthenticated } from '../../lib/authState';
 import './ChannelManager.css';
 
 /* ════════════════════════════════════════════════════════════
@@ -126,8 +128,9 @@ const TABS = [
   { id: 'admin',        label: 'Admin',          icon: Settings },
 ];
 
-/* Load per-OTA saved creds from localStorage */
+/* Load per-OTA saved creds from localStorage — auth-gated */
 const loadOTAConns = () => {
+  if (!isAuthenticated()) return {};
   const result = {};
   OTA_DEFS.forEach(o => {
     const raw = localStorage.getItem(`cm_ota_${o.id}`);
@@ -328,7 +331,9 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
       setSyncStatus('connected');
       setLastSync(new Date());
     } catch (err) {
-      setApiError(err.message || 'Erreur de connexion Channex.io');
+      const msg = err.message || 'Erreur de connexion Channex.io';
+      setApiError(msg);
+      toast.error(msg);
       setSyncStatus('error');
     } finally {
       setLoading(false);
@@ -379,7 +384,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
     if (!msgText.trim() || !bookingId) return;
     setSendingMsg(true);
     try { await channexAPI.sendMessage(channexToken, bookingId, msgText); setMsgText(''); }
-    catch (e) { console.error(e); }
+    catch (e) { toast.error(e?.message || 'Erreur envoi message'); }
     setSendingMsg(false);
   };
 

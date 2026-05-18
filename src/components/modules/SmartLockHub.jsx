@@ -13,6 +13,7 @@ import { ttlockAPI } from '../../lib/ttlock';
 import { tthotelAPI } from '../../lib/tthotel';
 import { tuyaAPI, TUYA_REGIONS } from '../../lib/tuya';
 import { handleApiError } from '../../lib/errorHandler';
+import { toast } from '../../lib/toast';
 import CardEncoderModal from './CardEncoderModal';
 import './SmartLockHub.css';
 
@@ -171,7 +172,11 @@ const SmartLockHub = () => {
         setTtlockDevices(mapped);
         return mapped.length;
       }
-    } catch (err) { handleApiError('smartlock', err); setApiError(err.message); }
+    } catch (err) {
+      handleApiError('smartlock', err);
+      setApiError(err.message);
+      toast.error(err.message || 'Erreur TTLock');
+    }
     return 0;
   }, [ttToken]);
 
@@ -227,21 +232,21 @@ const SmartLockHub = () => {
       try {
         lock.locked ? await ttlockAPI.unlock(ttToken, lock.lockId)
                     : await ttlockAPI.lock(ttToken, lock.lockId);
-      } catch (err) { setApiError(err.message); }
+      } catch (err) { handleApiError('smartlock.toggle', err); setApiError(err.message); toast.error(err.message || 'Erreur verrou TTLock'); }
     } else if (lock.provider === 'tthotel') {
       setTthotelDevices(p => p.map(l => l.id === lock.id ? { ...l, locked: !l.locked } : l));
       if (tthToken && !tthDemoMode) {
         try {
           lock.locked ? await tthotelAPI.unlock(tthToken, lock.lockId)
                       : await tthotelAPI.lock(tthToken, lock.lockId);
-        } catch (err) { setApiError(err.message); }
+        } catch (err) { handleApiError('smartlock.toggle', err); setApiError(err.message); toast.error(err.message || 'Erreur verrou TTHotel'); }
       }
     } else if (lock.provider === 'tuya') {
       setTuyaDevices(p => p.map(l => l.id === lock.id ? { ...l, locked: !l.locked } : l));
       if (tuyaToken && !tuyaDemoMode && lock.locked) {
         try {
           await tuyaAPI.unlock(tuyaId, tuyaSec, tuyaToken, lock.lockId, tuyaReg);
-        } catch (err) { setApiError(err.message); }
+        } catch (err) { handleApiError('smartlock.toggle', err); setApiError(err.message); toast.error(err.message || 'Erreur verrou Tuya'); }
       }
     }
     if (selectedLock?.id === lock.id) setSelectedLock(l => ({ ...l, locked: !l.locked }));
@@ -307,8 +312,12 @@ const SmartLockHub = () => {
       }
       setPinSuccess(true);
       setTimeout(() => { setPinSuccess(false); setShowPin(false); }, 1800);
-    } catch (err) { handleApiError('smartlock.pin', err); setApiError(`PIN non créé : ${err.message}`); }
-    finally { setPinLoading(false); }
+    } catch (err) {
+      handleApiError('smartlock.pin', err);
+      const msg = `PIN non créé : ${err.message}`;
+      setApiError(msg);
+      toast.error(msg);
+    } finally { setPinLoading(false); }
   };
 
   /* ════ Connect handlers ════ */

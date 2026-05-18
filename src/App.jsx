@@ -14,6 +14,7 @@ import OracleAssistant from './components/common/OracleAssistant';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ToastContainer from './components/common/ToastContainer';
 import { logError, logWarn } from './lib/errorHandler';
+import { setAuthState } from './lib/authState';
 
 // Lazy-loaded Views (Performance Optimization)
 const TaskListView = lazy(() => import('./components/views/TaskListView'));
@@ -144,12 +145,14 @@ function App() {
         writeSystemLog({ severity: 'error', module: 'auth', message: 'getSession failed', details: { error: error.message } });
       }
       if (session) {
+        setAuthState(true);
         setStoreSession(session);
         setIsAuthenticated(true);
         setCurrentUser(session.user);
         checkSuperAdmin(session.user);
         loadInitialStoreData();
       } else {
+        setAuthState(false);
         clearSensitiveLocalState();
       }
       setSessionChecked(true);
@@ -157,6 +160,7 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
+        setAuthState(true);
         setStoreSession(session);
         setIsAuthenticated(true);
         setCurrentUser(session.user);
@@ -166,6 +170,7 @@ function App() {
           loadInitialStoreData();
         }
       } else {
+        setAuthState(false);
         clearStoreSession();
         setIsAuthenticated(false);
         setCurrentUser(null);

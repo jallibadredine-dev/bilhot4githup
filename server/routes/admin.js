@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { requireSuperAdmin } from '../middleware/requireSuperAdmin.js';
+import { logger } from '../logger.js';
+import { createUserSchema, patchUserSchema, validate } from '../validate.js';
 
 const router = express.Router();
 
@@ -20,12 +22,6 @@ function safeInt(v, def, min, max) {
   return Math.min(Math.max(n, min), max);
 }
 
-const ALLOWED_PATCH_FIELDS = new Set([
-  'full_name', 'role', 'plan', 'company', 'phone', 'avatar_url', 'status', 'notes',
-]);
-
-const ALLOWED_ROLES = new Set(['user', 'admin', 'super_admin']);
-const ALLOWED_PLANS = new Set(['starter', 'standard', 'integral', 'lifetime']);
 
 function loadEnvFile() {
   try {
@@ -132,14 +128,9 @@ router.get('/users/:id', async (req, res) => {
 });
 
 router.post('/create-user', async (req, res) => {
-  const { email, name, plan = 'starter', role = 'user', company = '', phone = '' } = req.body;
-  if (!email || !name) return res.status(400).json({ error: 'email et name requis.' });
-  if (!isValidEmail(email)) return res.status(400).json({ error: 'Format email invalide.' });
-  if (typeof name !== 'string' || name.trim().length < 1 || name.length > 120) {
-    return res.status(400).json({ error: 'Nom invalide (1-120 caractères).' });
-  }
-  if (role && !ALLOWED_ROLES.has(role)) return res.status(400).json({ error: 'Rôle invalide.' });
-  if (plan && !ALLOWED_PLANS.has(plan)) return res.status(400).json({ error: 'Plan invalide.' });
+  const body = validate(createUserSchema, req.body, res);
+  if (!body) return;
+  const { email, name, plan, role, company, phone } = body;
   try {
     const password = 'Hova' + Math.random().toString(36).slice(2, 8).toUpperCase() + '!';
     const createRes = await sbFetch('/auth/v1/admin/users', {
@@ -164,13 +155,9 @@ router.post('/create-user', async (req, res) => {
 router.patch('/users/:id', async (req, res) => {
   const { id } = req.params;
   if (!isValidUUID(id)) return res.status(400).json({ error: 'ID utilisateur invalide.' });
-  const { email: _e, ...raw } = req.body;
-  const fields = {};
-  for (const [k, v] of Object.entries(raw)) {
-    if (ALLOWED_PATCH_FIELDS.has(k)) fields[k] = v;
-  }
-  if (fields.role && !ALLOWED_ROLES.has(fields.role)) return res.status(400).json({ error: 'Rôle invalide.' });
-  if (fields.plan && !ALLOWED_PLANS.has(fields.plan)) return res.status(400).json({ error: 'Plan invalide.' });
+  const { email: _e, ...rawBody } = req.body;
+  const fields = validate(patchUserSchema, rawBody, res);
+  if (!fields) return;
   try {
     fields.updated_at = new Date().toISOString();
     const r = await sbFetch(`/rest/v1/profiles?id=eq.${id}`, {
@@ -195,7 +182,7 @@ router.delete('/users/:id', async (req, res) => {
     const delAuth = await sbFetch(`/auth/v1/admin/users/${id}`, { method: 'DELETE' });
     if (!delAuth.ok && delAuth.status !== 404) {
       const txt = await delAuth.text();
-      console.warn('[admin] auth delete warn:', txt);
+      logger.warn('admin', 'Auth delete warn', { detail: txt });
     }
     await logAudit({ user_email: 'super_admin', action: `Compte supprimé`, resource: id, type: 'user' });
     res.json({ ok: true });
