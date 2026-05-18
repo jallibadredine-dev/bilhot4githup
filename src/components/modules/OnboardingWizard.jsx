@@ -54,8 +54,20 @@ const COUNTRIES = [
 ];
 
 /* ─── Storage helpers ─────────────────────────────────────── */
+// SECURITY: never persist credential fields to browser storage
+const DRAFT_ALLOWLIST = [
+  'name', 'email',
+  'establishment_type', 'establishment_custom', 'unit_count_range',
+  'business_name', 'phone', 'address', 'city', 'postal_code', 'country', 'website',
+  'primary_need',
+];
 const saveDraft = (data) => {
-  try { sessionStorage.setItem(SS_KEY, JSON.stringify(data)); } catch {}
+  try {
+    const safe = Object.fromEntries(
+      Object.entries(data).filter(([k]) => DRAFT_ALLOWLIST.includes(k))
+    );
+    sessionStorage.setItem(SS_KEY, JSON.stringify(safe));
+  } catch {}
 };
 const loadDraft = () => {
   try { return JSON.parse(sessionStorage.getItem(SS_KEY) || 'null'); } catch { return null; }
