@@ -134,7 +134,7 @@ const loadOTAConns = () => {
   if (!isAuthenticated()) return {};
   const result = {};
   OTA_DEFS.forEach(o => {
-    const raw = localStorage.getItem(`cm_ota_${o.id}`);
+    const raw = secureStorage.getSensitive(`cm_ota_${o.id}`);
     if (raw) {
       try { result[o.id] = JSON.parse(raw); } catch {}
     }
@@ -148,8 +148,8 @@ const loadOTAConns = () => {
 const ChannelManager = ({ pmsMode = 'pro' }) => {
 
   /* ── View & tabs ── */
-  const hasAnyOTA = isAuthenticated() && OTA_DEFS.some(o => !!localStorage.getItem(`cm_ota_${o.id}`));
-  const hasChannex = isAuthenticated() && !!localStorage.getItem('channex_token');
+  const hasAnyOTA = OTA_DEFS.some(o => !!secureStorage.getSensitive(`cm_ota_${o.id}`));
+  const hasChannex = !!secureStorage.getSensitive('channex_token');
   const [view, setView]           = useState(hasAnyOTA || hasChannex ? 'main' : 'setup');
   const [activeTab, setActiveTab] = useState(hasAnyOTA || hasChannex ? 'overview' : 'otas');
 
@@ -169,7 +169,7 @@ const ChannelManager = ({ pmsMode = 'pro' }) => {
     if (!isAuthenticated()) return {};
     const r = {};
     OTA_DEFS.forEach(o => {
-      const raw = localStorage.getItem(`cm_prods_${o.id}`);
+      const raw = secureStorage.getSensitive(`cm_prods_${o.id}`);
       if (raw) try { r[o.id] = JSON.parse(raw); } catch {}
     });
     return r;

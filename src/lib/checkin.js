@@ -2,12 +2,20 @@
  * HosFlow Digital Check-in Service
  * Generates unique check-in links, stores/retrieves sessions,
  * and validates guest identity + digital signature.
+ *
+ * Auth-gating strategy:
+ *  - getAllCheckins() — auth-gated (admin list views only)
+ *  - getCheckinByToken() / completeCheckin() — intentionally ungated:
+ *    guests access their own check-in via a cryptographically random token
+ *    without requiring a PMS account.
  */
+
+import { secureStorage } from './secureStorage';
 
 const CHECKINS_KEY = 'hosflow_checkins';
 
-// ── Storage ───────────────────────────────────────────────────────────────
-export const getAllCheckins = () => {
+// ── Private storage helpers (used on public guest paths) ──────────────────
+const _getAllCheckins = () => {
   try { return JSON.parse(localStorage.getItem(CHECKINS_KEY) || '[]'); } catch { return []; }
 };
 
@@ -23,7 +31,10 @@ const makeToken = () => {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 };
 
-// ── Create a check-in record ──────────────────────────────────────────────
+// ── Auth-gated list (admin PMS) ───────────────────────────────────────────
+export const getAllCheckins = () => secureStorage.parseJSON(CHECKINS_KEY, []);
+
+// ── Create a check-in record (called from auth-protected admin context) ───
 export const createCheckin = ({
   bookingId, guestName, guestEmail, guestPhone,
   propertyName, propertyAddress, propertyDesc, propertyEmoji,
@@ -57,21 +68,21 @@ export const createCheckin = ({
     signature: null,
   };
 
-  const list = getAllCheckins();
+  const list = _getAllCheckins();
   list.unshift(checkin);
   saveCheckins(list);
   return checkin;
 };
 
-// ── Find by token ─────────────────────────────────────────────────────────
+// ── Find by token (public — token is a 24-char random capability token) ───
 export const getCheckinByToken = (token) => {
-  const list = getAllCheckins();
+  const list = _getAllCheckins();
   return list.find(c => c.token === token) || null;
 };
 
-// ── Complete a check-in (called from guest page) ──────────────────────────
+// ── Complete a check-in (called from public guest page) ───────────────────
 export const completeCheckin = (token, { identity, signature }) => {
-  const list = getAllCheckins();
+  const list = _getAllCheckins();
   const idx = list.findIndex(c => c.token === token);
   if (idx === -1) return null;
 
@@ -87,9 +98,9 @@ export const completeCheckin = (token, { identity, signature }) => {
   return list[idx];
 };
 
-// ── Delete ─────────────────────────────────────────────────────────────────
+// ── Delete (admin action) ──────────────────────────────────────────────────
 export const deleteCheckin = (id) => {
-  const list = getAllCheckins().filter(c => c.id !== id);
+  const list = _getAllCheckins().filter(c => c.id !== id);
   saveCheckins(list);
 };
 

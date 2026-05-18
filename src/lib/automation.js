@@ -15,6 +15,7 @@ import { ttlockAPI } from './ttlock';
 import { sendPinNotifications } from './notifications';
 import { autoExpireCards, autoActivateCards } from './cardManagement';
 import { logError } from './errorHandler';
+import { secureStorage } from './secureStorage';
 
 const STORAGE_KEY = 'hosflow_automation_log';
 const MAPPING_KEY = 'hosflow_property_lock_map';
@@ -28,16 +29,27 @@ class AutomationEmitter extends EventTarget {
 export const automationEvents = new AutomationEmitter();
 
 // ── Storage helpers ───────────────────────────────────────────────────────────
-export const getAutomationLog = () => {
+
+// Private readers — no auth gate — used by engine cycle internals so that a
+// running automation cycle doesn't silently break if the session expires.
+const _getAutomationLog = () => {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
 };
+const _getProcessedBookings = () => {
+  try { return JSON.parse(localStorage.getItem('hosflow_processed_bookings') || '{}'); } catch { return {}; }
+};
+
+// Auth-gated public exports (used by admin UI)
+export const getAutomationLog = () => secureStorage.parseJSON(STORAGE_KEY, []);
+export const getPropertyLockMap = () => secureStorage.parseJSON(MAPPING_KEY, []);
+export const getProcessedBookings = () => secureStorage.parseJSON('hosflow_processed_bookings', {});
 
 const saveLog = (log) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(log.slice(0, 200)));
 };
 
 const addLogEntry = (entry) => {
-  const log = getAutomationLog();
+  const log = _getAutomationLog();
   const newEntry = { ...entry, id: Date.now(), createdAt: new Date().toISOString() };
   log.unshift(newEntry);
   saveLog(log);
@@ -45,16 +57,8 @@ const addLogEntry = (entry) => {
   return newEntry;
 };
 
-export const getPropertyLockMap = () => {
-  try { return JSON.parse(localStorage.getItem(MAPPING_KEY) || '[]'); } catch { return []; }
-};
-
 export const savePropertyLockMap = (mappings) => {
   localStorage.setItem(MAPPING_KEY, JSON.stringify(mappings));
-};
-
-export const getProcessedBookings = () => {
-  try { return JSON.parse(localStorage.getItem('hosflow_processed_bookings') || '{}'); } catch { return {}; }
 };
 
 const hashPin = async (pin) => {
@@ -63,7 +67,7 @@ const hashPin = async (pin) => {
 };
 
 const markBookingProcessed = async (bookingId, pin, lockId, arrivalDate, departureDate, guestName, propertyId) => {
-  const processed = getProcessedBookings();
+  const processed = _getProcessedBookings();
   const pinHash = pin ? await hashPin(pin) : null;
   processed[bookingId] = {
     pinHash, lockId,
@@ -79,7 +83,7 @@ const markBookingProcessed = async (bookingId, pin, lockId, arrivalDate, departu
 // ── PIN Generator ─────────────────────────────────────────────────────────────
 const generatePinForGuest = async () => {
   const processedHashes = new Set(
-    Object.values(getProcessedBookings())
+    Object.values(_getProcessedBookings())
       .map(r => r.pinHash)
       .filter(Boolean)
   );

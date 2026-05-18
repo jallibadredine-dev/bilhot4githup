@@ -40,7 +40,7 @@ export const CARD_EVENT = {
    INTERNAL HELPERS
 ══════════════════════════════════════════════════════════════════ */
 
-const lsGet  = (key) => { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } };
+const lsGet  = (key) => secureStorage.parseJSON(key, []);
 const lsSave = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
 /** Detect if Supabase table exists (swallow "relation does not exist") */

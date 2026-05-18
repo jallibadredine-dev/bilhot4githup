@@ -7,28 +7,32 @@
  */
 
 import emailjs from '@emailjs/browser';
+import { secureStorage } from './secureStorage';
 
 const CONFIG_KEY = 'sh_notif_config';
 const LOG_KEY    = 'sh_notif_log';
 
-/* ─── CONFIG ─────────────────────────────────────────────────── */
-export const getStaffNotifConfig = () => {
+/* ─── Private readers (internal send/log paths — no auth gate) ── */
+const _getStaffNotifConfig = () => {
   try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'); }
   catch { return {}; }
 };
+const _getStaffNotifLog = () => {
+  try { return JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); }
+  catch { return []; }
+};
+
+/* ─── Auth-gated public exports (admin UI) ───────────────────── */
+export const getStaffNotifConfig = () => secureStorage.parseJSON(CONFIG_KEY, {});
+export const getStaffNotifLog    = () => secureStorage.parseJSON(LOG_KEY, []);
 
 export const saveStaffNotifConfig = (cfg) => {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
 };
 
-/* ─── LOG ────────────────────────────────────────────────────── */
-export const getStaffNotifLog = () => {
-  try { return JSON.parse(localStorage.getItem(LOG_KEY) || '[]'); }
-  catch { return []; }
-};
-
+/* ─── LOG (internal write path) ──────────────────────────────── */
 const addLog = (entry) => {
-  const log = getStaffNotifLog();
+  const log = _getStaffNotifLog();
   log.unshift({ ...entry, id: Date.now(), sentAt: new Date().toISOString() });
   localStorage.setItem(LOG_KEY, JSON.stringify(log.slice(0, 50)));
 };
@@ -75,7 +79,7 @@ const buildVars = ({ staffName, staffEmail, staffPhone, roleName, tempPassword, 
 
 /* ─── SEND EMAIL (EmailJS) ───────────────────────────────────── */
 export const sendStaffEmail = async ({ staffName, staffEmail, staffPhone, roleName, tempPassword, propertyName }) => {
-  const cfg = getStaffNotifConfig();
+  const cfg = _getStaffNotifConfig();
   if (!cfg.emailEnabled) return { skipped: true, reason: 'email_disabled' };
   if (!cfg.ejsServiceId || !cfg.ejsTemplateId || !cfg.ejsPublicKey) {
     return { error: true, reason: 'emailjs_not_configured' };
@@ -112,7 +116,7 @@ export const sendStaffEmail = async ({ staffName, staffEmail, staffPhone, roleNa
 
 /* ─── SEND SMS (Twilio REST API — browser direct call) ───────── */
 export const sendStaffSMS = async ({ staffName, staffPhone, roleName, tempPassword, staffEmail, propertyName }) => {
-  const cfg = getStaffNotifConfig();
+  const cfg = _getStaffNotifConfig();
   if (!cfg.smsEnabled) return { skipped: true, reason: 'sms_disabled' };
   if (!cfg.twilioSid || !cfg.twilioToken || !cfg.twilioFrom) {
     return { error: true, reason: 'twilio_not_configured' };

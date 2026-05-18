@@ -7,6 +7,8 @@
  * Persiste dans localStorage : hova_reservations
  */
 
+import { secureStorage } from './secureStorage';
+
 export const RES_KEY = 'hova_reservations';
 
 /* ─── Source / OTA config ───────────────────────────────── */
@@ -70,11 +72,10 @@ const initStore = () => {
 };
 
 export const getReservations = () => {
-  try {
-    const raw = localStorage.getItem(RES_KEY);
-    if (!raw) return initStore();
-    return JSON.parse(raw);
-  } catch { return SEED; }
+  const fromStore = secureStorage.parseJSON(RES_KEY, null);
+  if (fromStore) return fromStore;
+  // First authenticated load: seed the store
+  return initStore();
 };
 
 export const saveReservations = (list) => {

@@ -35,6 +35,15 @@ const SENSITIVE_LS_KEYS = [
   'slh_tuya_demo',
   'slh_tuya_region',
   'ttlock_user',
+  'hosflow_notif_config',
+  'hosflow_notif_log',
+  'hova_inventory_rooms',
+  'hova_inventory_buildings',
+  'sh_notif_config',
+  'sh_notif_log',
+  'hova_reservations',
+  'hova_access_cards',
+  'hova_card_events',
 ];
 
 /** TTLock uses sessionStorage for its short-lived access token. */

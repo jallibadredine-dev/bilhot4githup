@@ -11,26 +11,31 @@
  */
 
 import emailjs from '@emailjs/browser';
+import { secureStorage } from './secureStorage';
 
 const NOTIF_CONFIG_KEY = 'hosflow_notif_config';
 const NOTIF_LOG_KEY    = 'hosflow_notif_log';
 
-// ── Config storage ─────────────────────────────────────────────────────────
-export const getNotifConfig = () => {
+// ── Private readers (used internally by sendEmailNotification / addNotifLog) ─
+// Not auth-gated so the engine can still read config during a running cycle.
+const _getNotifConfig = () => {
   try { return JSON.parse(localStorage.getItem(NOTIF_CONFIG_KEY) || '{}'); } catch { return {}; }
 };
+const _getNotifLog = () => {
+  try { return JSON.parse(localStorage.getItem(NOTIF_LOG_KEY) || '[]'); } catch { return []; }
+};
+
+// ── Auth-gated public exports (admin UI) ────────────────────────────────────
+export const getNotifConfig = () => secureStorage.parseJSON(NOTIF_CONFIG_KEY, {});
+export const getNotifLog    = () => secureStorage.parseJSON(NOTIF_LOG_KEY, []);
 
 export const saveNotifConfig = (cfg) => {
   localStorage.setItem(NOTIF_CONFIG_KEY, JSON.stringify(cfg));
 };
 
-// ── Notification log ────────────────────────────────────────────────────────
-export const getNotifLog = () => {
-  try { return JSON.parse(localStorage.getItem(NOTIF_LOG_KEY) || '[]'); } catch { return []; }
-};
-
+// ── Notification log (internal write path) ──────────────────────────────────
 const addNotifLog = (entry) => {
-  const log = getNotifLog();
+  const log = _getNotifLog();
   log.unshift({ ...entry, id: Date.now(), sentAt: new Date().toISOString() });
   localStorage.setItem(NOTIF_LOG_KEY, JSON.stringify(log.slice(0, 100)));
 };
@@ -95,7 +100,7 @@ L'équipe Hova`;
 
 // ── Email via EmailJS ───────────────────────────────────────────────────────
 export const sendEmailNotification = async (notifData) => {
-  const cfg = getNotifConfig();
+  const cfg = _getNotifConfig();
   if (!cfg.emailEnabled) return { skipped: true, reason: 'email_disabled' };
   if (!cfg.ejsServiceId || !cfg.ejsTemplateId || !cfg.ejsPublicKey) {
     return { error: true, reason: 'emailjs_not_configured' };

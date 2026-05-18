@@ -6,6 +6,8 @@
      hova_inventory_buildings → structure complète (rechargement SI)
 ════════════════════════════════════════════════════════════════ */
 
+import { secureStorage } from './secureStorage';
+
 const ROOMS_KEY = 'hova_inventory_rooms';
 const BLDS_KEY  = 'hova_inventory_buildings';
 
@@ -67,17 +69,10 @@ export const persistInventory = (buildings) => {
   } catch {}
 };
 
-/* ─── Read ───────────────────────────────────────────────────── */
-export const getInventoryRooms = () => {
-  try { return JSON.parse(localStorage.getItem(ROOMS_KEY) || '[]'); } catch { return []; }
-};
+/* ─── Read (auth-gated — only admin PMS reads inventory state) ─ */
+export const getInventoryRooms = () => secureStorage.parseJSON(ROOMS_KEY, []);
 
-export const getInventoryBuildings = () => {
-  try {
-    const raw = localStorage.getItem(BLDS_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-};
+export const getInventoryBuildings = () => secureStorage.parseJSON(BLDS_KEY, null);
 
 /* ─── Map inventory rooms → OTA products ────────────────────── */
 export const roomsToOTAProducts = (rooms, ota) =>

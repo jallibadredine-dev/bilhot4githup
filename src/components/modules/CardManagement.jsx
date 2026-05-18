@@ -13,6 +13,7 @@ import {
   getCardStats, logEvent, seedDemoCards, CARD_STATUS, CARD_EVENT
 } from '../../lib/cardManagement';
 import CardEncoderModal from './CardEncoderModal';
+import { secureStorage } from '../../lib/secureStorage';
 import './CardManagement.css';
 
 /* ── Status config ─────────────────────────────────────────────── */
@@ -506,7 +507,7 @@ function IssueCardModal({ onClose, onIssued }) {
     set('reservation_id', rawId);
     if (!rawId.trim()) { setResvInfo(null); return; }
     try {
-      const cache = JSON.parse(localStorage.getItem('hosflow_processed_bookings') || '{}');
+      const cache = secureStorage.parseJSON('hosflow_processed_bookings', {});
       const entry = cache[rawId.trim()];
       if (entry && entry.arrivalDate && entry.departureDate) {
         setResvInfo(entry);
