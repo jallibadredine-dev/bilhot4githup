@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, Building2, Calendar, DollarSign, TrendingUp, TrendingDown,
   Activity, RefreshCw, Cpu, Database, Globe, Wifi,
-  AlertTriangle, Clock, UserCheck, LogIn, ShieldCheck,
+  AlertTriangle, Clock, UserCheck, LogIn, ShieldCheck, XCircle,
 } from 'lucide-react';
+import { adminFetch } from './adminUtils';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
@@ -60,7 +61,7 @@ export default function Dashboard() {
       const [s, a, g] = await Promise.all([
         fetch('/api/admin/stats').then(r=>r.json()).catch(()=>({})),
         fetch('/api/admin/analytics').then(r=>r.json()).catch(()=>({})),
-        fetch('/api/admin/google-auth-stats').then(r=>r.json()).catch(()=>({})),
+        adminFetch('/api/admin/google-auth-stats').then(r=>r.json()).catch(()=>({})),
       ]);
       setStats({
         clients:      s?.totalUsers      || s?.activeUsers   || s?.clients      || 0,
@@ -209,11 +210,12 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12}}>
           {[
-            {Icon:UserCheck, label:'Utilisateurs Google', value: loading ? '…' : fmtN(googleAuth?.googleUsers ?? 0), color:'#4285F4'},
-            {Icon:LogIn,     label:'Inscriptions (30j)',  value: loading ? '…' : fmtN(googleAuth?.googleSignups30d ?? 0), color:'#34A853'},
-            {Icon:ShieldCheck,label:'Sessions actives (24h)', value: loading ? '…' : fmtN(googleAuth?.activeSessions24h ?? 0), color:'#FBBC05'},
+            {Icon:UserCheck,  label:'Comptes Google',       value: loading ? '…' : fmtN(googleAuth?.googleUsers ?? 0),        color:'#4285F4'},
+            {Icon:LogIn,      label:'Total connexions',      value: loading ? '…' : fmtN(googleAuth?.totalSignIns ?? 0),       color:'#EA4335'},
+            {Icon:Activity,   label:'Inscriptions (30j)',    value: loading ? '…' : fmtN(googleAuth?.googleSignups30d ?? 0),   color:'#34A853'},
+            {Icon:ShieldCheck,label:'Sessions actives (24h)',value: loading ? '…' : fmtN(googleAuth?.activeSessions24h ?? 0), color:'#FBBC05'},
           ].map(({Icon,label,value,color})=>(
             <div key={label} style={{background:'var(--sa2-surface2)',border:'1px solid var(--sa2-border)',borderRadius:'var(--sa2-radius-sm)',padding:'12px 14px',display:'flex',alignItems:'center',gap:10}}>
               <div style={{width:32,height:32,borderRadius:8,background:color+'18',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
@@ -238,6 +240,23 @@ export default function Dashboard() {
                   </div>
                   <span style={{flex:1,color:'var(--sa2-text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{u.email}</span>
                   <span style={{fontSize:'0.68rem',color:'var(--sa2-text-muted)',flexShrink:0}}>{fmtDate(u.last_sign_in_at)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(googleAuth?.oauthErrors?.length > 0) && (
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:6,fontSize:'0.72rem',fontWeight:700,color:'#EF4444',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8}}>
+              <XCircle size={11}/> Erreurs OAuth récentes
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:4}}>
+              {googleAuth.oauthErrors.map((e,i)=>(
+                <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'6px 10px',background:'#EF444408',border:'1px solid #EF444420',borderRadius:'var(--sa2-radius-sm)',fontSize:'0.75rem'}}>
+                  <XCircle size={12} style={{color:'#EF4444',flexShrink:0}}/>
+                  <span style={{flex:1,color:'#EF4444',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{e.action}</span>
+                  <span style={{fontSize:'0.68rem',color:'var(--sa2-text-muted)',flexShrink:0}}>{fmtDate(e.created_at)}</span>
                 </div>
               ))}
             </div>

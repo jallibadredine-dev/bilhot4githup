@@ -105,17 +105,22 @@ function App() {
     const ensureUserProfile = async (user) => {
       if (!user?.id) return;
       try {
-        const { data: existing } = await supabase
+        const { data: existing, error: fetchErr } = await supabase
           .from('profiles')
           .select('id')
           .eq('id', user.id)
           .single();
+        // PGRST116 = "no rows returned" — expected for new users; all other errors are real
+        if (fetchErr && fetchErr.code !== 'PGRST116') {
+          console.warn('[Hova] ensureUserProfile: could not check profile:', fetchErr.message);
+          return;
+        }
         if (!existing) {
           const displayName =
             user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             user.email?.split('@')[0] || '';
-          await supabase.from('profiles').upsert({
+          const { error: upsertErr } = await supabase.from('profiles').upsert({
             id: user.id,
             full_name: displayName,
             email: user.email,
@@ -124,8 +129,13 @@ function App() {
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
             created_at: new Date().toISOString(),
           }, { onConflict: 'id' });
+          if (upsertErr) {
+            console.warn('[Hova] ensureUserProfile: could not create profile:', upsertErr.message);
+          }
         }
-      } catch (_) {}
+      } catch (err) {
+        console.warn('[Hova] ensureUserProfile: unexpected error:', err.message);
+      }
     };
 
     supabase.auth.getSession().then(({ data: { session } }) => {

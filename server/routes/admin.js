@@ -56,6 +56,42 @@ function anonFetch(urlPath, token, options = {}) {
   });
 }
 
+/* ── Super-admin JWT guard ───────────────────────────────────── */
+async function requireSuperAdmin(req, res, next) {
+  const SB_URL = getSbUrl();
+  const SB_KEY = getSbKey();
+  // Dev/test mode: no Supabase configured → skip enforcement
+  if (!SB_URL || !SB_KEY) return next();
+
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'Authentication required.' });
+
+  try {
+    const anon = getSbAnon();
+    const userRes = await fetch(`${SB_URL}/auth/v1/user`, {
+      headers: { 'apikey': anon || SB_KEY, 'Authorization': `Bearer ${token}` },
+    });
+    if (!userRes.ok) return res.status(401).json({ error: 'Invalid or expired session.' });
+
+    const userData = await userRes.json();
+    const userId = userData?.id;
+    if (!userId) return res.status(401).json({ error: 'Invalid session.' });
+
+    const profileRes = await sbFetch(`/rest/v1/profiles?id=eq.${userId}&select=role`);
+    const profiles = profileRes.ok ? await profileRes.json() : [];
+    const role = Array.isArray(profiles) ? profiles[0]?.role : null;
+
+    if (role !== 'super_admin') return res.status(403).json({ error: 'Super admin access required.' });
+
+    req.adminUser = { id: userId, email: userData.email };
+    next();
+  } catch (err) {
+    console.error('[admin] auth middleware error:', err.message);
+    return res.status(500).json({ error: 'Authentication check failed.' });
+  }
+}
+
 async function logAudit({ user_email, action, resource, type = 'user' }) {
   try {
     await sbFetch('/rest/v1/audit_logs', {
@@ -299,10 +335,10 @@ router.get('/audit-logs', async (req, res) => {
    GOOGLE OAUTH STATS
    ════════════════════════════════════════ */
 
-router.get('/google-auth-stats', async (req, res) => {
+router.get('/google-auth-stats', requireSuperAdmin, async (req, res) => {
   try {
     const r = await sbFetch('/auth/v1/admin/users?page=1&per_page=1000');
-    if (!r.ok) return res.json({ googleUsers: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [] });
+    if (!r.ok) return res.json({ googleUsers: 0, totalSignIns: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [], oauthErrors: [] });
     const body = await r.json();
     const allUsers = Array.isArray(body) ? body : (Array.isArray(body?.users) ? body.users : []);
 
@@ -316,6 +352,7 @@ router.get('/google-auth-stats', async (req, res) => {
     const ms30d = 30 * 24 * 60 * 60 * 1000;
     const ms24h = 24 * 60 * 60 * 1000;
 
+    const totalSignIns       = googleUsers.reduce((s, u) => s + (typeof u.sign_in_count === 'number' ? u.sign_in_count : 0), 0);
     const googleSignups30d   = googleUsers.filter(u => u.created_at && (now - new Date(u.created_at).getTime()) < ms30d).length;
     const activeSessions24h  = googleUsers.filter(u => u.last_sign_in_at && (now - new Date(u.last_sign_in_at).getTime()) < ms24h).length;
     const recentUsers = googleUsers
@@ -328,9 +365,25 @@ router.get('/google-auth-stats', async (req, res) => {
         last_sign_in_at: u.last_sign_in_at,
       }));
 
-    res.json({ googleUsers: googleUsers.length, googleSignups30d, activeSessions24h, recentUsers });
+    // Best-effort: fetch recent OAuth-related error entries from audit_logs
+    let oauthErrors = [];
+    try {
+      const errR = await sbFetch('/rest/v1/audit_logs?select=id,action,user_email,created_at&action=ilike.*oauth*&order=created_at.desc&limit=5');
+      if (errR.ok) {
+        const errData = await errR.json();
+        if (Array.isArray(errData)) {
+          oauthErrors = errData.map(e => ({
+            action: e.action,
+            user_email: e.user_email,
+            created_at: e.created_at,
+          }));
+        }
+      }
+    } catch (_) {}
+
+    res.json({ googleUsers: googleUsers.length, totalSignIns, googleSignups30d, activeSessions24h, recentUsers, oauthErrors });
   } catch (err) {
-    res.json({ googleUsers: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [], error: err.message });
+    res.json({ googleUsers: 0, totalSignIns: 0, googleSignups30d: 0, activeSessions24h: 0, recentUsers: [], oauthErrors: [], error: err.message });
   }
 });
 
