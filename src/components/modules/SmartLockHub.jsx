@@ -87,11 +87,8 @@ const SmartLockHub = () => {
   // TTLock
   const [ttUser,      setTtUser]      = useState(secureStorage.getSensitive('ttlock_user', ''));
   const [ttPass,      setTtPass]      = useState('');
-  const [ttClientId,  setTtClientId]  = useState(secureStorage.getSensitive('ttlock_client_id',  ''));
-  const [ttClientSec, setTtClientSec] = useState(secureStorage.getSensitive('ttlock_client_sec', ''));
   const [ttToken,     setTtToken]     = useState(secureStorage.getSessionSensitive('ttlock_token', ''));
   const [ttShowPw,    setTtShowPw]    = useState(false);
-  const [ttShowSec,   setTtShowSec]   = useState(false);
   const [ttLoading,   setTtLoading]   = useState(false);
   const [ttErr,       setTtErr]       = useState('');
 
@@ -327,13 +324,10 @@ const SmartLockHub = () => {
   const connectTTLock = async (e) => {
     e.preventDefault(); setTtErr(''); setTtLoading(true);
     try {
-      if (!ttClientId.trim() || !ttClientSec.trim()) throw new Error('Client ID et Client Secret requis. Obtenez-les sur open.ttlock.com');
-      const data = await ttlockAPI.getToken(ttUser, ttPass, ttClientId.trim(), ttClientSec.trim());
+      const data = await ttlockAPI.getToken(ttUser, ttPass);
       if (data?.access_token) {
         sessionStorage.setItem('ttlock_token', data.access_token);
-        secureStorage.setSensitive('ttlock_user',       ttUser);
-        secureStorage.setSensitive('ttlock_client_id',  ttClientId.trim());
-        secureStorage.setSensitive('ttlock_client_sec', ttClientSec.trim());
+        secureStorage.setSensitive('ttlock_user', ttUser);
         setTtToken(data.access_token); setConnTTLock(true); setTtPass('');
         await fetchTTLock(data.access_token);
       } else throw new Error(data?.errmsg || 'Identifiants incorrects');
@@ -499,19 +493,6 @@ const SmartLockHub = () => {
             ) : (
               <form onSubmit={connectTTLock} className="slh-setup-form">
                 {ttErr && <div className="slh-setup-err"><AlertTriangle size={13}/> {ttErr}</div>}
-                <div className="slh-sf-group">
-                  <label>Client ID <span style={{ fontWeight: 400, opacity: 0.65, fontSize: '0.75rem' }}>— open.ttlock.com</span></label>
-                  <div className="slh-sf-input"><Key size={13}/><input type="text" value={ttClientId} onChange={e => setTtClientId(e.target.value)} placeholder="ex: a1b2c3d4e5f6..." required/></div>
-                </div>
-                <div className="slh-sf-group">
-                  <label>Client Secret</label>
-                  <div className="slh-sf-input">
-                    <Lock size={13}/>
-                    <input type={ttShowSec ? 'text' : 'password'} value={ttClientSec} onChange={e => setTtClientSec(e.target.value)} placeholder="••••••••••••" required/>
-                    <button type="button" className="slh-sf-eye" onClick={() => setTtShowSec(v => !v)}>{ttShowSec ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
-                  </div>
-                </div>
-                <div className="slh-sf-divider"/>
                 <div className="slh-sf-group">
                   <label>Email / Identifiant TTLock</label>
                   <div className="slh-sf-input"><User size={13}/><input type="text" value={ttUser} onChange={e => setTtUser(e.target.value)} placeholder="votre@email.com ou +212..." required/></div>

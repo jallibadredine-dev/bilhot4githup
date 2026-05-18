@@ -8,13 +8,33 @@
  */
 
 const BASE = import.meta.env.VITE_TTLOCK_API_URL || 'https://euapi.ttlock.com';
-const CLIENT_ID = import.meta.env.VITE_TTLOCK_CLIENT_ID || '';
+// Env-var fallback (set at build time for self-hosted deployments)
+const CLIENT_ID     = import.meta.env.VITE_TTLOCK_CLIENT_ID     || '';
 const CLIENT_SECRET = import.meta.env.VITE_TTLOCK_CLIENT_SECRET || '';
+
+// App-level credential keys managed by Super Admin → Integrations panel
+const LS_CID  = 'hova_ttlock_client_id';
+const LS_CSEC = 'hova_ttlock_client_sec';
+
+// Platform defaults — overridable from Super Admin → Integrations → TTLock → Configurer
+const DEFAULT_CLIENT_ID  = 'cdcd9c7d1f544d62a66eae63c760587f';
+const DEFAULT_CLIENT_SEC = '4b63ca9c66ae1b072a6df38279c55959';
+
+// Seed localStorage so the Super Admin config panel is pre-filled on first open
+if (typeof localStorage !== 'undefined') {
+  if (!localStorage.getItem(LS_CID))  localStorage.setItem(LS_CID,  DEFAULT_CLIENT_ID);
+  if (!localStorage.getItem(LS_CSEC)) localStorage.setItem(LS_CSEC, DEFAULT_CLIENT_SEC);
+}
+
+/** Return the active client_id: explicit arg → env var → Super Admin localStorage → built-in default */
+const resolveId  = (id)  => id  || CLIENT_ID     || (typeof localStorage !== 'undefined' ? localStorage.getItem(LS_CID)  : '') || DEFAULT_CLIENT_ID;
+/** Return the active client_secret: explicit arg → env var → Super Admin localStorage → built-in default */
+const resolveSec = (sec) => sec || CLIENT_SECRET || (typeof localStorage !== 'undefined' ? localStorage.getItem(LS_CSEC) : '') || DEFAULT_CLIENT_SEC;
 
 const getDate = () => Date.now();
 
 const buildParams = (params) => {
-  const p = new URLSearchParams({ ...params, clientId: CLIENT_ID, date: getDate() });
+  const p = new URLSearchParams({ ...params, clientId: resolveId(), date: getDate() });
   return p.toString();
 };
 
@@ -31,9 +51,9 @@ export const ttlockAPI = {
   // clientId / clientSecret: from TTLock Open Platform (https://open.ttlock.com)
   // Fall back to env vars if not provided (for self-hosted / pre-configured setups).
   getToken: async (username, password, clientId, clientSecret) => {
-    const cid = clientId || CLIENT_ID;
-    const csec = clientSecret || CLIENT_SECRET;
-    if (!cid || !csec) throw new Error('Client ID et Client Secret TTLock requis. Obtenez-les sur open.ttlock.com');
+    const cid  = resolveId(clientId);
+    const csec = resolveSec(clientSecret);
+    if (!cid || !csec) throw new Error('Client ID et Client Secret TTLock non configurés. Contactez votre administrateur.');
     const md5 = await import('md5').then(m => m.default || m).catch(() => null);
     const hashedPwd = md5 ? md5(password) : password;
     const res = await fetch(`${BASE}/oauth2/token`, {
@@ -51,8 +71,8 @@ export const ttlockAPI = {
   },
 
   refreshToken: async (refreshToken, clientId, clientSecret) => {
-    const cid = clientId || CLIENT_ID;
-    const csec = clientSecret || CLIENT_SECRET;
+    const cid  = resolveId(clientId);
+    const csec = resolveSec(clientSecret);
     const res = await fetch(`${BASE}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

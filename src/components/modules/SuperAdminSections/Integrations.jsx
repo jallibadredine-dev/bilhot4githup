@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
-import { Globe, Plus, CheckCircle, XCircle, AlertTriangle, Settings, ExternalLink, ToggleLeft, ToggleRight, Plug, Webhook, Link2, RefreshCw } from 'lucide-react';
+import { Globe, Plus, CheckCircle, XCircle, AlertTriangle, Settings, ExternalLink,
+         ToggleLeft, ToggleRight, Plug, Webhook, Link2, RefreshCw, Save, Eye, EyeOff, Key } from 'lucide-react';
+
+/* ── Global TTLock app-credential keys (shared with SmartLockHub) ── */
+const TT_CLIENT_ID_KEY  = 'hova_ttlock_client_id';
+const TT_CLIENT_SEC_KEY = 'hova_ttlock_client_sec';
 
 const GROUPS = [
   {cat:'Paiements',items:[
@@ -22,7 +27,7 @@ const GROUPS = [
     {id:'gemini',  name:'Google Gemini',    em:'🔍',col:'#4285F4',st:'disconnected',desc:'Traduction & NLP',                   feat:['Translation','NLP'],since:null},
   ]},
   {cat:'Accès & Sécurité',items:[
-    {id:'ttlock',  name:'TTLock / TTHotel', em:'🔐',col:'#8B5CF6',st:'degraded',    desc:'Serrures connectées, PIN, RFID',     feat:['Lock/Unlock','PIN','RFID'],since:'Jan 2026'},
+    {id:'ttlock',  name:'TTLock / TTHotel', em:'🔐',col:'#8B5CF6',st:'connected',   desc:'Serrures connectées, PIN, RFID',     feat:['Lock/Unlock','PIN','RFID'],since:'Jan 2026'},
     {id:'gauth',   name:'Google OAuth 2.0', em:'🔑',col:'#4285F4',st:'connected',   desc:'Authentification SSO',               feat:['SSO','OAuth2'],since:'Jan 2026'},
   ]},
   {cat:'Automatisations',items:[
@@ -37,6 +42,70 @@ const SC = {
   degraded:    {col:'#F59E0B',icon:<AlertTriangle size={11}/>, lbl:'Dégradé'},
   pending:     {col:'#3B82F6',icon:<RefreshCw size={11}/>,     lbl:'En attente'},
 };
+
+/* ── TTLock-specific config panel ── */
+function TTLockConfig() {
+  const [cid,   setCid]   = useState(() => localStorage.getItem(TT_CLIENT_ID_KEY)  || '');
+  const [csec,  setCsec]  = useState(() => localStorage.getItem(TT_CLIENT_SEC_KEY) || '');
+  const [showS, setShowS] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const save = () => {
+    if (!cid.trim() || !csec.trim()) return;
+    localStorage.setItem(TT_CLIENT_ID_KEY,  cid.trim());
+    localStorage.setItem(TT_CLIENT_SEC_KEY, csec.trim());
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="sa2-int-config">
+      <div style={{ fontSize: '0.7rem', color: '#64748B', marginBottom: 10, lineHeight: 1.5 }}>
+        Credentials d'application TTLock — obtenus sur{' '}
+        <a href="https://open.ttlock.com" target="_blank" rel="noreferrer" style={{ color: '#8B5CF6' }}>open.ttlock.com</a>.
+        Ces credentials sont partagés avec tous les utilisateurs de la plateforme.
+      </div>
+      <div className="sa2-form-row">
+        <label>Client ID</label>
+        <input
+          type="text"
+          value={cid}
+          onChange={e => setCid(e.target.value)}
+          placeholder="cdcd9c7d…"
+          className="sa2-input"
+          style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+        />
+      </div>
+      <div className="sa2-form-row">
+        <label>Client Secret</label>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input
+            type={showS ? 'text' : 'password'}
+            value={csec}
+            onChange={e => setCsec(e.target.value)}
+            placeholder="4b63ca9c…"
+            className="sa2-input"
+            style={{ fontFamily: 'monospace', fontSize: '0.75rem', flex: 1 }}
+          />
+          <button
+            onClick={() => setShowS(v => !v)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '0 4px' }}
+          >
+            {showS ? <EyeOff size={13}/> : <Eye size={13}/>}
+          </button>
+        </div>
+      </div>
+      <button
+        className="sa2-btn sa2-btn-primary sa2-btn-sm"
+        onClick={save}
+        disabled={!cid.trim() || !csec.trim()}
+        style={{ marginTop: 4 }}
+      >
+        {saved ? <><CheckCircle size={11}/> Sauvegardé</> : <><Save size={11}/> Sauvegarder</>}
+      </button>
+    </div>
+  );
+}
 
 function Card({integ}) {
   const [cfg,setCfg]=useState(false);
@@ -71,12 +140,16 @@ function Card({integ}) {
         )}
         <button className="sa2-btn sa2-btn-sm sa2-btn-ghost"><ExternalLink size={11}/> Docs</button>
       </div>
-      {cfg&&integ.st==='connected'&&(
-        <div className="sa2-int-config">
-          <div className="sa2-form-row"><label>Clé API</label><input type="password" defaultValue="••••••••••••" className="sa2-input"/></div>
-          <div className="sa2-form-row"><label>Webhook URL</label><input type="text" placeholder="https://…/webhook" className="sa2-input"/></div>
-          <button className="sa2-btn sa2-btn-primary sa2-btn-sm">Sauvegarder</button>
-        </div>
+      {cfg && integ.st==='connected' && (
+        integ.id === 'ttlock'
+          ? <TTLockConfig/>
+          : (
+            <div className="sa2-int-config">
+              <div className="sa2-form-row"><label>Clé API</label><input type="password" defaultValue="••••••••••••" className="sa2-input"/></div>
+              <div className="sa2-form-row"><label>Webhook URL</label><input type="text" placeholder="https://…/webhook" className="sa2-input"/></div>
+              <button className="sa2-btn sa2-btn-primary sa2-btn-sm">Sauvegarder</button>
+            </div>
+          )
       )}
     </div>
   );
