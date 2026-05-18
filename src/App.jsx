@@ -4,7 +4,8 @@ import { supabase, SUPABASE_READY } from './lib/supabase';
 import { LayoutDashboard, Monitor, MessageSquare, UserCheck, Menu } from 'lucide-react';
 import { getCheckinTokenFromURL } from './lib/checkin';
 import { clearSensitiveLocalState } from './lib/secureStorage';
-import { useRealtimeSync } from './store/realtime';
+import { useRealtimeSync, writeSystemLog, loadInitialStoreData } from './store/realtime';
+import { useAppStore } from './store/appStore';
 
 // Core Layout & Common Components (Eager Load)
 import Sidebar from './components/layout/Sidebar';
@@ -65,6 +66,10 @@ const LoadingFallback = () => (
 function App() {
   // Activate Supabase real-time sync for shared PMS state (only runs when SUPABASE_READY)
   useRealtimeSync();
+
+  // Global store actions — session and initial data are centralized
+  const setStoreSession = useAppStore(s => s.setSession);
+  const clearStoreSession = useAppStore(s => s.clearSession);
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -135,32 +140,48 @@ function App() {
           }, { onConflict: 'id' });
           if (upsertErr) {
             console.warn('[Hova] ensureUserProfile: could not create profile:', upsertErr.message);
+            writeSystemLog({ severity: 'error', module: 'auth', message: 'Profile creation failed', details: { userId: user.id, error: upsertErr.message } });
           }
         }
       } catch (err) {
         console.warn('[Hova] ensureUserProfile: unexpected error:', err.message);
+        writeSystemLog({ severity: 'error', module: 'auth', message: 'ensureUserProfile unexpected error', details: { error: err.message } });
       }
     };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.warn('[Hova] getSession error:', error.message);
+        writeSystemLog({ severity: 'error', module: 'auth', message: 'getSession failed', details: { error: error.message } });
+      }
       if (session) {
+        setStoreSession(session);
         setIsAuthenticated(true);
         setCurrentUser(session.user);
         checkSuperAdmin(session.user);
+        loadInitialStoreData();
       }
       setSessionChecked(true);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
+        setStoreSession(session);
         setIsAuthenticated(true);
         setCurrentUser(session.user);
         checkSuperAdmin(session.user);
-        if (_event === 'SIGNED_IN') ensureUserProfile(session.user);
+        if (_event === 'SIGNED_IN') {
+          ensureUserProfile(session.user);
+          loadInitialStoreData();
+        }
       } else {
+        clearStoreSession();
         setIsAuthenticated(false);
         setCurrentUser(null);
         clearSensitiveLocalState();
+        if (_event === 'SIGNED_OUT') {
+          writeSystemLog({ severity: 'info', module: 'auth', message: 'User signed out' });
+        }
       }
     });
 

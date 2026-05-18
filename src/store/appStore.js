@@ -7,7 +7,7 @@ import { subscribeWithSelector } from 'zustand/middleware';
 ─────────────────────────────────────────────────────────────── */
 
 export const useAppStore = create(
-  subscribeWithSelector((set, get) => ({
+  subscribeWithSelector((set) => ({
 
     /* ── Session / User ─────────────────────────────────────── */
     session: null,
@@ -18,101 +18,77 @@ export const useAppStore = create(
     /* ── Reservations ───────────────────────────────────────── */
     reservations: [],
     reservationsLoading: false,
-    reservationsError: null,
     setReservations: (reservations) => set({ reservations, reservationsLoading: false }),
-    upsertReservation: (row) => set((state) => {
-      const idx = state.reservations.findIndex(r => r.id === row.id);
-      if (idx >= 0) {
-        const next = [...state.reservations];
-        next[idx] = { ...next[idx], ...row };
-        return { reservations: next };
-      }
-      return { reservations: [row, ...state.reservations] };
+    upsertReservation: (row) => set((s) => {
+      const idx = s.reservations.findIndex(r => r.id === row.id);
+      if (idx >= 0) { const a = [...s.reservations]; a[idx] = { ...a[idx], ...row }; return { reservations: a }; }
+      return { reservations: [row, ...s.reservations] };
     }),
-    removeReservation: (id) => set((state) => ({
-      reservations: state.reservations.filter(r => r.id !== id),
-    })),
+    removeReservation: (id) => set((s) => ({ reservations: s.reservations.filter(r => r.id !== id) })),
 
     /* ── Guests ─────────────────────────────────────────────── */
     guests: [],
     guestsLoading: false,
     setGuests: (guests) => set({ guests, guestsLoading: false }),
-    upsertGuest: (row) => set((state) => {
-      const idx = state.guests.findIndex(g => g.id === row.id);
-      if (idx >= 0) {
-        const next = [...state.guests];
-        next[idx] = { ...next[idx], ...row };
-        return { guests: next };
-      }
-      return { guests: [row, ...state.guests] };
+    upsertGuest: (row) => set((s) => {
+      const idx = s.guests.findIndex(g => g.id === row.id);
+      if (idx >= 0) { const a = [...s.guests]; a[idx] = { ...a[idx], ...row }; return { guests: a }; }
+      return { guests: [row, ...s.guests] };
     }),
-    removeGuest: (id) => set((state) => ({ guests: state.guests.filter(g => g.id !== id) })),
+    removeGuest: (id) => set((s) => ({ guests: s.guests.filter(g => g.id !== id) })),
 
     /* ── Rooms ──────────────────────────────────────────────── */
     rooms: [],
     roomsLoading: false,
     setRooms: (rooms) => set({ rooms, roomsLoading: false }),
-    upsertRoom: (row) => set((state) => {
-      const idx = state.rooms.findIndex(r => r.id === row.id);
-      if (idx >= 0) {
-        const next = [...state.rooms];
-        next[idx] = { ...next[idx], ...row };
-        return { rooms: next };
-      }
-      return { rooms: [row, ...state.rooms] };
+    upsertRoom: (row) => set((s) => {
+      const idx = s.rooms.findIndex(r => r.id === row.id);
+      if (idx >= 0) { const a = [...s.rooms]; a[idx] = { ...a[idx], ...row }; return { rooms: a }; }
+      return { rooms: [row, ...s.rooms] };
     }),
-    removeRoom: (id) => set((state) => ({ rooms: state.rooms.filter(r => r.id !== id) })),
+    removeRoom: (id) => set((s) => ({ rooms: s.rooms.filter(r => r.id !== id) })),
 
     /* ── Access Cards ───────────────────────────────────────── */
     accessCards: [],
     setAccessCards: (accessCards) => set({ accessCards }),
-    upsertAccessCard: (row) => set((state) => {
-      const idx = state.accessCards.findIndex(c => c.id === row.id);
-      if (idx >= 0) {
-        const next = [...state.accessCards];
-        next[idx] = { ...next[idx], ...row };
-        return { accessCards: next };
-      }
-      return { accessCards: [row, ...state.accessCards] };
+    upsertAccessCard: (row) => set((s) => {
+      const idx = s.accessCards.findIndex(c => c.id === row.id);
+      if (idx >= 0) { const a = [...s.accessCards]; a[idx] = { ...a[idx], ...row }; return { accessCards: a }; }
+      return { accessCards: [row, ...s.accessCards] };
     }),
-    removeAccessCard: (id) => set((state) => ({
-      accessCards: state.accessCards.filter(c => c.id !== id),
-    })),
+    removeAccessCard: (id) => set((s) => ({ accessCards: s.accessCards.filter(c => c.id !== id) })),
 
     /* ── Profiles / Users ───────────────────────────────────── */
     profiles: [],
     setProfiles: (profiles) => set({ profiles }),
-    upsertProfile: (row) => set((state) => {
-      const idx = state.profiles.findIndex(p => p.id === row.id);
-      if (idx >= 0) {
-        const next = [...state.profiles];
-        next[idx] = { ...next[idx], ...row };
-        return { profiles: next };
-      }
-      return { profiles: [row, ...state.profiles] };
+    upsertProfile: (row) => set((s) => {
+      const idx = s.profiles.findIndex(p => p.id === row.id);
+      if (idx >= 0) { const a = [...s.profiles]; a[idx] = { ...a[idx], ...row }; return { profiles: a }; }
+      return { profiles: [row, ...s.profiles] };
     }),
-    removeProfile: (id) => set((state) => ({
-      profiles: state.profiles.filter(p => p.id !== id),
-    })),
+    removeProfile: (id) => set((s) => ({ profiles: s.profiles.filter(p => p.id !== id) })),
 
     /* ── Payments ───────────────────────────────────────────── */
     payments: [],
-    setPayments: (payments) => set({ payments }),
+    paymentsLoading: false,
+    setPayments: (payments) => set({ payments, paymentsLoading: false }),
+    upsertPayment: (row) => set((s) => {
+      const idx = s.payments.findIndex(p => p.id === row.id);
+      if (idx >= 0) { const a = [...s.payments]; a[idx] = { ...a[idx], ...row }; return { payments: a }; }
+      return { payments: [row, ...s.payments] };
+    }),
+    removePayment: (id) => set((s) => ({ payments: s.payments.filter(p => p.id !== id) })),
 
     /* ── Settings ───────────────────────────────────────────── */
     settings: {},
     setSettings: (settings) => set({ settings }),
-    mergeSetting: (key, value) => set((state) => ({ settings: { ...state.settings, [key]: value } })),
+    mergeSetting: (key, value) => set((s) => ({ settings: { ...s.settings, [key]: value } })),
 
     /* ── System Health ──────────────────────────────────────── */
     systemHealth: null,
     systemHealthLoading: false,
     systemHealthLastChecked: null,
-    setSystemHealth: (data) => set({
-      systemHealth: data,
-      systemHealthLoading: false,
-      systemHealthLastChecked: new Date().toISOString(),
-    }),
+    setSystemHealth: (data) => set({ systemHealth: data, systemHealthLoading: false, systemHealthLastChecked: new Date().toISOString() }),
     setSystemHealthLoading: (v) => set({ systemHealthLoading: v }),
 
     /* ── System Logs ────────────────────────────────────────── */
@@ -120,8 +96,6 @@ export const useAppStore = create(
     systemLogsLoading: false,
     systemLogsTotal: 0,
     setSystemLogs: (logs, total) => set({ systemLogs: logs, systemLogsLoading: false, systemLogsTotal: total ?? logs.length }),
-    prependSystemLog: (entry) => set((state) => ({
-      systemLogs: [entry, ...state.systemLogs].slice(0, 200),
-    })),
+    prependSystemLog: (entry) => set((s) => ({ systemLogs: [entry, ...s.systemLogs].slice(0, 200) })),
   }))
 );

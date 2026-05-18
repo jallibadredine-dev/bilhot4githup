@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { requireSuperAdmin } from '../middleware/requireSuperAdmin.js';
 
 const router = express.Router();
 
@@ -54,42 +55,6 @@ function anonFetch(urlPath, token, options = {}) {
       ...(options.headers || {}),
     },
   });
-}
-
-/* ── Super-admin JWT guard ───────────────────────────────────── */
-async function requireSuperAdmin(req, res, next) {
-  const SB_URL = getSbUrl();
-  const SB_KEY = getSbKey();
-  // Dev/test mode: no Supabase configured → skip enforcement
-  if (!SB_URL || !SB_KEY) return next();
-
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) return res.status(401).json({ error: 'Authentication required.' });
-
-  try {
-    const anon = getSbAnon();
-    const userRes = await fetch(`${SB_URL}/auth/v1/user`, {
-      headers: { 'apikey': anon || SB_KEY, 'Authorization': `Bearer ${token}` },
-    });
-    if (!userRes.ok) return res.status(401).json({ error: 'Invalid or expired session.' });
-
-    const userData = await userRes.json();
-    const userId = userData?.id;
-    if (!userId) return res.status(401).json({ error: 'Invalid session.' });
-
-    const profileRes = await sbFetch(`/rest/v1/profiles?id=eq.${userId}&select=role`);
-    const profiles = profileRes.ok ? await profileRes.json() : [];
-    const role = Array.isArray(profiles) ? profiles[0]?.role : null;
-
-    if (role !== 'super_admin') return res.status(403).json({ error: 'Super admin access required.' });
-
-    req.adminUser = { id: userId, email: userData.email };
-    next();
-  } catch (err) {
-    console.error('[admin] auth middleware error:', err.message);
-    return res.status(500).json({ error: 'Authentication check failed.' });
-  }
 }
 
 async function logAudit({ user_email, action, resource, type = 'user' }) {

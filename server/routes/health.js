@@ -2,6 +2,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { requireSuperAdmin } from '../middleware/requireSuperAdmin.js';
 
 const router = express.Router();
 
@@ -26,6 +27,33 @@ const dotEnv = loadEnvFile();
 function getSbUrl() { return process.env.VITE_SB_URL || process.env.SUPABASE_URL || dotEnv.VITE_SB_URL || dotEnv.SUPABASE_URL || ''; }
 function getSbKey() { return process.env.VITE_SB_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY_ACTUAL || dotEnv.VITE_SB_SERVICE_KEY || dotEnv.SUPABASE_SERVICE_ROLE_KEY_ACTUAL || ''; }
 
+/* ── In-memory uptime tracking (ring buffer per provider) ────── */
+const MAX_HISTORY = 100;
+const healthHistory = {}; // provider_id → [{status, responseMs, ts}]
+
+function recordCheck(providerId, status, responseMs) {
+  if (!healthHistory[providerId]) healthHistory[providerId] = [];
+  healthHistory[providerId].push({ status, responseMs, ts: Date.now() });
+  if (healthHistory[providerId].length > MAX_HISTORY) {
+    healthHistory[providerId] = healthHistory[providerId].slice(-MAX_HISTORY);
+  }
+}
+
+function getUptimePct(providerId) {
+  const hist = healthHistory[providerId] || [];
+  if (hist.length < 2) return null;
+  const up = hist.filter(h => h.status === 'up').length;
+  return Math.round((up / hist.length) * 10000) / 100;
+}
+
+function getRecentErrors(providerId, limit = 3) {
+  const hist = healthHistory[providerId] || [];
+  return hist
+    .filter(h => h.status !== 'up' && h.status !== 'not_configured' && h.status !== 'unknown')
+    .slice(-limit)
+    .map(h => ({ status: h.status, responseMs: h.responseMs, ts: new Date(h.ts).toISOString() }));
+}
+
 /* ── Timed fetch with timeout ───────────────────────────────── */
 async function timedFetch(url, options = {}, timeoutMs = 5000) {
   const controller = new AbortController();
@@ -46,46 +74,42 @@ async function timedFetch(url, options = {}, timeoutMs = 5000) {
 
 function classifyStatus(result) {
   if (!result) return 'unknown';
-  if (result.ok) {
-    if (result.ms < 1000) return 'up';
-    return 'degraded';
-  }
+  if (result.ok) return result.ms < 1000 ? 'up' : 'degraded';
   if (result.status === 408) return 'timeout';
   if (result.status === 0) return 'down';
   return 'degraded';
 }
 
-/* ── GET /api/health — basic liveness ────────────────────────── */
+/* ── Supabase system_logs writer (fire-and-forget) ──────────── */
+function sbWriteLog({ severity = 'warn', module = 'health', message, details }) {
+  const SB_URL = getSbUrl();
+  const SB_KEY = getSbKey();
+  if (!SB_URL || !SB_KEY) return;
+  fetch(`${SB_URL}/rest/v1/system_logs`, {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ severity, module, message, details: details ?? null, created_at: new Date().toISOString() }),
+  }).catch(() => {});
+}
+
+/* ── GET /api/health — basic liveness ─────────────────────────── */
 router.get('/', (_req, res) => {
   res.json({ ok: true, service: 'HosFlow API', ts: new Date().toISOString() });
 });
 
-/* ── GET /api/health/providers — full provider health sweep ──── */
+/* ── GET /api/health/providers — full provider health sweep ────── */
 router.get('/providers', async (_req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
 
   const checks = await Promise.allSettled([
-    /* Supabase REST */
     SB_URL && SB_KEY
-      ? timedFetch(`${SB_URL}/rest/v1/`, {
-          headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
-        })
+      ? timedFetch(`${SB_URL}/rest/v1/`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } })
       : Promise.resolve({ ok: false, status: 0, ms: 0, error: 'not_configured' }),
-
-    /* Backend self-check */
     timedFetch('http://localhost:' + (process.env.BACKEND_PORT || '3001') + '/api/health', {}, 2000),
-
-    /* Google OAuth discovery endpoint */
     timedFetch('https://accounts.google.com/.well-known/openid-configuration', {}, 4000),
-
-    /* TTLock cloud API */
     timedFetch('https://euapi.ttlock.com/v3/user/login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'clientId=health_check' }, 5000),
-
-    /* RFID / TTHotel encoder — internal service, best-effort */
     timedFetch('http://localhost:8080/api/status', {}, 2000),
-
-    /* Redis / cache — check if configured, report unknown otherwise */
     process.env.REDIS_URL
       ? timedFetch(process.env.REDIS_URL + '/ping', {}, 2000)
       : Promise.resolve(null),
@@ -95,65 +119,56 @@ router.get('/providers', async (_req, res) => {
     r.status === 'fulfilled' ? r.value : { ok: false, status: 0, ms: 0, error: r.reason?.message }
   );
 
-  const providers = [
-    {
-      id: 'supabase',
-      name: 'Supabase',
-      description: 'Base de données & Auth',
-      status: SB_URL ? classifyStatus(sbR) : 'not_configured',
-      responseMs: sbR?.ms ?? null,
-      configured: !!SB_URL,
-    },
-    {
-      id: 'backend',
-      name: 'Backend API',
-      description: 'Serveur Express interne',
-      status: classifyStatus(selfR),
-      responseMs: selfR?.ms ?? null,
-      configured: true,
-    },
-    {
-      id: 'google_oauth',
-      name: 'Google OAuth',
-      description: 'Authentification Google',
-      status: classifyStatus(googleR),
-      responseMs: googleR?.ms ?? null,
-      configured: true,
-    },
-    {
-      id: 'ttlock',
-      name: 'TTLock API',
-      description: 'Serrures connectées',
-      status: ttlockR?.status === 400 || ttlockR?.ok === false
-        ? (ttlockR?.status === 400 ? 'up' : classifyStatus(ttlockR))
-        : classifyStatus(ttlockR),
-      responseMs: ttlockR?.ms ?? null,
-      configured: true,
-      note: 'Un 400 signifie que l\'API répond (credentials invalides ignorés).',
-    },
-    {
-      id: 'rfid',
-      name: 'Encodeur RFID',
-      description: 'Service encoder local',
-      status: rfidR?.ok ? 'up' : (rfidR?.status === 0 ? 'not_configured' : 'down'),
-      responseMs: rfidR?.ms ?? null,
-      configured: !!rfidR?.ok,
-    },
-    {
-      id: 'redis',
-      name: 'Cache (Redis)',
-      description: 'Couche de cache optionnelle',
-      status: redisR == null ? 'not_configured' : classifyStatus(redisR),
-      responseMs: redisR?.ms ?? null,
-      configured: !!process.env.REDIS_URL,
-    },
+  // TTLock: a 400 response means the server is up (request format error, not an outage)
+  const ttlockStatus = ttlockR?.status === 400 ? 'up' : classifyStatus(ttlockR);
+
+  const rawProviders = [
+    { id: 'supabase',     raw: sbR,      status: SB_URL ? classifyStatus(sbR)  : 'not_configured', configured: !!SB_URL },
+    { id: 'backend',      raw: selfR,    status: classifyStatus(selfR),                             configured: true     },
+    { id: 'google_oauth', raw: googleR,  status: classifyStatus(googleR),                           configured: true     },
+    { id: 'ttlock',       raw: ttlockR,  status: ttlockStatus,                                      configured: true     },
+    { id: 'rfid',         raw: rfidR,    status: rfidR?.ok ? 'up' : (rfidR?.status === 0 ? 'not_configured' : 'down'), configured: !!rfidR?.ok },
+    { id: 'redis',        raw: redisR,   status: redisR == null ? 'not_configured' : classifyStatus(redisR), configured: !!process.env.REDIS_URL },
   ];
+
+  // Record in history and write system log for any newly degraded/down provider
+  for (const p of rawProviders) {
+    if (p.status !== 'not_configured') {
+      recordCheck(p.id, p.status, p.raw?.ms ?? null);
+      if (p.status === 'down' || p.status === 'timeout') {
+        sbWriteLog({ severity: 'error', module: 'health', message: `Provider ${p.id} is ${p.status}`, details: { responseMs: p.raw?.ms, error: p.raw?.error } });
+      } else if (p.status === 'degraded') {
+        sbWriteLog({ severity: 'warn', module: 'health', message: `Provider ${p.id} is degraded`, details: { responseMs: p.raw?.ms } });
+      }
+    }
+  }
+
+  const META = {
+    supabase:     { name: 'Supabase',       description: 'Base de données & Auth' },
+    backend:      { name: 'Backend API',    description: 'Serveur Express interne' },
+    google_oauth: { name: 'Google OAuth',   description: 'Authentification Google' },
+    ttlock:       { name: 'TTLock API',     description: 'Serrures connectées', note: 'Un 400 signifie que l\'API répond (credentials ignorés).' },
+    rfid:         { name: 'Encodeur RFID',  description: 'Service encoder local' },
+    redis:        { name: 'Cache (Redis)',  description: 'Couche de cache optionnelle' },
+  };
+
+  const providers = rawProviders.map(p => ({
+    id: p.id,
+    name: META[p.id]?.name,
+    description: META[p.id]?.description,
+    note: META[p.id]?.note,
+    status: p.status,
+    responseMs: p.raw?.ms ?? null,
+    uptimePct: getUptimePct(p.id),
+    recentErrors: getRecentErrors(p.id, 3),
+    configured: p.configured,
+  }));
 
   res.json({ providers, checkedAt: new Date().toISOString() });
 });
 
-/* ── GET /api/health/logs — system_logs from Supabase ─────────── */
-router.get('/logs', async (req, res) => {
+/* ── GET /api/health/logs — system_logs (super-admin only) ─────── */
+router.get('/logs', requireSuperAdmin, async (req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
   const { severity = '', module = '', limit = 50 } = req.query;
@@ -183,8 +198,8 @@ router.get('/logs', async (req, res) => {
   }
 });
 
-/* ── POST /api/health/logs — write a system log entry ─────────── */
-router.post('/logs', async (req, res) => {
+/* ── POST /api/health/logs — write a log (super-admin only) ────── */
+router.post('/logs', requireSuperAdmin, async (req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
   if (!SB_URL || !SB_KEY) return res.status(503).json({ error: 'Supabase non configuré.' });
