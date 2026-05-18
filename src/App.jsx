@@ -109,9 +109,10 @@ function App() {
     const ensureUserProfile = async (user) => {
       if (!user?.id) return;
       try {
+        // Step 1 — Check profile existence with only guaranteed-existing columns
         const { data: existing, error: fetchErr } = await supabase
           .from('profiles')
-          .select('id, plan, trial_ends_at')
+          .select('id, plan')
           .eq('id', user.id)
           .single();
         // PGRST116 = "no rows returned" — expected for new users; all other errors are real
@@ -119,27 +120,41 @@ function App() {
           logWarn('auth', 'ensureUserProfile: could not check profile', { code: fetchErr.code, message: fetchErr.message });
           return;
         }
+
+        const isOAuthProvider = user.app_metadata?.provider && user.app_metadata.provider !== 'email';
+
         if (!existing) {
+          // New user — create profile with trial plan
           const displayName =
             user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             user.email?.split('@')[0] || '';
           const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-          const isOAuthProvider = user.app_metadata?.provider && user.app_metadata.provider !== 'email';
-          const { error: upsertErr } = await supabase.from('profiles').upsert({
+
+          // Build upsert payload — only include trial_ends_at if migration has been applied
+          const profilePayload = {
             id: user.id,
             full_name: displayName,
             email: user.email,
             role: 'user',
             plan: 'trial',
-            trial_ends_at: trialEndsAt,
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
             created_at: new Date().toISOString(),
-          }, { onConflict: 'id' });
-          if (upsertErr) {
+          };
+
+          // Attempt to write trial_ends_at; if column missing, upsert without it
+          const { error: upsertErr } = await supabase.from('profiles').upsert(
+            { ...profilePayload, trial_ends_at: trialEndsAt },
+            { onConflict: 'id' }
+          );
+          if (upsertErr && upsertErr.code === '42703') {
+            // trial_ends_at column not yet created (migration pending) — upsert without it
+            await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+          } else if (upsertErr) {
             logError('auth', 'ensureUserProfile: could not create profile', { userId: user.id, error: upsertErr.message });
             writeSystemLog({ severity: 'error', module: 'auth', message: 'Profile creation failed', details: { userId: user.id, error: upsertErr.message } });
           }
+
           // New user → set trial banner info
           setTrialInfo({ daysLeft: 14, expired: false });
           // OAuth new user → send through qualification wizard (steps 2-5)
@@ -147,12 +162,29 @@ function App() {
             setGoogleOnboardingUser(user);
             setShowGoogleOnboarding(true);
           }
-        } else if (existing.plan === 'trial' && existing.trial_ends_at) {
-          // Existing trial user → compute remaining days
-          const daysLeft = Math.ceil(
-            (new Date(existing.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-          );
-          setTrialInfo({ daysLeft: Math.max(0, daysLeft), expired: daysLeft <= 0 });
+        } else if (existing.plan === 'trial') {
+          // Step 2 — Read trial expiry (separate query to handle migration-pending gracefully)
+          const { data: trialRow, error: trialErr } = await supabase
+            .from('profiles')
+            .select('trial_ends_at, establishment_type')
+            .eq('id', user.id)
+            .single();
+
+          if (trialErr?.code === '42703') {
+            // Columns not yet migrated — show banner with default 14 days (best-effort)
+            setTrialInfo({ daysLeft: 14, expired: false });
+          } else if (!trialErr && trialRow?.trial_ends_at) {
+            const daysLeft = Math.ceil(
+              (new Date(trialRow.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+            );
+            setTrialInfo({ daysLeft: Math.max(0, daysLeft), expired: daysLeft <= 0 });
+          }
+
+          // OAuth user with incomplete profile (qualification not completed) → re-trigger wizard
+          if (isOAuthProvider && trialRow && !trialRow.establishment_type) {
+            setGoogleOnboardingUser(user);
+            setShowGoogleOnboarding(true);
+          }
         }
       } catch (err) {
         logError('auth', 'ensureUserProfile: unexpected error', { error: err.message });
@@ -171,6 +203,8 @@ function App() {
         setIsAuthenticated(true);
         setCurrentUser(session.user);
         checkSuperAdmin(session.user);
+        // Evaluate trial status on every session restore (not just on SIGNED_IN)
+        ensureUserProfile(session.user);
         loadInitialStoreData();
       } else {
         setAuthState(false);
@@ -186,7 +220,7 @@ function App() {
         setIsAuthenticated(true);
         setCurrentUser(session.user);
         checkSuperAdmin(session.user);
-        if (_event === 'SIGNED_IN') {
+        if (_event === 'SIGNED_IN' || _event === 'INITIAL_SESSION') {
           ensureUserProfile(session.user);
           loadInitialStoreData();
         }
