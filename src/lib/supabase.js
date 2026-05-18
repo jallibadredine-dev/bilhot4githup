@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 
-const rawUrl  = import.meta.env.VITE_SUPABASE_URL   || ''
-const rawKey  = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+// Les Replit Secrets VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY ont des valeurs inversées.
+// On utilise VITE_SB_URL / VITE_SB_ANON_KEY définis dans .env avec les bonnes valeurs.
+const rawUrl  = import.meta.env.VITE_SB_URL        || import.meta.env.VITE_SUPABASE_URL   || ''
+const rawKey  = import.meta.env.VITE_SB_ANON_KEY   || import.meta.env.VITE_SUPABASE_ANON_KEY || ''
 
 const isValidUrl = (v) => { try { return v && new URL(v).protocol.startsWith('http'); } catch { return false; } }
 const isValidKey = (v) => v && v.startsWith('eyJ')
@@ -14,12 +16,12 @@ export const supabase = SUPABASE_READY
     })
   : {
       auth: {
-        getSession:       async () => ({ data: { session: null }, error: null }),
-        onAuthStateChange: (_ev, _cb) => ({ data: { subscription: { unsubscribe: () => {} } } }),
-        signUp:           async () => ({ error: { message: 'Supabase non configuré — utilisez le mode Démo.' } }),
-        signInWithPassword: async () => ({ error: { message: 'Supabase non configuré — utilisez le mode Démo.' } }),
-        signInWithOAuth:  async () => ({ error: { message: 'Supabase non configuré — utilisez le mode Démo.' } }),
-        signOut:          async () => ({ error: null }),
+        getSession:            async () => ({ data: { session: null }, error: null }),
+        onAuthStateChange:     (_ev, _cb) => ({ data: { subscription: { unsubscribe: () => {} } } }),
+        signUp:                async () => ({ error: { message: 'Supabase non configuré — utilisez le mode Démo.' } }),
+        signInWithPassword:    async () => ({ error: { message: 'Supabase non configuré — utilisez le mode Démo.' } }),
+        signInWithOAuth:       async () => ({ error: { message: 'Supabase non configuré — utilisez le mode Démo.' } }),
+        signOut:               async () => ({ error: null }),
         resetPasswordForEmail: async () => ({ error: { message: 'Supabase non configuré.' } }),
       },
       from: () => ({
@@ -32,8 +34,7 @@ export const supabase = SUPABASE_READY
     }
 
 if (!SUPABASE_READY) {
-  console.warn(
-    '[Hova] Supabase non configuré — mode local activé.\n' +
-    'Corrigez VITE_SUPABASE_URL (https://xxx.supabase.co) et VITE_SUPABASE_ANON_KEY (eyJ...) dans les Secrets Replit.'
-  )
+  console.warn('[Hova] Supabase non configuré — mode local activé.')
+} else {
+  console.log('[Hova] Supabase connecté ✓', rawUrl)
 }
