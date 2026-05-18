@@ -16,6 +16,8 @@ import './OnboardingWizard.css';
 /* ─── Constants ───────────────────────────────────────────── */
 const TOTAL_STEPS = 6;
 const SS_KEY = 'hova_onboarding_draft';
+// Persists qualification data for deferred upsert (e.g. email confirmation flow)
+const SS_PENDING_KEY = 'hova_onboarding_pending';
 
 const ESTABLISHMENT_TYPES = [
   { id: 'hotel',       label: 'Hôtel',                 icon: <Hotel size={20}/>,    unitLabel: 'chambres' },
@@ -513,11 +515,14 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
         };
         const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
         if (upsertErr) {
-          // If the column doesn't exist yet (migration pending) or session not yet established
-          // (email confirmation required), treat as non-fatal — ensureUserProfile in App.jsx
-          // will complete the profile when the authenticated session is available.
           if (upsertErr.code === '42703' || upsertErr.code === '42501') {
-            console.warn('[Hova] Profile upsert partial — will retry via ensureUserProfile', upsertErr.message);
+            // Column missing (migration pending) or session not yet authenticated
+            // (email confirmation required). Store qualification data for deferred upsert:
+            // App.jsx ensureUserProfile will pick it up on the next SIGNED_IN event.
+            try {
+              sessionStorage.setItem(SS_PENDING_KEY, JSON.stringify(profilePayload));
+            } catch {}
+            console.warn('[Hova] Profile upsert deferred — qualification data stored for post-login retry', upsertErr.message);
           } else {
             throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
           }

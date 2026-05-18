@@ -123,36 +123,59 @@ function App() {
 
         const isOAuthProvider = user.app_metadata?.provider && user.app_metadata.provider !== 'email';
 
+        // Check for deferred onboarding qualification data (stored when email confirmation
+        // was required and the profile upsert could not complete during signup).
+        const SS_PENDING_KEY = 'hova_onboarding_pending';
+        let pendingQualification = null;
+        try {
+          const raw = sessionStorage.getItem(SS_PENDING_KEY);
+          if (raw) pendingQualification = JSON.parse(raw);
+        } catch {}
+
         if (!existing) {
-          // New user — create profile with trial plan
+          // New user — create profile, merging any pending qualification data
           const displayName =
             user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             user.email?.split('@')[0] || '';
           const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
-          // Build upsert payload — only include trial_ends_at if migration has been applied
           const profilePayload = {
             id: user.id,
-            full_name: displayName,
+            full_name: pendingQualification?.full_name || displayName,
             email: user.email,
             role: 'user',
             plan: 'trial',
+            trial_ends_at: trialEndsAt,
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
             created_at: new Date().toISOString(),
+            // Merge qualification fields from deferred onboarding if available
+            ...(pendingQualification ? {
+              establishment_type: pendingQualification.establishment_type,
+              establishment_custom: pendingQualification.establishment_custom,
+              unit_count_range: pendingQualification.unit_count_range,
+              business_name: pendingQualification.business_name,
+              phone: pendingQualification.phone,
+              address: pendingQualification.address,
+              city: pendingQualification.city,
+              postal_code: pendingQualification.postal_code,
+              country: pendingQualification.country,
+              website: pendingQualification.website,
+              primary_need: pendingQualification.primary_need,
+            } : {}),
           };
 
-          // Attempt to write trial_ends_at; if column missing, upsert without it
-          const { error: upsertErr } = await supabase.from('profiles').upsert(
-            { ...profilePayload, trial_ends_at: trialEndsAt },
-            { onConflict: 'id' }
-          );
+          // Attempt upsert; if trial_ends_at column missing (migration pending), retry without it
+          const { error: upsertErr } = await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
           if (upsertErr && upsertErr.code === '42703') {
-            // trial_ends_at column not yet created (migration pending) — upsert without it
-            await supabase.from('profiles').upsert(profilePayload, { onConflict: 'id' });
+            const { trial_ends_at: _dropped, ...payloadWithoutTrial } = profilePayload;
+            await supabase.from('profiles').upsert(payloadWithoutTrial, { onConflict: 'id' });
           } else if (upsertErr) {
             logError('auth', 'ensureUserProfile: could not create profile', { userId: user.id, error: upsertErr.message });
             writeSystemLog({ severity: 'error', module: 'auth', message: 'Profile creation failed', details: { userId: user.id, error: upsertErr.message } });
+          } else if (pendingQualification) {
+            // Qualification data successfully persisted — clear the pending store
+            try { sessionStorage.removeItem(SS_PENDING_KEY); } catch {}
           }
 
           // New user → set trial banner info
@@ -163,6 +186,16 @@ function App() {
             setShowGoogleOnboarding(true);
           }
         } else if (existing.plan === 'trial') {
+          // If pending qualification exists for an existing profile, apply it now
+          if (pendingQualification) {
+            const { error: qualErr } = await supabase.from('profiles').upsert(
+              { ...pendingQualification, id: user.id },
+              { onConflict: 'id' }
+            );
+            if (!qualErr) {
+              try { sessionStorage.removeItem(SS_PENDING_KEY); } catch {}
+            }
+          }
           // Step 2 — Read trial expiry (separate query to handle migration-pending gracefully)
           const { data: trialRow, error: trialErr } = await supabase
             .from('profiles')
