@@ -2,19 +2,20 @@ import React, { useState } from 'react';
 import {
   LayoutDashboard, Building2, Key, Globe, FileText,
   Package, CreditCard, Users, ClipboardList, Settings,
-  LogOut, ChevronLeft, ChevronRight, Menu, X,
+  LogOut, ChevronLeft, ChevronRight, Menu, X, HeartPulse,
 } from 'lucide-react';
 
-import Dashboard   from './SuperAdminSections/Dashboard.jsx';
-import PMSManager  from './SuperAdminSections/PMSManager.jsx';
-import APIManager  from './SuperAdminSections/APIManager.jsx';
-import Integrations from './SuperAdminSections/Integrations.jsx';
-import CMSEditor   from './SuperAdminSections/CMSEditor.jsx';
-import PlansManager from './SuperAdminSections/PlansManager.jsx';
-import Payments    from './SuperAdminSections/Payments.jsx';
-import UsersRoles  from './SuperAdminSections/UsersRoles.jsx';
-import AuditLogs   from './SuperAdminSections/AuditLogs.jsx';
+import Dashboard     from './SuperAdminSections/Dashboard.jsx';
+import PMSManager    from './SuperAdminSections/PMSManager.jsx';
+import APIManager    from './SuperAdminSections/APIManager.jsx';
+import Integrations  from './SuperAdminSections/Integrations.jsx';
+import CMSEditor     from './SuperAdminSections/CMSEditor.jsx';
+import PlansManager  from './SuperAdminSections/PlansManager.jsx';
+import Payments      from './SuperAdminSections/Payments.jsx';
+import UsersRoles    from './SuperAdminSections/UsersRoles.jsx';
+import AuditLogs     from './SuperAdminSections/AuditLogs.jsx';
 import SystemSettings from './SuperAdminSections/Settings.jsx';
+import SystemHealth  from './SuperAdminSections/SystemHealth.jsx';
 
 import './SuperAdmin.css';
 
@@ -28,6 +29,7 @@ const NAV = [
   { id:'payments',     label:'Paiements & Finance',    Icon:CreditCard,      group:'business'},
   { id:'users',        label:'Utilisateurs & Rôles',   Icon:Users,           group:'business'},
   { id:'logs',         label:"Journal d'Activité",     Icon:ClipboardList,   group:'admin'  },
+  { id:'health',       label:'Santé Système',          Icon:HeartPulse,      group:'admin'  },
   { id:'settings',     label:'Paramètres Système',     Icon:Settings,        group:'admin'  },
 ];
 
@@ -48,6 +50,7 @@ const SECTION_MAP = {
   payments:     Payments,
   users:        UsersRoles,
   logs:         AuditLogs,
+  health:       SystemHealth,
   settings:     SystemSettings,
 };
 

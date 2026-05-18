@@ -4,6 +4,7 @@ import { supabase, SUPABASE_READY } from './lib/supabase';
 import { LayoutDashboard, Monitor, MessageSquare, UserCheck, Menu } from 'lucide-react';
 import { getCheckinTokenFromURL } from './lib/checkin';
 import { clearSensitiveLocalState } from './lib/secureStorage';
+import { useRealtimeSync } from './store/realtime';
 
 // Core Layout & Common Components (Eager Load)
 import Sidebar from './components/layout/Sidebar';
@@ -62,6 +63,9 @@ const LoadingFallback = () => (
 );
 
 function App() {
+  // Activate Supabase real-time sync for shared PMS state (only runs when SUPABASE_READY)
+  useRealtimeSync();
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
