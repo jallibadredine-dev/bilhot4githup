@@ -10,8 +10,8 @@ const PLANS = [
     name: 'PMS Standard',
     subtitle: 'Gestion interne & réception',
     badge: null,
-    unitLabel: '25 MAD/ch',
-    formula: (rooms) => rooms * 25,
+    unitLabel: '35 MAD/ch',
+    formula: (rooms) => rooms * 35,
     color: '#3B82F6',
     features: ['PMS Cloud', 'Calendrier', 'Facturation', 'Support email'],
   },
@@ -20,8 +20,8 @@ const PLANS = [
     name: 'PMS Intégral',
     subtitle: 'Channel Manager + IA inclus',
     badge: 'Populaire',
-    unitLabel: '30 MAD/ch',
-    formula: (rooms) => rooms * 30,
+    unitLabel: '55 MAD/ch',
+    formula: (rooms) => rooms * 55,
     color: '#FF385C',
     features: ['Tout Standard', 'Channel Manager', 'Revenue AI', 'Serrures IoT'],
     integrations: true,
@@ -75,8 +75,8 @@ const PricingSimulator = ({ onStart }) => {
         <div className="ps-formula-note">
           <Info size={13}/>
           <span>
-            <strong>PMS Standard :</strong> 25 MAD × nombre de chambres<br/>
-            <strong>PMS Intégral :</strong> 30 MAD × nombre de chambres (Channel Manager inclus)
+            <strong>PMS Standard :</strong> 35 MAD × nombre de chambres<br/>
+            <strong>PMS Intégral :</strong> 55 MAD × nombre de chambres (Channel Manager inclus)
           </span>
         </div>
       </div>
