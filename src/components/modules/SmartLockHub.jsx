@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ttlockAPI } from '../../lib/ttlock';
 import { tthotelAPI } from '../../lib/tthotel';
 import { tuyaAPI, TUYA_REGIONS } from '../../lib/tuya';
+import { handleApiError } from '../../lib/errorHandler';
 import CardEncoderModal from './CardEncoderModal';
 import './SmartLockHub.css';
 
@@ -170,7 +171,7 @@ const SmartLockHub = () => {
         setTtlockDevices(mapped);
         return mapped.length;
       }
-    } catch (err) { setApiError(err.message); }
+    } catch (err) { handleApiError('smartlock', err); setApiError(err.message); }
     return 0;
   }, [ttToken]);
 
@@ -306,7 +307,7 @@ const SmartLockHub = () => {
       }
       setPinSuccess(true);
       setTimeout(() => { setPinSuccess(false); setShowPin(false); }, 1800);
-    } catch (err) { setApiError(`PIN non créé : ${err.message}`); }
+    } catch (err) { handleApiError('smartlock.pin', err); setApiError(`PIN non créé : ${err.message}`); }
     finally { setPinLoading(false); }
   };
 

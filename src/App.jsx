@@ -149,6 +149,8 @@ function App() {
         setCurrentUser(session.user);
         checkSuperAdmin(session.user);
         loadInitialStoreData();
+      } else {
+        clearSensitiveLocalState();
       }
       setSessionChecked(true);
     });

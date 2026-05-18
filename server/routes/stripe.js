@@ -3,6 +3,13 @@ import { getUncachableStripeClient } from '../stripeClient.js';
 
 const router = Router();
 
+/* ─── Validation helpers ─── */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const VALID_PERIODS = new Set(['monthly', 'annual', 'biennial', 'triennial']);
+const MAX_ROOMS = 500;
+
+function isValidEmail(v) { return typeof v === 'string' && EMAIL_RE.test(v) && v.length <= 254; }
+
 /* ─── Plan config: plan_key metadata must match Stripe products ─── */
 const PLAN_CONFIG = {
   standard:   { planKey: 'pms_standard_monthly',  mode: 'subscription' },
@@ -54,10 +61,17 @@ router.post('/checkout', async (req, res) => {
     if (!planId || !PLAN_CONFIG[planId]) {
       return res.status(400).json({ error: `Plan invalide: ${planId}` });
     }
+    if (email && !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Email invalide.' });
+    }
+    if (period && !VALID_PERIODS.has(period)) {
+      return res.status(400).json({ error: 'Période invalide.' });
+    }
+    const roomsNum = Math.min(Math.max(1, parseInt(rooms) || 1), MAX_ROOMS);
 
     const stripe  = await getUncachableStripeClient();
     const config  = PLAN_CONFIG[planId];
-    const qty     = config.mode === 'payment' ? 1 : Math.max(1, parseInt(rooms) || 1);
+    const qty     = config.mode === 'payment' ? 1 : roomsNum;
 
     /* ── Find product by metadata plan_key ── */
     const search  = await stripe.products.search({

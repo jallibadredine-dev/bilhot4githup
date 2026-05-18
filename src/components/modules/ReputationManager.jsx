@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { channexAPI } from '../../lib/channex';
+import { logError } from '../../lib/errorHandler';
 import './ReputationManager.css';
 
 /* ─── OTA DEFINITIONS ─────────────────────────────────────── */
@@ -214,7 +215,7 @@ const ReputationManager = ({ pmsMode, setActiveView }) => {
 
     if (rev?.isReal && channexToken) {
       try { await channexAPI.replyToReview(channexToken, reviewId, replyText); }
-      catch (e) { console.error('Reply failed:', e); }
+      catch (e) { logError('reputation', 'Reply to review failed', { error: e?.message }); }
     }
 
     setReviews(prev => prev.map(r =>
