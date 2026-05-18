@@ -4,7 +4,7 @@ import {
   ChevronLeft, ChevronRight, Plus, X, Calendar, User, CreditCard, Key,
   Phone, Mail, MessageSquare, CheckCircle2, Clock, AlertTriangle,
   LogOut, Filter, Search, Smartphone, Globe2, Zap, Star, BedDouble,
-  Users, ArrowRight, RefreshCw, Building2, MoreHorizontal
+  Users, ArrowRight, RefreshCw, Building2, MoreHorizontal, Trash2
 } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { persistReservation } from '../../store/realtime';
@@ -97,6 +97,56 @@ const StatusPill = ({ status }) => {
   );
 };
 
+/* ─── MINI CALENDAR ──────────────────────────────────────── */
+const MiniCal = ({ checkIn, checkOut }) => {
+  const DAY_LBL = ['L','M','M','J','V','S','D'];
+  const ci = parseDate(checkIn);
+  const year = ci.getFullYear(), month = ci.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDow = (new Date(year, month, 1).getDay() + 6) % 7;
+  const getWeek = d => {
+    const dt = new Date(d); dt.setHours(0,0,0,0);
+    dt.setDate(dt.getDate() + 3 - (dt.getDay() + 6) % 7);
+    const w1 = new Date(dt.getFullYear(), 0, 4);
+    return 1 + Math.round(((dt.getTime() - w1.getTime()) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
+  };
+  const fmtD = d => `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const totalCells = Math.ceil((firstDow + daysInMonth) / 7) * 7;
+  const cells = Array.from({ length: totalCells }, (_, i) => { const d = i - firstDow + 1; return d >= 1 && d <= daysInMonth ? d : null; });
+  const rows = [];
+  for (let r = 0; r < totalCells / 7; r++) {
+    const dayCells = cells.slice(r * 7, r * 7 + 7);
+    if (dayCells.every(c => c === null)) continue;
+    const firstReal = dayCells.find(c => c !== null);
+    rows.push({ weekNum: getWeek(new Date(year, month, firstReal)), days: dayCells });
+  }
+  return (
+    <div className="pc-mini-cal">
+      <div className="pc-mini-cal-month">{new Date(year,month).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</div>
+      <div className="pc-mini-cal-head">
+        <span className="pc-mini-cal-wk-lbl"/>
+        {DAY_LBL.map((d,i) => <span key={i} className="pc-mini-cal-dn">{d}</span>)}
+      </div>
+      {rows.map((row, ri) => (
+        <div key={ri} className="pc-mini-cal-row">
+          <span className="pc-mini-cal-wk-lbl">{row.weekNum}</span>
+          {row.days.map((d, ci) => {
+            if (!d) return <span key={ci} className="pc-mini-cal-cell pc-mini-cal-empty"/>;
+            const iso = fmtD(d);
+            const isStart = iso === checkIn, isEnd = iso === checkOut;
+            const inRange = iso > checkIn && iso < checkOut;
+            return (
+              <span key={ci} className={['pc-mini-cal-cell', isStart&&'pc-mini-cal-start', isEnd&&'pc-mini-cal-end', inRange&&'pc-mini-cal-in-range'].filter(Boolean).join(' ')}>
+                {d}
+              </span>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 /* ════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ════════════════════════════════════════════════════════════ */
@@ -112,6 +162,7 @@ const PlanningCalendar = () => {
   const [selected,  setSelected]  = useState(null);
   const [panelTab,  setPanelTab]  = useState('detail');
   const [creating,  setCreating]  = useState(false);
+  const [createStep, setCreateStep] = useState(1);
   const [sourceFilter, setSourceFilter] = useState('all');
   const [searchQ,   setSearchQ]   = useState('');
   const [showSearch,setShowSearch]= useState(false);
@@ -124,8 +175,13 @@ const PlanningCalendar = () => {
   const endDate = addDays(startDate, vDays - 1);
 
   const [form, setForm] = useState({
-    guest:'', email:'', phone:'', roomId:'', checkIn: fmtISO(TODAY), checkOut: fmtISO(addDays(TODAY,2)),
+    firstName:'', lastName:'', email:'', phone:'', roomId:'',
+    checkIn: fmtISO(TODAY), checkOut: fmtISO(addDays(TODAY,2)),
     source:'Direct', status:'confirmed', price:'', notes:'', guests:'2',
+    pricingPlan:'default', mealPlan:'none', guestPays:'',
+    company:'', resaType:'', amenities:'', floor:'',
+    roomCount:1, pricingType:'custom', samePriceAll:true,
+    pricePerDay:'50', adults:1, children:0,
   });
 
   /* reservas is derived from the global store — no local persistence needed */
@@ -169,18 +225,22 @@ const PlanningCalendar = () => {
   };
 
   const submitCreate = () => {
-    if (!form.guest.trim() || !form.roomId) return;
+    const guestName = [form.firstName, form.lastName].filter(Boolean).join(', ') || '';
+    if (!guestName.trim() || !form.roomId) return;
+    const totalPrice = parseFloat(form.price) || parseFloat(form.pricePerDay || 0) * nights(form.checkIn, form.checkOut);
     const newR = {
       id: `R${String(reservas.length + 1).padStart(3,'0')}`,
       ...form,
-      price: parseFloat(form.price) || 0,
+      guest: guestName,
+      price: totalPrice,
       paid: 0,
-      guests: parseInt(form.guests) || 1,
+      guests: (form.adults || 1) + (form.children || 0),
       hasKey: false,
     };
-    upsertResa(newR);           // optimistic update in store
-    persistReservation(newR);  // persist to Supabase (fire-and-forget)
+    upsertResa(newR);
+    persistReservation(newR);
     setCreating(false);
+    setCreateStep(1);
   };
 
   const genPin = () => {
@@ -531,115 +591,309 @@ const PlanningCalendar = () => {
         )}
       </AnimatePresence>
 
-      {/* ══ CREATE MODAL ════════════════════════════════════ */}
+      {/* CREATE MODAL */}
       <AnimatePresence>
         {creating && (
-          <div className="pc-modal-overlay" onClick={() => setCreating(false)}>
+          <div className="pc-modal-overlay" onClick={()=>{setCreating(false);setCreateStep(1);}}>
             <motion.div
-              className="pc-modal"
-              initial={{ opacity:0, scale:0.96, y:20 }} animate={{ opacity:1, scale:1, y:0 }} exit={{ opacity:0, scale:0.96, y:20 }}
-              onClick={e => e.stopPropagation()}
+              className="pc-modal pc-modal-lg"
+              initial={{opacity:0,scale:0.97,y:16}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:0.97,y:16}}
+              transition={{duration:0.2}}
+              onClick={e=>e.stopPropagation()}
             >
+              {/* Header */}
               <div className="pc-modal-head">
                 <div>
-                  <h2>Nouvelle Réservation</h2>
-                  <p>Ajout manuel — visible immédiatement dans le planning</p>
+                  <h2>Nouvelle Réservation <span className="pc-step-badge">Étape {createStep} de 2</span></h2>
+                  <p>{createStep===1?'Détails du séjour — configuration du logement et des tarifs':'Coordonnées du client & finalisation'}</p>
                 </div>
-                <button className="pc-close-btn" onClick={() => setCreating(false)}><X size={18}/></button>
+                <div className="pc-step-progress">
+                  {[1,2].map(s=>(
+                    <React.Fragment key={s}>
+                      <div className={`pc-step-dot${createStep>=s?' active':''}`}>{s}</div>
+                      {s<2&&<div className={`pc-step-line${createStep>=2?' active':''}`}/>}
+                    </React.Fragment>
+                  ))}
+                </div>
+                <button className="pc-close-btn" onClick={()=>{setCreating(false);setCreateStep(1);}}><X size={18}/></button>
               </div>
 
-              <div className="pc-modal-body">
-                <div className="pc-form-row">
-                  <div className="pc-form-group pc-form-wide">
-                    <label>Nom du client <span className="req">*</span></label>
-                    <input className="pc-input" value={form.guest} onChange={e=>setForm(f=>({...f,guest:e.target.value}))} placeholder="Ex: Dupont, Marie" autoFocus/>
-                  </div>
-                  <div className="pc-form-group">
-                    <label>Adultes</label>
-                    <input className="pc-input" type="number" min="1" max="10" value={form.guests} onChange={e=>setForm(f=>({...f,guests:e.target.value}))} />
-                  </div>
-                </div>
+              {/* Body */}
+              <div className="pc-modal-body pc-modal-split">
 
-                <div className="pc-form-row">
-                  <div className="pc-form-group">
-                    <label>Email</label>
-                    <input className="pc-input" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="client@example.com"/>
-                  </div>
-                  <div className="pc-form-group">
-                    <label>Téléphone</label>
-                    <input className="pc-input" value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="+33 6 …"/>
-                  </div>
-                </div>
+                {/* LEFT MAIN */}
+                <div className="pc-modal-main">
 
-                <div className="pc-form-row">
-                  <div className="pc-form-group">
-                    <label>Check-in <span className="req">*</span></label>
-                    <input className="pc-input" type="date" value={form.checkIn} onChange={e=>setForm(f=>({...f,checkIn:e.target.value}))}/>
-                  </div>
-                  <div className="pc-form-group">
-                    <label>Check-out <span className="req">*</span></label>
-                    <input className="pc-input" type="date" value={form.checkOut} onChange={e=>setForm(f=>({...f,checkOut:e.target.value}))}/>
-                  </div>
-                </div>
+                  {createStep===1&&(<>
+                    {/* Row 1 — 5 columns */}
+                    <div className="pc-form-row-top5">
+                      <div className="pc-form-group pc-fg-dates">
+                        <label>Plage de dates</label>
+                        <div className="pc-date-pair">
+                          <Calendar size={13} className="pc-date-pair-icon"/>
+                          <input type="date" className="pc-input pc-input-date" value={form.checkIn} onChange={e=>setForm(f=>({...f,checkIn:e.target.value}))}/>
+                          <span className="pc-date-sep">–</span>
+                          <input type="date" className="pc-input pc-input-date" value={form.checkOut} onChange={e=>setForm(f=>({...f,checkOut:e.target.value}))}/>
+                        </div>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>Plan tarifaire</label>
+                        <select className="pc-input" value={form.pricingPlan} onChange={e=>setForm(f=>({...f,pricingPlan:e.target.value}))}>
+                          <option value="default">Default prices</option>
+                          <option value="weekend">Weekend</option>
+                          <option value="season">Haute saison</option>
+                          <option value="promo">Promo</option>
+                        </select>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>Premier repas</label>
+                        <select className="pc-input" value={form.mealPlan} onChange={e=>setForm(f=>({...f,mealPlan:e.target.value}))}>
+                          <option value="none">Aucune</option>
+                          <option value="breakfast">Petit-déjeuner</option>
+                          <option value="halfboard">Demi-pension</option>
+                          <option value="fullboard">Pension complète</option>
+                        </select>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>L'invité paie</label>
+                        <select className="pc-input" value={form.guestPays} onChange={e=>setForm(f=>({...f,guestPays:e.target.value}))}>
+                          <option value="">Sélectionner…</option>
+                          <option value="now">Maintenant</option>
+                          <option value="arrival">À l'arrivée</option>
+                          <option value="checkout">Au départ</option>
+                        </select>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>Canaux de vente</label>
+                        <select className="pc-input" value={form.source} onChange={e=>setForm(f=>({...f,source:e.target.value}))}>
+                          {Object.keys(SOURCE_CFG).map(s=><option key={s} value={s}>{s}</option>)}
+                          <option value="Private">Private reserva…</option>
+                        </select>
+                      </div>
+                    </div>
 
-                <div className="pc-form-row">
-                  <div className="pc-form-group pc-form-wide">
-                    <label>Chambre <span className="req">*</span></label>
-                    <select className="pc-input" value={form.roomId} onChange={e=>setForm(f=>({...f,roomId:e.target.value}))}>
-                      <option value="">Sélectionnez une chambre…</option>
-                      {ROOMS.map(r => <option key={r.id} value={r.id}>Ch. {r.id} — {r.name} ({r.type})</option>)}
-                    </select>
-                  </div>
-                  <div className="pc-form-group">
-                    <label>Prix total (€)</label>
-                    <input className="pc-input" type="number" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} placeholder="0"/>
-                  </div>
-                </div>
+                    {/* Row 2 — Name */}
+                    <div className="pc-form-row">
+                      <div className="pc-form-group">
+                        <label>Prénom</label>
+                        <input className="pc-input" value={form.firstName} onChange={e=>setForm(f=>({...f,firstName:e.target.value}))} placeholder="Prénom" autoFocus/>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>Nom de famille</label>
+                        <input className="pc-input" value={form.lastName} onChange={e=>setForm(f=>({...f,lastName:e.target.value}))} placeholder="Nom de famille"/>
+                      </div>
+                    </div>
 
-                <div className="pc-form-row">
-                  <div className="pc-form-group">
-                    <label>Canal / Source</label>
-                    <select className="pc-input" value={form.source} onChange={e=>setForm(f=>({...f,source:e.target.value}))}>
-                      {Object.keys(SOURCE_CFG).map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div className="pc-form-group">
-                    <label>Statut</label>
-                    <select className="pc-input" value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}>
-                      {Object.entries(STATUS_CFG).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
-                    </select>
-                  </div>
-                </div>
+                    {/* Row 3 — Company / Type / Status */}
+                    <div className="pc-form-row-3">
+                      <div className="pc-form-group">
+                        <label>Entreprise</label>
+                        <select className="pc-input" value={form.company} onChange={e=>setForm(f=>({...f,company:e.target.value}))}>
+                          <option value="">Aucune</option>
+                          <option value="corp1">Corporate A</option>
+                          <option value="corp2">Corporate B</option>
+                        </select>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>Type de réservation</label>
+                        <input className="pc-input" value={form.resaType} onChange={e=>setForm(f=>({...f,resaType:e.target.value}))} placeholder="Type de réservation"/>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>État</label>
+                        <select className="pc-input" value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}>
+                          {Object.entries(STATUS_CFG).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
 
-                <div className="pc-form-group">
-                  <label>Notes internes</label>
-                  <textarea className="pc-input pc-textarea" rows={2} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Demandes spéciales, préférences, allergies…"/>
-                </div>
+                    {/* Row 4 — Filters + Mini Calendar */}
+                    <div className="pc-cal-row">
+                      <div className="pc-cal-row-left">
+                        <div className="pc-form-row">
+                          <div className="pc-form-group">
+                            <label>Commodités</label>
+                            <select className="pc-input" value={form.amenities} onChange={e=>setForm(f=>({...f,amenities:e.target.value}))}>
+                              <option value="">Sélect…</option>
+                              <option value="wifi">Wi-Fi</option>
+                              <option value="parking">Parking</option>
+                              <option value="pool">Piscine</option>
+                              <option value="spa">Spa</option>
+                            </select>
+                          </div>
+                          <div className="pc-form-group">
+                            <label>Sols</label>
+                            <select className="pc-input" value={form.floor} onChange={e=>setForm(f=>({...f,floor:e.target.value}))}>
+                              <option value="">Sélect…</option>
+                              <option value="0">Rez-de-chaussée</option>
+                              <option value="1">1er étage</option>
+                              <option value="2">2ème étage</option>
+                              <option value="3">3ème étage</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="pc-form-group">
+                          <label>Chambre <span className="req">*</span></label>
+                          <select className="pc-input" value={form.roomId} onChange={e=>setForm(f=>({...f,roomId:e.target.value}))}>
+                            <option value="">Sélectionnez une chambre…</option>
+                            {ROOMS.map(r=><option key={r.id} value={r.id}>Ch.{r.id} — {r.name} ({r.type})</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="pc-cal-row-right">
+                        <MiniCal checkIn={form.checkIn} checkOut={form.checkOut}/>
+                      </div>
+                    </div>
 
-                {/* Source preview */}
-                {form.source && (
-                  <div className="pc-form-preview">
-                    <SourceBadge source={form.source} size="md"/>
-                    <StatusPill status={form.status}/>
-                    {form.checkIn && form.checkOut && (
-                      <span className="pc-preview-nights">
-                        {nights(form.checkIn, form.checkOut)} nuit{nights(form.checkIn,form.checkOut)>1?'s':''}
-                        {form.price ? ` · ${parseFloat(form.price).toLocaleString('fr-FR')} €` : ''}
-                      </span>
+                    {/* Row 5 — Room count + Tarification */}
+                    <div className="pc-form-row">
+                      <div className="pc-form-group">
+                        <label>Nombre de chambres</label>
+                        <div className="pc-counter">
+                          <button className="pc-counter-btn" type="button" onClick={()=>setForm(f=>({...f,roomCount:Math.max(1,f.roomCount-1)}))}>−</button>
+                          <span className="pc-counter-val">{form.roomCount}</span>
+                          <button className="pc-counter-btn" type="button" onClick={()=>setForm(f=>({...f,roomCount:f.roomCount+1}))}>+</button>
+                        </div>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>Type de tarification</label>
+                        <select className="pc-input" value={form.pricingType} onChange={e=>setForm(f=>({...f,pricingType:e.target.value}))}>
+                          <option value="custom">Personnalisé</option>
+                          <option value="standard">Standard</option>
+                          <option value="promo">Promo</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Row 6 — Toggle + Prices */}
+                    <div className="pc-price-row">
+                      <label className="pc-toggle-label">
+                        <div className={`pc-toggle${form.samePriceAll?' on':''}`} onClick={()=>setForm(f=>({...f,samePriceAll:!f.samePriceAll}))}>
+                          <div className="pc-toggle-thumb"/>
+                        </div>
+                        <span>Même prix pour toutes les chambres</span>
+                      </label>
+                      <div className="pc-price-inputs">
+                        <div className="pc-form-group">
+                          <label>Prix par jour</label>
+                          <input className="pc-input" type="number" min="0" value={form.pricePerDay}
+                            onChange={e=>{const ppd=e.target.value;const n=nights(form.checkIn,form.checkOut);setForm(f=>({...f,pricePerDay:ppd,price:String(parseFloat(ppd||0)*n)}));}}
+                            placeholder="0"/>
+                        </div>
+                        <div className="pc-form-group">
+                          <label>Prix total</label>
+                          <input className="pc-input" type="number" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} placeholder="0"/>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Row 7 — Clients */}
+                    <div className="pc-guests-row">
+                      <span className="pc-guests-count">{form.adults+form.children}</span>
+                      <span className="pc-guests-label">Clients</span>
+                      <div className="pc-guests-breakdown">
+                        <span>Adultes {form.adults}</span>
+                        <input type="range" min="1" max="10" value={form.adults} onChange={e=>setForm(f=>({...f,adults:parseInt(e.target.value)}))} className="pc-range"/>
+                      </div>
+                      <div className="pc-guests-breakdown">
+                        <span>Enfants {form.children}</span>
+                        <input type="range" min="0" max="6" value={form.children} onChange={e=>setForm(f=>({...f,children:parseInt(e.target.value)}))} className="pc-range"/>
+                      </div>
+                    </div>
+                  </>)}
+
+                  {createStep===2&&(<>
+                    <div className="pc-step2-recap">
+                      <div className="pc-recap-title">Récapitulatif du séjour</div>
+                      <div className="pc-recap-grid">
+                        <div className="pc-recap-item"><span className="pc-recap-lbl">Client</span><span className="pc-recap-val">{[form.firstName,form.lastName].filter(Boolean).join(' ')||'—'}</span></div>
+                        <div className="pc-recap-item"><span className="pc-recap-lbl">Chambre</span><span className="pc-recap-val">{ROOMS.find(r=>r.id===form.roomId)?.name||'—'}</span></div>
+                        <div className="pc-recap-item"><span className="pc-recap-lbl">Séjour</span><span className="pc-recap-val">{form.checkIn} → {form.checkOut} · {nights(form.checkIn,form.checkOut)} nuit{nights(form.checkIn,form.checkOut)>1?'s':''}</span></div>
+                        <div className="pc-recap-item"><span className="pc-recap-lbl">Prix total</span><span className="pc-recap-val">{parseFloat(form.price||0).toLocaleString('fr-FR')} €</span></div>
+                      </div>
+                    </div>
+                    <div className="pc-form-row">
+                      <div className="pc-form-group">
+                        <label>Email</label>
+                        <input className="pc-input" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} placeholder="client@example.com" autoFocus/>
+                      </div>
+                      <div className="pc-form-group">
+                        <label>Téléphone</label>
+                        <input className="pc-input" value={form.phone} onChange={e=>setForm(f=>({...f,phone:e.target.value}))} placeholder="+33 6 …"/>
+                      </div>
+                    </div>
+                    <div className="pc-form-group">
+                      <label>Notes internes</label>
+                      <textarea className="pc-input pc-textarea" rows={3} value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Demandes spéciales, préférences, allergies…"/>
+                    </div>
+                    {form.source&&(
+                      <div className="pc-form-preview">
+                        <SourceBadge source={form.source} size="md"/>
+                        <StatusPill status={form.status}/>
+                        {form.checkIn&&form.checkOut&&(
+                          <span className="pc-preview-nights">
+                            {nights(form.checkIn,form.checkOut)} nuit{nights(form.checkIn,form.checkOut)>1?'s':''}
+                            {form.price?` · ${parseFloat(form.price).toLocaleString('fr-FR')} €`:''}
+                          </span>
+                        )}
+                      </div>
                     )}
-                  </div>
-                )}
+                  </>)}
+                </div>
+
+                {/* RIGHT SIDEBAR */}
+                <div className="pc-modal-side">
+                  <div className="pc-side-title">Chambres sélectionnées</div>
+                  {form.roomId?(()=>{
+                    const room=ROOMS.find(r=>r.id===form.roomId);
+                    const total=parseFloat(form.price)||parseFloat(form.pricePerDay||0)*nights(form.checkIn,form.checkOut);
+                    return(
+                      <div className="pc-sel-room-card">
+                        <div className="pc-sel-room-top">
+                          <button className="pc-sel-room-del" onClick={()=>setForm(f=>({...f,roomId:''}))}>
+                            <Trash2 size={13}/>
+                          </button>
+                          <div className="pc-sel-room-badge"><BedDouble size={13}/> {form.roomCount}</div>
+                          <div className="pc-sel-room-price">{total.toLocaleString('fr-FR',{minimumFractionDigits:2})} EUR</div>
+                        </div>
+                        <div className="pc-sel-room-name">{room?.name||`Ch. ${form.roomId}`}</div>
+                        <div className="pc-sel-room-meta">{nights(form.checkIn,form.checkOut)} nuit{nights(form.checkIn,form.checkOut)>1?'s':''} · {room?.type||''}</div>
+                        <div className="pc-sel-room-avail"><span className="pc-avail-dot"/> Disponible · 1 Votre réservation</div>
+                      </div>
+                    );
+                  })():(
+                    <div className="pc-sel-room-empty">
+                      <BedDouble size={28} style={{color:'#CBD5E1',marginBottom:8}}/>
+                      <p>Sélectionnez une chambre dans le formulaire</p>
+                    </div>
+                  )}
+                  {form.roomId&&form.checkIn&&form.checkOut&&(
+                    <div className="pc-side-summary">
+                      <div className="pc-side-sum-row"><span>Arrivée</span><span>{new Date(form.checkIn+'T00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})}</span></div>
+                      <div className="pc-side-sum-row"><span>Départ</span><span>{new Date(form.checkOut+'T00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'})}</span></div>
+                      <div className="pc-side-sum-row"><span>Durée</span><span>{nights(form.checkIn,form.checkOut)} nuit{nights(form.checkIn,form.checkOut)>1?'s':''}</span></div>
+                      <div className="pc-side-sum-row"><span>Clients</span><span>{form.adults} adulte{form.adults>1?'s':''}{form.children>0?` + ${form.children} enfant${form.children>1?'s':''}`:''}
+                      </span></div>
+                      <div className="pc-side-sum-row pc-side-sum-total"><span>Total</span><span>{parseFloat(form.price||0).toLocaleString('fr-FR',{minimumFractionDigits:2})} €</span></div>
+                    </div>
+                  )}
+                </div>
               </div>
 
+              {/* Footer */}
               <div className="pc-modal-foot">
-                <button className="pc-panel-btn-sec" onClick={() => setCreating(false)}>Annuler</button>
-                <button
-                  className="pc-panel-btn-prim"
-                  onClick={submitCreate}
-                  disabled={!form.guest.trim() || !form.roomId}
-                >
-                  <Plus size={15}/> Créer la Réservation
-                </button>
+                <button className="pc-panel-btn-sec" onClick={()=>{setCreating(false);setCreateStep(1);}}>Annuler</button>
+                {createStep===1?(
+                  <button className="pc-panel-btn-prim" onClick={()=>setCreateStep(2)}>
+                    Suivant <ArrowRight size={14}/>
+                  </button>
+                ):(
+                  <>
+                    <button className="pc-panel-btn-sec" style={{marginLeft:'auto'}} onClick={()=>setCreateStep(1)}>← Retour</button>
+                    <button className="pc-panel-btn-prim" onClick={submitCreate} disabled={!form.roomId||(!form.firstName?.trim()&&!form.lastName?.trim())}>
+                      <Plus size={15}/> Créer la Réservation
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>
