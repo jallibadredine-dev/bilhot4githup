@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit3, Trash2, Search, Eye, XCircle, UserCheck, Shield, Crown, Save, RefreshCw, Check, X, Lock } from 'lucide-react';
+import { useAppStore } from '../../../store/appStore';
 
 const ROLES = ['super_admin','admin','manager','support','user'];
 const ROLE_COLORS = {super_admin:'#EF4444',admin:'#F59E0B',manager:'#3B82F6',support:'#8B5CF6',user:'#94A3B8'};
@@ -34,9 +35,12 @@ const RolePill = ({role}) => {
 };
 
 export default function UsersRoles() {
+  const storeProfiles    = useAppStore(s => s.profiles);
+  const setStoreProfiles = useAppStore(s => s.setProfiles);
+
   const [tab,setTab]     = useState('users');
-  const [users,setUsers] = useState([]);
-  const [loading,setLoading] = useState(true);
+  const [users,setUsers] = useState(() => storeProfiles); // pre-populate from global store
+  const [loading,setLoading] = useState(storeProfiles.length === 0);
   const [q,setQ]         = useState('');
   const [sel,setSel]     = useState(null);
   const [perms,setPerms] = useState(DEFAULT_PERMS);
@@ -46,7 +50,9 @@ export default function UsersRoles() {
     fetch('/api/admin/users').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.users) ? d.users : []);
       setUsers(arr);
-    }).catch(()=>setUsers([])).finally(()=>setLoading(false));
+      if (arr.length) setStoreProfiles(arr); // keep global store in sync
+    }).catch(()=>{ if (!storeProfiles.length) setUsers([]); })
+      .finally(()=>setLoading(false));
   },[]);
 
   const filtered = users.filter(u=>

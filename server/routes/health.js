@@ -98,7 +98,7 @@ router.get('/', (_req, res) => {
 });
 
 /* ── GET /api/health/providers — full provider health sweep ────── */
-router.get('/providers', async (_req, res) => {
+router.get('/providers', requireSuperAdmin, async (_req, res) => {
   const SB_URL = getSbUrl();
   const SB_KEY = getSbKey();
 
@@ -109,24 +109,27 @@ router.get('/providers', async (_req, res) => {
     timedFetch('http://localhost:' + (process.env.BACKEND_PORT || '3001') + '/api/health', {}, 2000),
     timedFetch('https://accounts.google.com/.well-known/openid-configuration', {}, 4000),
     timedFetch('https://euapi.ttlock.com/v3/user/login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'clientId=health_check' }, 5000),
+    timedFetch('https://thtthotel.ttlock.com/v3/hotel/listHotelInfo', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'clientId=health_check' }, 5000),
     timedFetch('http://localhost:8080/api/status', {}, 2000),
     process.env.REDIS_URL
       ? timedFetch(process.env.REDIS_URL + '/ping', {}, 2000)
       : Promise.resolve(null),
   ]);
 
-  const [sbR, selfR, googleR, ttlockR, rfidR, redisR] = checks.map(r =>
+  const [sbR, selfR, googleR, ttlockR, tthotelR, rfidR, redisR] = checks.map(r =>
     r.status === 'fulfilled' ? r.value : { ok: false, status: 0, ms: 0, error: r.reason?.message }
   );
 
-  // TTLock: a 400 response means the server is up (request format error, not an outage)
-  const ttlockStatus = ttlockR?.status === 400 ? 'up' : classifyStatus(ttlockR);
+  // TTLock/TTHotel: 400 means the server is up (auth error, not an outage)
+  const ttlockStatus  = ttlockR?.status  === 400 ? 'up' : classifyStatus(ttlockR);
+  const tthotelStatus = tthotelR?.status === 400 ? 'up' : (tthotelR?.status === 0 ? 'not_configured' : classifyStatus(tthotelR));
 
   const rawProviders = [
     { id: 'supabase',     raw: sbR,      status: SB_URL ? classifyStatus(sbR)  : 'not_configured', configured: !!SB_URL },
     { id: 'backend',      raw: selfR,    status: classifyStatus(selfR),                             configured: true     },
     { id: 'google_oauth', raw: googleR,  status: classifyStatus(googleR),                           configured: true     },
     { id: 'ttlock',       raw: ttlockR,  status: ttlockStatus,                                      configured: true     },
+    { id: 'tthotel',      raw: tthotelR, status: tthotelStatus,                                     configured: tthotelR?.status !== 0 },
     { id: 'rfid',         raw: rfidR,    status: rfidR?.ok ? 'up' : (rfidR?.status === 0 ? 'not_configured' : 'down'), configured: !!rfidR?.ok },
     { id: 'redis',        raw: redisR,   status: redisR == null ? 'not_configured' : classifyStatus(redisR), configured: !!process.env.REDIS_URL },
   ];
@@ -144,12 +147,13 @@ router.get('/providers', async (_req, res) => {
   }
 
   const META = {
-    supabase:     { name: 'Supabase',       description: 'Base de données & Auth' },
-    backend:      { name: 'Backend API',    description: 'Serveur Express interne' },
-    google_oauth: { name: 'Google OAuth',   description: 'Authentification Google' },
-    ttlock:       { name: 'TTLock API',     description: 'Serrures connectées', note: 'Un 400 signifie que l\'API répond (credentials ignorés).' },
-    rfid:         { name: 'Encodeur RFID',  description: 'Service encoder local' },
-    redis:        { name: 'Cache (Redis)',  description: 'Couche de cache optionnelle' },
+    supabase:     { name: 'Supabase',        description: 'Base de données & Auth' },
+    backend:      { name: 'Backend API',     description: 'Serveur Express interne' },
+    google_oauth: { name: 'Google OAuth',    description: 'Authentification Google' },
+    ttlock:       { name: 'TTLock API',      description: 'Serrures connectées', note: 'Un 400 signifie que l\'API répond (credentials ignorés).' },
+    tthotel:      { name: 'TTHotel API',     description: 'Gestion hôtelière TTLock', note: 'Un 400 signifie que l\'API répond (credentials ignorés).' },
+    rfid:         { name: 'Encodeur RFID',   description: 'Service encoder local' },
+    redis:        { name: 'Cache (Redis)',   description: 'Couche de cache optionnelle' },
   };
 
   const providers = rawProviders.map(p => ({

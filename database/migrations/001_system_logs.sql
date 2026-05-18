@@ -19,7 +19,7 @@ create index if not exists idx_system_logs_module     on public.system_logs (mod
 -- Enable Row Level Security
 alter table public.system_logs enable row level security;
 
--- Only super_admins can read; backend service role can write
+-- Only super_admins can read system logs
 create policy "super_admin_read_system_logs"
   on public.system_logs for select
   using (
@@ -29,9 +29,16 @@ create policy "super_admin_read_system_logs"
     )
   );
 
-create policy "service_role_write_system_logs"
+-- Only super_admins can insert via authenticated client sessions.
+-- Backend writes use the service_role key which bypasses RLS entirely.
+create policy "super_admin_write_system_logs"
   on public.system_logs for insert
-  with check (true);
+  with check (
+    auth.uid() is not null and exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'super_admin'
+    )
+  );
 
 -- Enable Realtime for live log streaming
 alter publication supabase_realtime add table public.system_logs;

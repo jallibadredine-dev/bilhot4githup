@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, CreditCard, RefreshCw, Download, Search, Eye, CheckCircle, XCircle, Clock, AlertTriangle, BarChart3 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { useAppStore } from '../../../store/appStore';
 
 const fmtEur = n => `${Number(n||0).toLocaleString('fr-FR')} €`;
 const MRR_DATA = [
@@ -23,16 +24,22 @@ const StatusBadge = ({s}) => {
 };
 
 export default function Payments() {
-  const [payments,setPayments] = useState([]);
-  const [loading,setLoading]   = useState(true);
+  const storePayments    = useAppStore(s => s.payments);
+  const setStorePayments = useAppStore(s => s.setPayments);
+
+  const [payments,setPayments] = useState(() => storePayments.length ? storePayments : []); // pre-populate from store
+  const [loading,setLoading]   = useState(storePayments.length === 0);
   const [tab,setTab]           = useState('overview');
   const [q,setQ]               = useState('');
 
   useEffect(()=>{
     fetch('/api/admin/payments').then(r=>r.json()).then(d=>{
       const arr = Array.isArray(d) ? d : (Array.isArray(d?.payments) ? d.payments : []);
-      setPayments(arr.length ? arr : MOCK_TXN);
-    }).catch(()=>setPayments(MOCK_TXN)).finally(()=>setLoading(false));
+      const result = arr.length ? arr : MOCK_TXN;
+      setPayments(result);
+      if (arr.length) setStorePayments(arr); // keep global store in sync
+    }).catch(()=>setPayments(storePayments.length ? storePayments : MOCK_TXN))
+      .finally(()=>setLoading(false));
   },[]);
 
   const txns = (payments.length ? payments : MOCK_TXN).filter(t =>

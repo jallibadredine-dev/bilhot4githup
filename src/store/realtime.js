@@ -6,39 +6,57 @@ import { useAppStore } from './appStore';
    Call useRealtimeSync() once at the App root.
    Subscribes to all core PMS tables and pushes INSERT/UPDATE/DELETE
    events into the global Zustand store (single source of truth).
+   Optional tables (settings, permissions) fail silently.
    Channels are removed on unmount to avoid leaks.
 ─────────────────────────────────────────────────────────────── */
 
 const TABLE_CONFIGS = [
+  /* ── Core PMS tables ─────────────────────────────────────── */
   {
-    table: 'reservations',
+    table: 'reservations', required: true,
     upsert: (row) => useAppStore.getState().upsertReservation(row),
     remove: (row) => useAppStore.getState().removeReservation(row.id),
   },
   {
-    table: 'guests',
+    table: 'guests', required: true,
     upsert: (row) => useAppStore.getState().upsertGuest(row),
     remove: (row) => useAppStore.getState().removeGuest(row.id),
   },
   {
-    table: 'rooms',
+    table: 'rooms', required: true,
     upsert: (row) => useAppStore.getState().upsertRoom(row),
     remove: (row) => useAppStore.getState().removeRoom(row.id),
   },
   {
-    table: 'access_cards',
+    table: 'access_cards', required: true,
     upsert: (row) => useAppStore.getState().upsertAccessCard(row),
     remove: (row) => useAppStore.getState().removeAccessCard(row.id),
   },
   {
-    table: 'profiles',
+    table: 'profiles', required: true,
     upsert: (row) => useAppStore.getState().upsertProfile(row),
     remove: (row) => useAppStore.getState().removeProfile(row.id),
   },
   {
-    table: 'payments',
+    table: 'payments', required: true,
     upsert: (row) => useAppStore.getState().upsertPayment(row),
     remove: (row) => useAppStore.getState().removePayment(row.id),
+  },
+  /* ── Optional domains (silent on missing tables) ─────────── */
+  {
+    table: 'settings', required: false,
+    upsert: (row) => row.key && useAppStore.getState().mergeSetting(row.key, row.value),
+    remove: () => {},
+  },
+  {
+    table: 'permissions', required: false,
+    upsert: (row) => row.id && useAppStore.getState().upsertProfile(row),
+    remove: () => {},
+  },
+  {
+    table: 'system_logs', required: false,
+    upsert: (row) => useAppStore.getState().prependSystemLog(row),
+    remove: () => {},
   },
 ];
 
@@ -48,7 +66,7 @@ export function useRealtimeSync() {
   useEffect(() => {
     if (!SUPABASE_READY) return;
 
-    const channels = TABLE_CONFIGS.map(({ table, upsert, remove }) => {
+    const channels = TABLE_CONFIGS.map(({ table, upsert, remove, required }) => {
       const channel = supabase
         .channel(`realtime:${table}`)
         .on(
@@ -65,8 +83,10 @@ export function useRealtimeSync() {
         )
         .subscribe((status) => {
           if (status === 'CHANNEL_ERROR') {
-            console.warn(`[Hova] Realtime channel error: ${table}`);
-            writeSystemLog({ severity: 'warn', module: 'realtime', message: `Realtime channel error: ${table}` });
+            if (required) {
+              console.warn(`[Hova] Realtime channel error: ${table}`);
+              writeSystemLog({ severity: 'warn', module: 'realtime', message: `Realtime channel error: ${table}` });
+            }
           }
         });
       return channel;
@@ -98,26 +118,24 @@ export async function loadInitialStoreData() {
   if (!SUPABASE_READY) return;
   const store = useAppStore.getState();
 
-  // Load in parallel; each table is optional (graceful on missing table)
   const loads = [
     supabase.from('reservations').select('*').order('created_at', { ascending: false }).limit(200)
       .then(({ data }) => data && store.setReservations(data))
       .catch(() => {}),
-
     supabase.from('guests').select('*').order('created_at', { ascending: false }).limit(200)
       .then(({ data }) => data && store.setGuests(data))
       .catch(() => {}),
-
     supabase.from('rooms').select('*').order('name', { ascending: true }).limit(200)
       .then(({ data }) => data && store.setRooms(data))
       .catch(() => {}),
-
     supabase.from('access_cards').select('*').order('created_at', { ascending: false }).limit(200)
       .then(({ data }) => data && store.setAccessCards(data))
       .catch(() => {}),
-
     supabase.from('profiles').select('id,full_name,email,role,plan,avatar_url,created_at').order('created_at', { ascending: false }).limit(200)
       .then(({ data }) => data && store.setProfiles(data))
+      .catch(() => {}),
+    supabase.from('payments').select('*').order('created_at', { ascending: false }).limit(200)
+      .then(({ data }) => data && store.setPayments(data))
       .catch(() => {}),
   ];
 
