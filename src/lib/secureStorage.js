@@ -1,14 +1,15 @@
 /**
- * Auth-gated localStorage accessor for sensitive credentials.
+ * Auth-gated storage accessor for sensitive credentials.
  *
  * Read methods enforce isAuthenticated() before returning data — preventing
  * stale credential exposure on unauthenticated page loads.
- * clearSensitiveLocalState() removes all sensitive keys on sign-out / no session.
+ * clearSensitiveLocalState() purges both localStorage AND sessionStorage on
+ * sign-out / no session, closing the residual-token-after-logout gap.
  */
 import { isAuthenticated } from './authState';
 
 /* ─── Key registry (used by clearSensitiveLocalState) ─────── */
-const SENSITIVE_STORAGE_KEYS = [
+const SENSITIVE_LS_KEYS = [
   'channex_token',
   'hosflow_checkins',
   'hosflow_police_declarations',
@@ -36,33 +37,45 @@ const SENSITIVE_STORAGE_KEYS = [
   'ttlock_user',
 ];
 
-const SENSITIVE_KEY_PREFIXES = [
-  'cm_ota_',
-  'cm_prods_',
-];
+/** TTLock uses sessionStorage for its short-lived access token. */
+const SENSITIVE_SS_KEYS = ['ttlock_token'];
 
-/* ─── Purge all sensitive state (called on sign-out / no session) ─── */
+const SENSITIVE_LS_PREFIXES = ['cm_ota_', 'cm_prods_'];
+
+/* ─── Purge ALL sensitive state (called on sign-out / no session) ─── */
 export const clearSensitiveLocalState = () => {
-  SENSITIVE_STORAGE_KEYS.forEach(key => localStorage.removeItem(key));
-  const keysToRemove = [];
+  // localStorage — known keys
+  SENSITIVE_LS_KEYS.forEach(key => localStorage.removeItem(key));
+  // localStorage — prefix-matched keys (cm_ota_*, cm_prods_*)
+  const lsToRemove = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && SENSITIVE_KEY_PREFIXES.some(prefix => k.startsWith(prefix))) {
-      keysToRemove.push(k);
-    }
+    if (k && SENSITIVE_LS_PREFIXES.some(p => k.startsWith(p))) lsToRemove.push(k);
   }
-  keysToRemove.forEach(k => localStorage.removeItem(k));
+  lsToRemove.forEach(k => localStorage.removeItem(k));
+  // sessionStorage — TTLock access token and any future session-scoped secrets
+  SENSITIVE_SS_KEYS.forEach(key => sessionStorage.removeItem(key));
 };
 
 /* ─── Auth-gated accessors ───────────────────────────────────── */
 export const secureStorage = {
   /**
-   * Returns the stored string value only when a session is active.
-   * Returns `defaultValue` (null) when unauthenticated, even if the key exists.
+   * localStorage: returns stored string only when a session is active.
+   * Returns `defaultValue` when unauthenticated, even if the key exists.
    */
   getSensitive(key, defaultValue = null) {
     if (!isAuthenticated()) return defaultValue;
     const val = localStorage.getItem(key);
+    return val !== null ? val : defaultValue;
+  },
+
+  /**
+   * sessionStorage: same auth-gate pattern for session-scoped secrets
+   * (e.g. TTLock access token).
+   */
+  getSessionSensitive(key, defaultValue = null) {
+    if (!isAuthenticated()) return defaultValue;
+    const val = sessionStorage.getItem(key);
     return val !== null ? val : defaultValue;
   },
 
@@ -72,7 +85,7 @@ export const secureStorage = {
     return localStorage.getItem(key) === '1';
   },
 
-  /** Parses a JSON value — returns `defaultValue` without session or on error. */
+  /** Parses a JSON value from localStorage — returns `defaultValue` without session or on error. */
   parseJSON(key, defaultValue = null) {
     if (!isAuthenticated()) return defaultValue;
     try {
@@ -83,6 +96,8 @@ export const secureStorage = {
     }
   },
 
-  setSensitive(key, value)  { localStorage.setItem(key, value); },
-  removeSensitive(key)      { localStorage.removeItem(key); },
+  setSensitive(key, value)         { localStorage.setItem(key, value); },
+  removeSensitive(key)             { localStorage.removeItem(key); },
+  setSessionSensitive(key, value)  { sessionStorage.setItem(key, value); },
+  removeSessionSensitive(key)      { sessionStorage.removeItem(key); },
 };

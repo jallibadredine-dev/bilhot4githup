@@ -74,19 +74,19 @@ const BattBar = ({ level }) => (
 const SmartLockHub = () => {
 
   /* ── View state ── */
-  const anyConnected = !!(sessionStorage.getItem('ttlock_token') || secureStorage.getSensitive('slh_tthotel') || secureStorage.getSensitive('slh_tuya'));
+  const anyConnected = !!(secureStorage.getSessionSensitive('ttlock_token') || secureStorage.getSensitive('slh_tthotel') || secureStorage.getSensitive('slh_tuya'));
   const [view, setView]     = useState(anyConnected ? 'devices' : 'setup'); // 'setup' | 'devices'
   const [syncing, setSyncing] = useState(false);
 
   /* ── Provider auth ── */
-  const [connTTLock,  setConnTTLock]  = useState(!!sessionStorage.getItem('ttlock_token'));
+  const [connTTLock,  setConnTTLock]  = useState(!!secureStorage.getSessionSensitive('ttlock_token'));
   const [connTTHotel, setConnTTHotel] = useState(!!secureStorage.getSensitive('slh_tthotel'));
   const [connTuya,    setConnTuya]    = useState(!!secureStorage.getSensitive('slh_tuya'));
 
   // TTLock
   const [ttUser,   setTtUser]   = useState(secureStorage.getSensitive('ttlock_user', ''));
   const [ttPass,   setTtPass]   = useState('');
-  const [ttToken,  setTtToken]  = useState(sessionStorage.getItem('ttlock_token') || '');
+  const [ttToken,  setTtToken]  = useState(secureStorage.getSessionSensitive('ttlock_token', ''));
   const [ttShowPw, setTtShowPw] = useState(false);
   const [ttLoading,setTtLoading]= useState(false);
   const [ttErr,    setTtErr]    = useState('');

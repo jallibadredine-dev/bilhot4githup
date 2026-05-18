@@ -41,7 +41,7 @@ const AutomationHub = () => {
 
   // Tokens
   const channexToken = secureStorage.getSensitive('channex_token', '');
-  const ttlockToken = sessionStorage.getItem('ttlock_token') || '';
+  const ttlockToken = secureStorage.getSessionSensitive('ttlock_token', '');
   const hasChannex = !!channexToken;
   const hasTTLock = !!ttlockToken;
   const isReady = hasChannex && hasTTLock;
