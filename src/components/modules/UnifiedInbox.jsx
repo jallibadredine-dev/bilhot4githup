@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { channexAPI } from '../../lib/channex';
+import { logError } from '../../lib/errorHandler';
+import { toast } from '../../lib/toast';
 import './UnifiedInbox.css';
 
 /* ─── OTA DEFINITIONS (mirroring ChannelManager) ─────────── */
@@ -228,8 +230,11 @@ const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
         setSyncStatus('connected');
         setLastSync(new Date());
       } catch (e) {
+        const msg = e.message || 'Erreur API Channex';
+        logError('inbox', 'Channex sync failed', { error: msg });
+        toast.error(msg);
         setSyncStatus('error');
-        setApiError(e.message || 'Erreur API Channex');
+        setApiError(msg);
       }
     }
 
@@ -315,7 +320,7 @@ const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
     const conv = conversations.find(c => c.id === selectedId);
     if (conv?.isReal && channexToken) {
       try { await channexAPI.sendMessage(channexToken, selectedId, sentText); }
-      catch (e) { console.error('Send failed:', e); }
+      catch (e) { logError('inbox', 'Message send failed', { error: e?.message }); toast.error(e?.message || 'Erreur envoi message'); }
     }
     setSending(false);
     refreshSuggestions([...threadMap[selectedId] || [], newMsg]);

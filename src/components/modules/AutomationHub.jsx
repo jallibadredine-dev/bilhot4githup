@@ -24,6 +24,8 @@ import {
   DEFAULT_SMS_TEMPLATE, DEFAULT_EMAIL_SUBJECT, DEFAULT_EMAIL_BODY,
 } from '../../lib/notifications';
 import { channexAPI } from '../../lib/channex';
+import { logError } from '../../lib/errorHandler';
+import { toast } from '../../lib/toast';
 import './AutomationHub.css';
 
 const AutomationHub = () => {
@@ -106,7 +108,10 @@ const AutomationHub = () => {
       setTestResult({ ok: true, msg: 'Email envoyé avec succès !' });
       setNotifLog(getNotifLog());
     } catch (e) {
-      setTestResult({ ok: false, msg: e.text || e.message || 'Erreur envoi' });
+      const msg = e.text || e.message || 'Erreur envoi';
+      logError('automation.test', msg);
+      toast.error(msg);
+      setTestResult({ ok: false, msg });
     }
     setTestSending(false);
   };
@@ -155,7 +160,9 @@ const AutomationHub = () => {
     try {
       const res = await channexAPI.getProperties(channexToken);
       if (res?.data) setProperties(res.data);
-    } catch {}
+    } catch (e) {
+      logError('automation.properties', e?.message || 'Échec du chargement des propriétés');
+    }
     setPropertiesLoading(false);
   }, [channexToken]);
 
