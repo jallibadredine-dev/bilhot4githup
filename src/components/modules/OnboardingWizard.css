@@ -1,0 +1,495 @@
+/* ═══════════════════════════════════════════════════════════
+   OnboardingWizard — HOVA PMS
+═══════════════════════════════════════════════════════════ */
+.ow-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+/* ── Top bar ──────────────────────────────────────────────── */
+.ow-top-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+.ow-switch-link {
+  background: none;
+  border: none;
+  color: #6D28D9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 0;
+  font-family: inherit;
+}
+.ow-switch-link:hover { text-decoration: underline; }
+
+/* ── Progress bar ─────────────────────────────────────────── */
+.ow-step-indicator {
+  margin-bottom: 20px;
+}
+.ow-progress-bar {
+  height: 5px;
+  background: #EDE9FE;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 7px;
+}
+.ow-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7C3AED, #A855F7);
+  border-radius: 10px;
+}
+.ow-step-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9CA3AF;
+  letter-spacing: 0.3px;
+}
+
+/* ── Step wrapper ─────────────────────────────────────────── */
+.ow-step-wrapper {
+  min-height: 300px;
+}
+.ow-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Step header icons ────────────────────────────────────── */
+.ow-step-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ow-step-icon.purple { background: #EDE9FE; color: #6D28D9; }
+.ow-step-icon.blue   { background: #EFF6FF; color: #2563EB; }
+.ow-step-icon.green  { background: #F0FDF4; color: #16A34A; }
+.ow-step-icon.orange { background: #FFF7ED; color: #EA580C; }
+.ow-step-icon.pink   { background: #FDF4FF; color: #A21CAF; }
+.ow-step-icon.red    { background: #FEF2F2; color: #DC2626; }
+
+.ow-step-body h2 {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #0F172A;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+.ow-step-sub {
+  font-size: 0.85rem;
+  color: #64748B;
+  margin: -6px 0 2px;
+}
+
+/* ── Alert ─────────────────────────────────────────────────── */
+.ow-alert {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 9px;
+}
+
+/* ── Fields ────────────────────────────────────────────────── */
+.ow-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ow-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+.ow-field label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ow-optional {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #94A3B8;
+}
+.ow-field input,
+.ow-field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: #1E293B;
+  background: #F8FAFC;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.ow-field input:focus,
+.ow-field select:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+  background: white;
+}
+.ow-field.error input,
+.ow-field.error select {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
+}
+.ow-field-err {
+  font-size: 0.75rem;
+  color: #EF4444;
+  font-weight: 600;
+}
+.ow-field-row {
+  display: flex;
+  gap: 10px;
+}
+.ow-field-row .ow-field { flex: 1; }
+
+/* ── Password ───────────────────────────────────────────────── */
+.ow-pw-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ow-pw-wrap input {
+  padding-right: 38px;
+}
+.ow-pw-eye {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #94A3B8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+}
+.ow-pw-eye:hover { color: #475569; }
+
+.ow-pw-strength {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ow-pw-rule {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94A3B8;
+  background: #F1F5F9;
+  padding: 3px 9px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.ow-pw-rule.ok {
+  color: #16A34A;
+  background: #DCFCE7;
+}
+.ow-pw-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #CBD5E1;
+  display: inline-block;
+}
+
+/* ── Type cards ─────────────────────────────────────────────── */
+.ow-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 480px) {
+  .ow-cards-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.ow-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  border: 2px solid #E2E8F0;
+  border-radius: 14px;
+  background: #F8FAFC;
+  cursor: pointer;
+  transition: all 0.18s;
+  position: relative;
+  font-family: inherit;
+}
+.ow-type-card:hover {
+  border-color: #A78BFA;
+  background: #F5F3FF;
+  transform: translateY(-2px);
+}
+.ow-type-card.selected {
+  border-color: #7C3AED;
+  background: #EDE9FE;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+}
+.ow-type-icon {
+  color: #6D28D9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ow-type-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #1E293B;
+  text-align: center;
+  line-height: 1.3;
+}
+.ow-type-check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #7C3AED;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Unit ranges ─────────────────────────────────────────────── */
+.ow-range-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ow-range-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
+  background: #F8FAFC;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1E293B;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+}
+.ow-range-btn:hover {
+  border-color: #A78BFA;
+  background: #F5F3FF;
+}
+.ow-range-btn.selected {
+  border-color: #7C3AED;
+  background: #EDE9FE;
+  color: #5B21B6;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+}
+.ow-range-check {
+  color: #7C3AED;
+}
+
+/* ── Needs ────────────────────────────────────────────────────── */
+.ow-need-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ow-need-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px solid #E2E8F0;
+  border-radius: 12px;
+  background: #F8FAFC;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+  position: relative;
+}
+.ow-need-btn:hover {
+  border-color: #A78BFA;
+  background: #F5F3FF;
+}
+.ow-need-btn.selected {
+  border-color: #7C3AED;
+  background: #EDE9FE;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+}
+.ow-need-icon {
+  color: #7C3AED;
+  display: flex;
+  align-items: center;
+}
+.ow-need-label {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1E293B;
+  text-align: left;
+}
+.ow-need-check {
+  color: #7C3AED;
+  flex-shrink: 0;
+}
+
+/* ── Step 6 — Success ─────────────────────────────────────────── */
+.ow-step-success {
+  align-items: center;
+  text-align: center;
+  padding: 10px 0 20px;
+  gap: 16px;
+}
+.ow-step-success h2 {
+  font-size: 1.5rem;
+}
+.ow-success-badge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(124,58,237,0.35);
+}
+.ow-trial-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: linear-gradient(135deg, #EDE9FE, #F5F3FF);
+  border: 1.5px solid #C4B5FD;
+  border-radius: 16px;
+  padding: 16px 20px;
+  text-align: left;
+  color: #5B21B6;
+  width: 100%;
+  box-sizing: border-box;
+}
+.ow-trial-banner > svg { flex-shrink: 0; margin-top: 2px; }
+.ow-trial-banner strong { display: block; font-size: 0.95rem; font-weight: 900; margin-bottom: 3px; }
+.ow-trial-banner span   { font-size: 0.8rem; font-weight: 500; color: #6D28D9; }
+.ow-success-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+.ow-success-feat {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: #F0FDF4;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+  padding: 4px 11px;
+  border-radius: 20px;
+}
+.ow-err-text { color: #DC2626 !important; }
+
+/* ── Loading spinner ───────────────────────────────────────────── */
+.ow-loading-spinner {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ow-spinner-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 4px solid rgba(124,58,237,0.15);
+  border-top-color: #7C3AED;
+}
+
+/* ── Footer navigation ─────────────────────────────────────────── */
+.ow-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  gap: 10px;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 18px;
+}
+.ow-btn-back {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 16px;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  background: white;
+  color: #475569;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s;
+}
+.ow-btn-back:hover:not(:disabled) {
+  border-color: #CBD5E1;
+  background: #F8FAFC;
+}
+.ow-btn-back:disabled { opacity: 0.35; cursor: default; }
+
+.ow-btn-next {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 10px;
+  background: #1E293B;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s;
+}
+.ow-btn-next:hover {
+  background: #0F172A;
+  transform: translateY(-1px);
+}
+.ow-btn-next.primary {
+  background: linear-gradient(135deg, #7C3AED, #6D28D9);
+  box-shadow: 0 4px 14px -3px rgba(109,40,217,0.45);
+}
+.ow-btn-next.primary:hover {
+  background: linear-gradient(135deg, #6D28D9, #5B21B6);
+  box-shadow: 0 6px 18px -3px rgba(109,40,217,0.55);
+}
+
+/* ── Responsive mobile ─────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .ow-field-row { flex-direction: column; }
+  .ow-btn-next { padding: 10px 16px; font-size: 0.82rem; }
+  .ow-cards-grid { grid-template-columns: repeat(2, 1fr); }
+}

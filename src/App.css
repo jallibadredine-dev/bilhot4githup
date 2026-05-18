@@ -12,6 +12,64 @@
   overflow: hidden;
 }
 
+/* ── Trial / Onboarding banner ── */
+.trial-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1200;
+  background: linear-gradient(90deg, #7C3AED 0%, #9333EA 100%);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(109,40,217,0.35);
+}
+.trial-banner--expired {
+  background: linear-gradient(90deg, #DC2626 0%, #EF4444 100%);
+  box-shadow: 0 2px 12px rgba(220,38,38,0.35);
+}
+.trial-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 8px 20px;
+}
+.trial-banner-icon { flex-shrink: 0; opacity: 0.85; }
+.trial-banner-text { flex: 1; }
+.trial-banner-cta {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s;
+  font-family: inherit;
+}
+.trial-banner-cta:hover { background: rgba(255,255,255,0.3); }
+.trial-banner-dismiss {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.trial-banner-dismiss:hover { color: white; }
+
+/* Push content down when trial banner is visible */
+.app-container.has-trial-banner {
+  padding-top: 36px;
+}
+
 /* ─── MAIN CONTENT AREA ─── */
 .app-main-content {
   flex: 1;

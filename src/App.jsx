@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
 import { supabase, SUPABASE_READY } from './lib/supabase';
-import { LayoutDashboard, Monitor, MessageSquare, UserCheck, Menu } from 'lucide-react';
+import { LayoutDashboard, Monitor, MessageSquare, UserCheck, Menu, Clock, Sparkles, X } from 'lucide-react';
 import { getCheckinTokenFromURL } from './lib/checkin';
 import { clearSensitiveLocalState } from './lib/secureStorage';
 import { useRealtimeSync, writeSystemLog, loadInitialStoreData } from './store/realtime';
@@ -79,6 +79,8 @@ function App() {
   const [activeView, setActiveView] = useState('dashboard');
   const [pmsMode, setPmsMode] = useState('pro');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
+  const [trialInfo, setTrialInfo] = useState(null); // { daysLeft: number, expired: boolean } | null
 
   useEffect(() => {
     if (!SUPABASE_READY) {
@@ -106,7 +108,7 @@ function App() {
       try {
         const { data: existing, error: fetchErr } = await supabase
           .from('profiles')
-          .select('id')
+          .select('id, plan, trial_ends_at')
           .eq('id', user.id)
           .single();
         // PGRST116 = "no rows returned" — expected for new users; all other errors are real
@@ -119,12 +121,14 @@ function App() {
             user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             user.email?.split('@')[0] || '';
+          const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
           const { error: upsertErr } = await supabase.from('profiles').upsert({
             id: user.id,
             full_name: displayName,
             email: user.email,
             role: 'user',
-            plan: 'starter',
+            plan: 'trial',
+            trial_ends_at: trialEndsAt,
             avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
             created_at: new Date().toISOString(),
           }, { onConflict: 'id' });
@@ -132,6 +136,14 @@ function App() {
             logError('auth', 'ensureUserProfile: could not create profile', { userId: user.id, error: upsertErr.message });
             writeSystemLog({ severity: 'error', module: 'auth', message: 'Profile creation failed', details: { userId: user.id, error: upsertErr.message } });
           }
+          // New user → set trial banner info
+          setTrialInfo({ daysLeft: 14, expired: false });
+        } else if (existing.plan === 'trial' && existing.trial_ends_at) {
+          // Existing trial user → compute remaining days
+          const daysLeft = Math.ceil(
+            (new Date(existing.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+          );
+          setTrialInfo({ daysLeft: Math.max(0, daysLeft), expired: daysLeft <= 0 });
         }
       } catch (err) {
         logError('auth', 'ensureUserProfile: unexpected error', { error: err.message });
@@ -395,16 +407,62 @@ function App() {
               setAuthState(true);
               setIsAuthenticated(true);
               setActiveView('super-admin');
+            } else if (mode === 'trial') {
+              setPmsMode('pro');
+              setTrialInfo({ daysLeft: 14, expired: false });
+              setIsAuthenticated(true);
             } else {
-              setPmsMode(mode);
+              setPmsMode(mode || 'pro');
             }
         }} />
       </Suspense>
     );
   }
 
+  /* ── Trial banner (shown to trial users) ── */
+  const TrialBanner = () => {
+    if (!trialInfo || trialBannerDismissed) return null;
+    const { daysLeft, expired } = trialInfo;
+
+    return (
+      <div className={`trial-banner ${expired ? 'trial-banner--expired' : ''}`}>
+        <div className="trial-banner-inner">
+          {expired ? (
+            <Clock size={15} className="trial-banner-icon"/>
+          ) : (
+            <Sparkles size={15} className="trial-banner-icon"/>
+          )}
+          <span className="trial-banner-text">
+            {expired
+              ? 'Votre essai gratuit est terminé. Abonnez-vous pour continuer à accéder à toutes les fonctionnalités.'
+              : `Essai gratuit — ${daysLeft} jour${daysLeft > 1 ? 's' : ''} restant${daysLeft > 1 ? 's' : ''}.`
+            }
+          </span>
+          <button
+            className="trial-banner-cta"
+            onClick={() => setActiveView('plans')}
+          >
+            {expired ? 'Voir les plans' : 'Choisir un plan'} →
+          </button>
+          {!expired && (
+            <button
+              className="trial-banner-dismiss"
+              onClick={() => setTrialBannerDismissed(true)}
+              aria-label="Fermer"
+            >
+              <X size={13}/>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className={`app-container mode-${pmsMode} ${isMobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+    <div className={`app-container mode-${pmsMode} ${isMobileMenuOpen ? 'mobile-menu-open' : ''} ${trialInfo && !trialBannerDismissed ? 'has-trial-banner' : ''}`}>
+      {/* Trial banner */}
+      <TrialBanner />
+
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div 
