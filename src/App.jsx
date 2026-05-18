@@ -338,6 +338,8 @@ function App() {
       return (
         <Suspense fallback={<LoadingFallback />}>
           <SuperAdmin onLogout={() => {
+            setAuthState(false);
+            clearSensitiveLocalState();
             supabase.auth.signOut();
             setIsAuthenticated(false);
             setCurrentUser(null);
@@ -366,6 +368,8 @@ function App() {
     return (
       <Suspense fallback={<LoadingFallback />}>
         <SuperAdmin onLogout={() => {
+          setAuthState(false);
+          clearSensitiveLocalState();
           supabase.auth.signOut();
           setIsAuthenticated(false);
           setCurrentUser(null);
@@ -440,6 +444,8 @@ function App() {
             setActiveView={setActiveView}
             currentUser={currentUser}
             onLogout={() => {
+              setAuthState(false);
+              clearSensitiveLocalState();
               supabase.auth.signOut();
               setIsAuthenticated(false);
               setCurrentUser(null);

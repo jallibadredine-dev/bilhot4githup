@@ -45,8 +45,12 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }
   const handleLogout = async () => {
     setLoggingOut(true);
     setDropdownOpen(false);
-    await supabase.auth.signOut();
+    // setAuthState(false) + clearSensitiveLocalState() run synchronously first
+    // so secureStorage gates close immediately, before the async signOut resolves.
+    const { setAuthState } = await import('../../lib/authState');
+    setAuthState(false);
     clearSensitiveLocalState();
+    await supabase.auth.signOut();
     if (onLogout) onLogout();
   };
 

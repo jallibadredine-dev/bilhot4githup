@@ -3,24 +3,22 @@
  *
  * Read methods enforce isAuthenticated() before returning data — preventing
  * stale credential exposure on unauthenticated page loads.
- * clearSensitiveLocalState() purges both localStorage AND sessionStorage on
- * sign-out / no session, closing the residual-token-after-logout gap.
+ *
+ * clearSensitiveLocalState() purges CREDENTIAL keys only (API tokens, secrets).
+ * Business/operational data (reservations, inventory, etc.) is retained across
+ * sessions because it is already protected by the read-time auth gate.
  */
 import { isAuthenticated } from './authState';
 
-/* ─── Key registry (used by clearSensitiveLocalState) ─────── */
-const SENSITIVE_LS_KEYS = [
+/* ─── Credential-only purge list ─────────────────────────────
+ * These grant access to EXTERNAL SYSTEMS (Channex, Beds24, TTLock,
+ * TTHotel, Tuya, EmailJS, Twilio).  They MUST be cleared on sign-out
+ * to prevent API impersonation from a shared browser profile.
+ * ─────────────────────────────────────────────────────────── */
+const CREDENTIAL_LS_KEYS = [
   'channex_token',
-  'hosflow_checkins',
-  'hosflow_police_declarations',
   'beds24_token',
   'beds24_invite_token',
-  'hosflow_processed_bookings',
-  'hosflow_automation_log',
-  'hosflow_property_lock_map',
-  'sh_cleaning_status',
-  'sh_staff',
-  'slh_assignments',
   'slh_tthotel',
   'slh_tthotel_user',
   'slh_tthotel_token',
@@ -35,35 +33,33 @@ const SENSITIVE_LS_KEYS = [
   'slh_tuya_demo',
   'slh_tuya_region',
   'ttlock_user',
-  'hosflow_notif_config',
-  'hosflow_notif_log',
-  'hova_inventory_rooms',
-  'hova_inventory_buildings',
-  'sh_notif_config',
-  'sh_notif_log',
-  'hova_reservations',
-  'hova_access_cards',
-  'hova_card_events',
+  'hosflow_notif_config',  // EmailJS service IDs / public key
+  'sh_notif_config',       // Twilio SID / token
 ];
 
+/** OTA credential configs — purge on logout (grant API access to OTAs). */
+const CREDENTIAL_LS_PREFIXES = ['cm_ota_'];
+
 /** TTLock uses sessionStorage for its short-lived access token. */
-const SENSITIVE_SS_KEYS = ['ttlock_token'];
+const CREDENTIAL_SS_KEYS = ['ttlock_token'];
 
-const SENSITIVE_LS_PREFIXES = ['cm_ota_', 'cm_prods_'];
-
-/* ─── Purge ALL sensitive state (called on sign-out / no session) ─── */
+/* ─── Purge CREDENTIAL state on sign-out ────────────────────
+ * Business/operational data (reservations, inventory, logs, etc.)
+ * is NOT purged here — it is protected by the read-time auth gate
+ * and should persist across user sessions on the same machine.
+ * ─────────────────────────────────────────────────────────── */
 export const clearSensitiveLocalState = () => {
-  // localStorage — known keys
-  SENSITIVE_LS_KEYS.forEach(key => localStorage.removeItem(key));
-  // localStorage — prefix-matched keys (cm_ota_*, cm_prods_*)
+  // localStorage — known credential keys
+  CREDENTIAL_LS_KEYS.forEach(key => localStorage.removeItem(key));
+  // localStorage — prefix-matched OTA credential keys
   const lsToRemove = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && SENSITIVE_LS_PREFIXES.some(p => k.startsWith(p))) lsToRemove.push(k);
+    if (k && CREDENTIAL_LS_PREFIXES.some(p => k.startsWith(p))) lsToRemove.push(k);
   }
   lsToRemove.forEach(k => localStorage.removeItem(k));
-  // sessionStorage — TTLock access token and any future session-scoped secrets
-  SENSITIVE_SS_KEYS.forEach(key => sessionStorage.removeItem(key));
+  // sessionStorage — TTLock access token
+  CREDENTIAL_SS_KEYS.forEach(key => sessionStorage.removeItem(key));
 };
 
 /* ─── Auth-gated accessors ───────────────────────────────────── */
