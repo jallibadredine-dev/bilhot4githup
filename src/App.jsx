@@ -198,7 +198,7 @@ function App() {
       case 'services-hub':
         return <ServicesHub addFolioCharge={addFolioCharge} roomFolios={roomFolios} />;
       case 'billing-engine':
-        return <BillingEngine />;
+        return <BillingEngine pmsMode={pmsMode} />;
       case 'system-admin':
         return <SystemAdmin />;
       case 'super-admin':
