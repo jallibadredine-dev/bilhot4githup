@@ -1,0 +1,163 @@
+NOTE IMPORTANTE À AJOUTER AU PROJET
+
+Optimiser et centraliser toutes les nouvelles fonctionnalités sur l’ensemble du PMS existant.
+
+OBJECTIF GLOBAL :
+Créer une architecture totalement centralisée, synchronisée et visible depuis toutes les interfaces :
+
+- Super Admin Dashboard
+- Admin Hôtel
+- Réception
+- Client Portal
+- Mobile View
+- API Backend
+- Base de données Supabase
+- Redis / Cache
+- Logs système
+
+Toutes les données doivent être synchronisées en temps réel.
+
+---------------------------------------------------
+1. MODULE GESTION DES CARTES / SERRURES HÔTEL
+---------------------------------------------------
+
+Ajouter un module complet de gestion des cartes RFID/NFC pour serrures d’hôtel, compatible avec systèmes type TTHotel / TTLock.
+
+Fonctionnalités obligatoires :
+
+- Encoder une carte d’accès chambre
+- Associer carte + réservation + client
+- Définir automatiquement :
+  - date d’activation
+  - heure d’activation
+  - date d’expiration
+  - heure d’expiration
+- Désactivation automatique après checkout
+- Réencodage carte perdue
+- Historique complet des cartes générées
+- Gestion multi-cartes par réservation
+- Gestion multi-chambres
+- Renouvellement d’accès
+- Accès temporaire
+- Activation immédiate
+- Activation planifiée
+- Vérification statut serrure
+- Journal des événements serrure
+- Compatibilité encodeurs USB RFID standards
+- Préparer architecture compatible API TTHotel / TTLock
+
+Centralisation obligatoire dans Super Admin :
+
+- Nombre de cartes actives
+- Cartes expirées
+- Cartes désactivées
+- Cartes perdues
+- Statut des serrures
+- Historique complet par hôtel
+- Logs techniques encodeur
+
+---------------------------------------------------
+2. AUTHENTIFICATION GOOGLE / GMAIL
+---------------------------------------------------
+
+Activer une authentification Google réelle et fonctionnelle.
+
+Fonctionnalités obligatoires :
+
+- Connexion avec Google
+- Inscription avec Google
+- OAuth Google 2.0
+- Login rapide Gmail
+- Création automatique du compte client
+- Association automatique du profil client
+- Sessions sécurisées
+- JWT sécurisé
+- Possibilité email/password + Google
+- Support desktop et mobile
+- Déconnexion sécurisée
+- Rafraîchissement automatique des sessions
+
+Implémentation recommandée :
+
+- Supabase Auth avec Google Provider
+ou
+- Firebase Auth
+ou
+- NextAuth/Auth.js
+
+Centralisation obligatoire :
+
+Super Admin doit voir :
+
+- Nombre de connexions Google
+- Nombre d’inscriptions Google
+- Utilisateurs actifs
+- Sessions ouvertes
+- Historique connexions
+- Logs OAuth
+- Erreurs de connexion
+
+---------------------------------------------------
+3. CENTRALISATION DES DONNÉES
+---------------------------------------------------
+
+Toutes les interfaces doivent lire les mêmes données :
+
+- réservations
+- clients
+- chambres
+- cartes d’accès
+- paiements
+- utilisateurs
+- permissions
+- logs
+- paramètres
+
+Synchronisation temps réel avec Supabase.
+
+---------------------------------------------------
+4. SANTÉ DU SYSTÈME (HEALTH MONITORING)
+---------------------------------------------------
+
+Ajouter une section "System Health" dans Super Admin :
+
+- statut Supabase
+- statut Redis
+- statut API
+- statut authentification Google
+- statut encodeur RFID
+- erreurs système
+- temps de réponse
+- uptime
+- monitoring temps réel
+
+---------------------------------------------------
+5. OPTIMISATION TECHNIQUE
+---------------------------------------------------
+
+Optimiser tout le projet :
+
+- nettoyage du code
+- suppression doublons
+- composants réutilisables
+- centralisation état global
+- sécurisation API
+- gestion erreurs
+- logs détaillés
+- optimisation performance
+- responsive mobile
+- stabilité production
+
+---------------------------------------------------
+6. OBJECTIF FINAL
+---------------------------------------------------
+
+Avoir un PMS hôtel entièrement opérationnel, centralisé, professionnel et prêt pour production avec :
+
+- gestion hôtels
+- gestion clients
+- gestion réservations
+- accès cartes chambres
+- Google login
+- monitoring système
+- dashboard super admin complet

@@ -1,0 +1,157 @@
+Je veux réécrire complètement l’interface SUPER ADMIN du projet PMS et centraliser toute la gestion du système dans une seule interface professionnelle, moderne et évolutive.
+
+Objectif principal :
+Créer un véritable centre de contrôle unique (Control Center) permettant de gérer l’intégralité du projet depuis une seule interface Super Admin.
+
+L’interface doit être entièrement reconstruite avec une architecture scalable, propre et modulaire.
+
+FONCTIONNALITÉS PRINCIPALES À CENTRALISER :
+
+Gestion globale du PMS
+Depuis l’interface Super Admin, je dois pouvoir :
+gérer toutes les fonctionnalités PMS
+activer/désactiver des modules
+modifier les paramètres du PMS
+gérer les hôtels
+gérer les chambres
+gérer les réservations
+gérer les clients
+gérer les check-in/check-out
+gérer les cartes de serrures RFID
+gérer les encodeurs
+gérer les employés
+gérer les permissions
+Gestion centralisée des API
+Créer un module API Manager permettant :
+ajouter/modifier/supprimer des APIs
+gérer les clés API
+voir l’état des connexions API
+monitorer l’utilisation
+logs des erreurs
+gestion des quotas
+activation/désactivation des APIs
+
+Intégrations prévues :
+
+Stripe
+PayPal
+Google
+WhatsApp API
+Booking
+Airbnb
+OpenAI
+SMS providers
+Email providers
+Serrures intelligentes
+Encodeurs RFID
+Toute API externe
+Gestion des intégrations
+Créer une section “Integrations Center” :
+connecter de nouveaux services
+configurer des webhooks
+gérer les synchronisations
+gérer les automatisations
+voir le statut temps réel des intégrations
+Gestion du site web et de la page d’accueil
+Je veux gérer entièrement le site public depuis le Super Admin.
+
+Fonctionnalités :
+
+modifier la homepage
+gérer les sliders
+ajouter des affiches publicitaires
+ajouter des bannières
+modifier les textes
+gérer les images
+gérer les vidéos
+créer des promotions
+créer des campagnes marketing
+modifier les sections dynamiques
+
+Je veux un CMS intégré directement dans le Super Admin.
+
+Gestion des abonnements et packs
+créer des packs
+modifier les prix
+attribuer des abonnements
+limiter des fonctionnalités
+gérer les essais gratuits
+gestion multi-plans
+Gestion des paiements
+dashboard paiements
+historique des transactions
+remboursements
+factures
+Stripe et PayPal
+revenus globaux
+statistiques financières
+Gestion des utilisateurs et rôles
+Super Admin
+Admin Hôtel
+Réception
+Personnel
+Client
+Permissions avancées
+ACL complète
+Dashboard analytique global
+Créer un dashboard ultra moderne avec :
+statistiques temps réel
+revenus
+réservations
+activité utilisateurs
+consommation API
+monitoring système
+état des serveurs
+analytics visuels avancés
+Refonte UI/UX complète
+Je veux une interface :
+moderne
+premium
+responsive
+rapide
+scalable
+style SaaS professionnel
+dark/light mode
+sidebar intelligente
+widgets dynamiques
+composants réutilisables
+Architecture technique souhaitée
+Frontend :
+React / Next.js
+TailwindCSS
+ShadCN UI
+Dashboard moderne
+
+Backend :
+
+Node.js / Express
+API REST sécurisée
+Architecture modulaire
+
+Database :
+
+PostgreSQL ou MongoDB
+
+Auth :
+
+JWT sécurisé
+Google OAuth
+gestion des sessions
+Objectif final
+Le Super Admin doit devenir le centre de contrôle principal de toute la plateforme.
+
+Je veux pouvoir :
+
+gérer le PMS,
+gérer les APIs,
+gérer les intégrations,
+gérer les publicités,
+gérer le site web,
+gérer les clients,
+gérer les paiements,
+gérer les abonnements,
+gérer les hôtels,
+gérer les cartes d’accès,
+gérer tous les paramètres du système,
+
+depuis UNE SEULE INTERFACE centralisée.
