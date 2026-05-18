@@ -39,6 +39,7 @@ const SystemAdmin = lazy(() => import('./components/modules/SystemAdmin'));
 const UnifiedInbox = lazy(() => import('./components/modules/UnifiedInbox'));
 const StaffHub = lazy(() => import('./components/modules/StaffHub'));
 const AuthPage = lazy(() => import('./components/modules/AuthPage'));
+const OnboardingWizardLazy = lazy(() => import('./components/modules/OnboardingWizard'));
 const LandingPage = lazy(() => import('./components/modules/LandingPage'));
 const SmartLockHub = lazy(() => import('./components/modules/SmartLockHub'));
 const CardManagement = lazy(() => import('./components/modules/CardManagement'));
@@ -81,6 +82,8 @@ function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const [trialInfo, setTrialInfo] = useState(null); // { daysLeft: number, expired: boolean } | null
+  const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
+  const [googleOnboardingUser, setGoogleOnboardingUser] = useState(null);
 
   useEffect(() => {
     if (!SUPABASE_READY) {
@@ -122,6 +125,7 @@ function App() {
             user.user_metadata?.name ||
             user.email?.split('@')[0] || '';
           const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+          const isOAuthProvider = user.app_metadata?.provider && user.app_metadata.provider !== 'email';
           const { error: upsertErr } = await supabase.from('profiles').upsert({
             id: user.id,
             full_name: displayName,
@@ -138,6 +142,11 @@ function App() {
           }
           // New user → set trial banner info
           setTrialInfo({ daysLeft: 14, expired: false });
+          // OAuth new user → send through qualification wizard (steps 2-5)
+          if (isOAuthProvider) {
+            setGoogleOnboardingUser(user);
+            setShowGoogleOnboarding(true);
+          }
         } else if (existing.plan === 'trial' && existing.trial_ends_at) {
           // Existing trial user → compute remaining days
           const daysLeft = Math.ceil(
@@ -242,6 +251,47 @@ function App() {
     });
   };
 
+  /* ── Trial gate wrapper for premium modules ─────────────── */
+  const withTrialGate = (component, moduleName) => {
+    if (!trialInfo?.expired) return component;
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+        <div style={{ filter: 'blur(4px) grayscale(0.4)', pointerEvents: 'none', width: '100%', height: '100%' }}>
+          {component}
+        </div>
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.65)',
+          backdropFilter: 'blur(2px)', zIndex: 10, gap: 16, padding: 24
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 20, padding: '28px 32px', textAlign: 'center',
+            maxWidth: 380, boxShadow: '0 20px 50px rgba(0,0,0,0.25)'
+          }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🔒</div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0F172A', margin: '0 0 8px' }}>
+              Essai terminé
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 18px', lineHeight: 1.5 }}>
+              L'accès à <strong>{moduleName}</strong> nécessite un abonnement actif.
+              Choisissez votre plan pour continuer.
+            </p>
+            <button
+              onClick={() => setActiveView('plans')}
+              style={{
+                background: 'linear-gradient(135deg, #7C3AED, #6D28D9)', color: 'white',
+                border: 'none', borderRadius: 12, padding: '11px 24px', fontSize: '0.9rem',
+                fontWeight: 800, cursor: 'pointer', width: '100%', fontFamily: 'inherit'
+              }}
+            >
+              Voir les plans →
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderModule = () => {
     switch (activeView) {
       case 'dashboard':
@@ -263,7 +313,7 @@ function App() {
       case 'smart-access':
         return <SmartAccess />;
       case 'distribution':
-        return <ChannelManager pmsMode="pro" setActiveView={setActiveView} />;
+        return withTrialGate(<ChannelManager pmsMode="pro" setActiveView={setActiveView} />, 'Channel Manager');
       case 'guest-workflow':
         return <GuestJourneyDiagram />;
       case 'reports':
@@ -271,7 +321,7 @@ function App() {
       case 'website-builder':
         return <WebsiteBuilder />;
       case 'automation-hub':
-        return <AutomationHub />;
+        return withTrialGate(<AutomationHub />, 'Automation Hub');
       case 'checkin-manager':
         return <CheckinManager />;
       case 'automation-workflow':
@@ -305,7 +355,7 @@ function App() {
       case 'staff-hub':
         return <StaffHub onNavigate={setActiveView} />;
       case 'locks':
-        return <SmartLockHub />;
+        return withTrialGate(<SmartLockHub />, 'SmartLock Hub');
       case 'card-management':
         return <CardManagement />;
       case 'inventory':
@@ -416,6 +466,43 @@ function App() {
             }
         }} />
       </Suspense>
+    );
+  }
+
+  /* ── Google OAuth first-login qualification overlay ──────────────────────
+     Shown after Google sign-in for NEW users only.
+     Renders steps 2–5 of the OnboardingWizard before granting PMS access.
+  ── */
+  if (isAuthenticated && showGoogleOnboarding) {
+    return (
+      <div className="auth-container">
+        <div className="ambient-orb orb-1"></div>
+        <div className="ambient-orb orb-2"></div>
+        <div className="ambient-orb orb-3"></div>
+        <div className="auth-content">
+          <Suspense fallback={<LoadingFallback/>}>
+            <div className="auth-form-card auth-form-card--wizard" style={{ marginTop: '6rem' }}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 900, fontSize: '1rem', color: '#0F172A' }}>
+                  Bienvenue sur HOVA PMS
+                </div>
+                <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '4px 0 0' }}>
+                  Quelques informations pour personnaliser votre espace.
+                </p>
+              </div>
+              <OnboardingWizardLazy
+                googleMode={true}
+                googleUser={googleOnboardingUser}
+                onComplete={() => {
+                  setShowGoogleOnboarding(false);
+                  setGoogleOnboardingUser(null);
+                  setTrialInfo({ daysLeft: 14, expired: false });
+                }}
+              />
+            </div>
+          </Suspense>
+        </div>
+      </div>
     );
   }
 

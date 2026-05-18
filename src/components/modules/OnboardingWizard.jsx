@@ -460,7 +460,7 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
       const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
       if (userId && SUPABASE_READY) {
-        await supabase.from('profiles').upsert({
+        const { error: upsertErr } = await supabase.from('profiles').upsert({
           id: userId,
           full_name: data.name.trim() || googleUser?.user_metadata?.full_name || '',
           email: data.email.trim() || googleUser?.email || '',
@@ -481,6 +481,9 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
           avatar_url: googleUser?.user_metadata?.avatar_url || null,
           created_at: new Date().toISOString(),
         }, { onConflict: 'id' });
+        if (upsertErr) {
+          throw new Error('Échec de la sauvegarde du profil : ' + upsertErr.message);
+        }
       }
 
       clearDraft();
