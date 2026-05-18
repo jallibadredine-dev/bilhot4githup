@@ -61,6 +61,7 @@ export default function CardManagement() {
   const [copied,      setCopied]      = useState('');
   const [activeTab,   setActiveTab]   = useState('cards');
   const [doorEvents,  setDoorEvents]  = useState([]);
+  const [opError,     setOpError]     = useState('');
 
   /* ── Load ── */
   const load = useCallback(async () => {
@@ -88,15 +89,21 @@ export default function CardManagement() {
     setEventsLoading(false);
   }, []);
 
+  const _wrapOp = async (fn) => {
+    setOpError('');
+    try { await fn(); }
+    catch (e) { setOpError(e.message || 'Opération échouée'); }
+  };
+
   /* ── Actions ── */
   const handleActivate = async (cardId) => {
-    await activateCard(cardId); await load(); if (selected?.id === cardId) openCard({ ...selected, status: 'active' });
+    await _wrapOp(async () => { await activateCard(cardId); await load(); if (selected?.id === cardId) openCard({ ...selected, status: 'active' }); });
   };
   const handleDeactivate = async (cardId) => {
-    await deactivateCard(cardId); await load(); setSelected(null);
+    await _wrapOp(async () => { await deactivateCard(cardId); await load(); setSelected(null); });
   };
   const handleLost = async (cardId) => {
-    await markCardLost(cardId); await load(); setSelected(null);
+    await _wrapOp(async () => { await markCardLost(cardId); await load(); setSelected(null); });
   };
   const handleReEncode = async (card) => {
     const updated = await reEncodeCard(card.id);
@@ -157,6 +164,14 @@ export default function CardManagement() {
           <RefreshCw size={14} className={loading ? 'rcm-spin' : ''} />
         </button>
       </div>
+
+      {/* ── OPERATION ERROR BANNER ── */}
+      {opError && (
+        <div className="rcm-error-banner">
+          <AlertTriangle size={14} /> {opError}
+          <button onClick={() => setOpError('')}><X size={12} /></button>
+        </div>
+      )}
 
       {/* ── SEARCH ── */}
       <div className="rcm-toolbar">
@@ -461,20 +476,50 @@ function IssueCardModal({ onClose, onIssued }) {
     guest_name: '', room_id: '101', lock_id: 'TTH-001',
     reservation_id: '', activated_at: today, expires_at: nextWeek, notes: '', card_uid: '',
   });
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting,   setSubmitting]   = useState(false);
+  const [submitError,  setSubmitError]  = useState('');
+  const [resvInfo,     setResvInfo]     = useState(null);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  // Lookup reservation in automation bookings cache — canonical Channex booking ID
+  const handleReservationChange = (rawId) => {
+    set('reservation_id', rawId);
+    if (!rawId.trim()) { setResvInfo(null); return; }
+    try {
+      const cache = JSON.parse(localStorage.getItem('hosflow_processed_bookings') || '{}');
+      const entry = cache[rawId.trim()];
+      if (entry && entry.arrivalDate && entry.departureDate) {
+        setResvInfo(entry);
+        setForm(p => ({
+          ...p,
+          reservation_id: rawId.trim(),
+          activated_at:   entry.arrivalDate,
+          expires_at:     entry.departureDate,
+          ...(entry.guestName && !p.guest_name ? { guest_name: entry.guestName } : {}),
+        }));
+      } else {
+        setResvInfo(null);
+      }
+    } catch { setResvInfo(null); }
+  };
 
   const handleSubmit = async () => {
     if (!form.guest_name || !form.room_id) return;
     setSubmitting(true);
-    const card = await issueCard({
-      ...form,
-      activated_at: form.activated_at ? `${form.activated_at}T14:00:00.000Z` : null,
-      expires_at:   form.expires_at   ? `${form.expires_at}T12:00:00.000Z`   : null,
-    });
-    setSubmitting(false);
-    onIssued(card);
+    setSubmitError('');
+    try {
+      const card = await issueCard({
+        ...form,
+        activated_at: form.activated_at ? `${form.activated_at}T14:00:00.000Z` : null,
+        expires_at:   form.expires_at   ? `${form.expires_at}T12:00:00.000Z`   : null,
+      });
+      setSubmitting(false);
+      onIssued(card);
+    } catch (err) {
+      setSubmitting(false);
+      setSubmitError(err.message || 'Erreur lors de la création de la carte.');
+    }
   };
 
   return (
@@ -493,14 +538,31 @@ function IssueCardModal({ onClose, onIssued }) {
           <p>La carte sera encodée via l'encodeur RFID USB après confirmation.</p>
         </div>
 
+        {submitError && (
+          <div className="rcm-submit-error"><AlertTriangle size={13} /> {submitError}</div>
+        )}
+
         <div className="rcm-form-grid">
           <div className="rcm-field">
             <label>Nom du client *</label>
             <div className="rcm-input-wrap"><User size={13} /><input placeholder="Marie Dupont" value={form.guest_name} onChange={e => set('guest_name', e.target.value)} /></div>
           </div>
           <div className="rcm-field">
-            <label>N° de réservation</label>
-            <div className="rcm-input-wrap"><Key size={13} /><input placeholder="RES-001" value={form.reservation_id} onChange={e => set('reservation_id', e.target.value)} /></div>
+            <label>ID de réservation Channex</label>
+            <div className="rcm-input-wrap">
+              <Key size={13} />
+              <input
+                placeholder="booking-id Channex (auto-remplit les dates)"
+                value={form.reservation_id}
+                onChange={e => handleReservationChange(e.target.value)}
+              />
+            </div>
+            {resvInfo && (
+              <div className="rcm-resv-found">
+                <CheckCircle2 size={11} /> Réservation trouvée · Arrivée {resvInfo.arrivalDate} · Départ {resvInfo.departureDate}
+                {resvInfo.guestName ? ` · ${resvInfo.guestName}` : ''}
+              </div>
+            )}
           </div>
           <div className="rcm-field">
             <label>Chambre *</label>

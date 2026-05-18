@@ -475,3 +475,51 @@
   margin: 0;
   line-height: 1.4;
 }
+
+/* ── ERROR BANNER ───────────────────────────────────────────── */
+.rcm-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  color: #DC2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.rcm-error-banner button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #DC2626;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+/* ── MODAL SUBMIT ERROR + RESV FOUND ────────────────────────── */
+.rcm-submit-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  color: #DC2626;
+  font-size: 0.82rem;
+  margin-bottom: 12px;
+}
+.rcm-resv-found {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 0.73rem;
+  color: #10B981;
+  font-weight: 500;
+}

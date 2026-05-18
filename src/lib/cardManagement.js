@@ -155,15 +155,11 @@ export async function issueCard(data) {
 
   if (sb) {
     const { data: row, error } = await supabase.from('access_cards').insert(card).select().single();
-    if (error) {
-      console.warn('[CardMgmt] insert failed, falling back to localStorage:', error.message);
-      const cards = _lsGetCards();
-      cards.unshift(card);
-      _lsSaveCards(cards);
-    } else if (row) {
-      card.id = row.id;
-    }
+    // Production path: Supabase only — no silent localStorage fallback
+    if (error) throw new Error(`Impossible d'enregistrer la carte : ${error.message}`);
+    if (row) card.id = row.id;
   } else {
+    // Offline / demo mode: Supabase tables not present, use localStorage
     const cards = _lsGetCards();
     cards.unshift(card);
     _lsSaveCards(cards);
@@ -240,12 +236,9 @@ export async function renewCard(cardId, newExpiresAt) {
 export async function updateCard(cardId, updates) {
   const patch = { ...updates, updated_at: now() };
   if (await sbReady()) {
+    // Production path: Supabase only — errors are surfaced to callers
     const { error } = await supabase.from('access_cards').update(patch).eq('id', cardId);
-    if (error) {
-      console.warn('[CardMgmt] update failed, applying to localStorage:', error.message);
-      const cards = _lsGetCards().map(c => c.id === cardId ? { ...c, ...patch } : c);
-      _lsSaveCards(cards);
-    }
+    if (error) throw new Error(`Mise à jour impossible : ${error.message}`);
   } else {
     const cards = _lsGetCards().map(c => c.id === cardId ? { ...c, ...patch } : c);
     _lsSaveCards(cards);

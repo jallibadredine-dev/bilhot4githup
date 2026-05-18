@@ -52,7 +52,7 @@ export const savePropertyLockMap = (mappings) => {
   localStorage.setItem(MAPPING_KEY, JSON.stringify(mappings));
 };
 
-const getProcessedBookings = () => {
+export const getProcessedBookings = () => {
   try { return JSON.parse(localStorage.getItem('hosflow_processed_bookings') || '{}'); } catch { return {}; }
 };
 
@@ -61,10 +61,17 @@ const hashPin = async (pin) => {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
 };
 
-const markBookingProcessed = async (bookingId, pin, lockId) => {
+const markBookingProcessed = async (bookingId, pin, lockId, arrivalDate, departureDate, guestName, propertyId) => {
   const processed = getProcessedBookings();
   const pinHash = pin ? await hashPin(pin) : null;
-  processed[bookingId] = { pinHash, lockId, processedAt: new Date().toISOString() };
+  processed[bookingId] = {
+    pinHash, lockId,
+    arrivalDate:   arrivalDate   || null,
+    departureDate: departureDate || null,
+    guestName:     guestName     || null,
+    propertyId:    propertyId    || null,
+    processedAt:   new Date().toISOString(),
+  };
   localStorage.setItem('hosflow_processed_bookings', JSON.stringify(processed));
 };
 
@@ -193,7 +200,7 @@ export const AutomationEngine = {
             type: 1,
           });
 
-          await markBookingProcessed(booking.id, pin, mapping.ttlockLockId);
+          await markBookingProcessed(booking.id, pin, mapping.ttlockLockId, arrivalDate, departureDate, guestName, propertyId);
           pinsCreated++;
 
           addLogEntry({
