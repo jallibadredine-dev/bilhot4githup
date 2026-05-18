@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Globe, Plus, CheckCircle, XCircle, AlertTriangle, Settings, ExternalLink,
          ToggleLeft, ToggleRight, Plug, Webhook, Link2, RefreshCw, Save, Eye, EyeOff, Key } from 'lucide-react';
+import { LS_TUYA_ID, LS_TUYA_SEC, LS_TUYA_REG, TUYA_REGIONS } from '../../../lib/tuya';
 
 /* ── Global TTLock app-credential keys (shared with SmartLockHub) ── */
 const TT_CLIENT_ID_KEY  = 'hova_ttlock_client_id';
@@ -28,6 +29,7 @@ const GROUPS = [
   ]},
   {cat:'Accès & Sécurité',items:[
     {id:'ttlock',  name:'TTLock / TTHotel', em:'🔐',col:'#8B5CF6',st:'connected',   desc:'Serrures connectées, PIN, RFID',     feat:['Lock/Unlock','PIN','RFID'],since:'Jan 2026'},
+    {id:'tuya',   name:'Tuya Smart',        em:'🌿',col:'#059669',st:'connected',   desc:'Serrures & appareils IoT Tuya',      feat:['Lock/Unlock','Devices','IoT'],since:'Jan 2026'},
     {id:'gauth',   name:'Google OAuth 2.0', em:'🔑',col:'#4285F4',st:'connected',   desc:'Authentification SSO',               feat:['SSO','OAuth2'],since:'Jan 2026'},
   ]},
   {cat:'Automatisations',items:[
@@ -107,6 +109,78 @@ function TTLockConfig() {
   );
 }
 
+/* ── Tuya-specific config panel ── */
+function TuyaConfig() {
+  const [cid,   setCid]   = useState(() => localStorage.getItem(LS_TUYA_ID)  || '');
+  const [csec,  setCsec]  = useState(() => localStorage.getItem(LS_TUYA_SEC) || '');
+  const [reg,   setReg]   = useState(() => localStorage.getItem(LS_TUYA_REG) || 'eu');
+  const [showS, setShowS] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const save = () => {
+    if (!cid.trim() || !csec.trim()) return;
+    localStorage.setItem(LS_TUYA_ID,  cid.trim());
+    localStorage.setItem(LS_TUYA_SEC, csec.trim());
+    localStorage.setItem(LS_TUYA_REG, reg);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="sa2-int-config">
+      <div style={{ fontSize: '0.7rem', color: '#718096', marginBottom: 10, lineHeight: 1.5 }}>
+        Credentials d'application Tuya — obtenus sur{' '}
+        <a href="https://iot.tuya.com" target="_blank" rel="noreferrer" style={{ color: '#059669' }}>iot.tuya.com</a>
+        {' '}→ Développement Cloud → Créer un projet. Ces credentials sont partagés avec tous les utilisateurs.
+      </div>
+      <div className="sa2-form-row">
+        <label>Client ID (Access ID)</label>
+        <input
+          type="text"
+          value={cid}
+          onChange={e => setCid(e.target.value)}
+          placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          className="sa2-input"
+          style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+        />
+      </div>
+      <div className="sa2-form-row">
+        <label>Client Secret</label>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input
+            type={showS ? 'text' : 'password'}
+            value={csec}
+            onChange={e => setCsec(e.target.value)}
+            placeholder="••••••••••••••••••••••••••••••••"
+            className="sa2-input"
+            style={{ fontFamily: 'monospace', fontSize: '0.75rem', flex: 1 }}
+          />
+          <button onClick={() => setShowS(v => !v)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '0 4px' }}>
+            {showS ? <EyeOff size={13}/> : <Eye size={13}/>}
+          </button>
+        </div>
+      </div>
+      <div className="sa2-form-row">
+        <label>Région Cloud</label>
+        <select value={reg} onChange={e => setReg(e.target.value)} className="sa2-input" style={{ fontSize: '0.8rem' }}>
+          {Object.entries(TUYA_REGIONS).map(([k, v]) => (
+            <option key={k} value={k}>{v.label} — {v.base.replace('https://','')}</option>
+          ))}
+        </select>
+      </div>
+      <button
+        className="sa2-btn sa2-btn-primary sa2-btn-sm"
+        onClick={save}
+        disabled={!cid.trim() || !csec.trim()}
+        style={{ marginTop: 4 }}
+      >
+        {saved ? <><CheckCircle size={11}/> Sauvegardé</> : <><Save size={11}/> Sauvegarder</>}
+      </button>
+    </div>
+  );
+}
+
 function Card({integ}) {
   const [cfg,setCfg]=useState(false);
   const s=SC[integ.st];
@@ -141,15 +215,15 @@ function Card({integ}) {
         <button className="sa2-btn sa2-btn-sm sa2-btn-ghost"><ExternalLink size={11}/> Docs</button>
       </div>
       {cfg && integ.st==='connected' && (
-        integ.id === 'ttlock'
-          ? <TTLockConfig/>
-          : (
-            <div className="sa2-int-config">
-              <div className="sa2-form-row"><label>Clé API</label><input type="password" defaultValue="••••••••••••" className="sa2-input"/></div>
-              <div className="sa2-form-row"><label>Webhook URL</label><input type="text" placeholder="https://…/webhook" className="sa2-input"/></div>
-              <button className="sa2-btn sa2-btn-primary sa2-btn-sm">Sauvegarder</button>
-            </div>
-          )
+        integ.id === 'ttlock' ? <TTLockConfig/>
+        : integ.id === 'tuya' ? <TuyaConfig/>
+        : (
+          <div className="sa2-int-config">
+            <div className="sa2-form-row"><label>Clé API</label><input type="password" defaultValue="••••••••••••" className="sa2-input"/></div>
+            <div className="sa2-form-row"><label>Webhook URL</label><input type="text" placeholder="https://…/webhook" className="sa2-input"/></div>
+            <button className="sa2-btn sa2-btn-primary sa2-btn-sm">Sauvegarder</button>
+          </div>
+        )
       )}
     </div>
   );

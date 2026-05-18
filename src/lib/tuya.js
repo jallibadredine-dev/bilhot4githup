@@ -19,6 +19,16 @@ export const TUYA_REGIONS = {
   in: { label: 'Inde',     base: 'https://openapi.tuyain.com' },
 };
 
+// App-level credential keys managed by Super Admin → Integrations panel
+export const LS_TUYA_ID  = 'hova_tuya_client_id';
+export const LS_TUYA_SEC = 'hova_tuya_client_sec';
+export const LS_TUYA_REG = 'hova_tuya_region';
+
+const _ls = (k) => (typeof localStorage !== 'undefined' ? localStorage.getItem(k) : '') || '';
+export const resolveTuyaId  = () => _ls(LS_TUYA_ID);
+export const resolveTuyaSec = () => _ls(LS_TUYA_SEC);
+export const resolveTuyaReg = () => _ls(LS_TUYA_REG) || 'eu';
+
 /* ── Crypto helpers ────────────────────────────────────── */
 async function hmacSha256(secret, message) {
   const enc = new TextEncoder();

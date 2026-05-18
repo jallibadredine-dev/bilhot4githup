@@ -11,7 +11,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ttlockAPI } from '../../lib/ttlock';
 import { tthotelAPI } from '../../lib/tthotel';
-import { tuyaAPI, TUYA_REGIONS } from '../../lib/tuya';
+import { tuyaAPI, TUYA_REGIONS, resolveTuyaId, resolveTuyaSec, resolveTuyaReg } from '../../lib/tuya';
 import { handleApiError } from '../../lib/errorHandler';
 import { toast } from '../../lib/toast';
 import { secureStorage } from '../../lib/secureStorage';
@@ -102,12 +102,8 @@ const SmartLockHub = () => {
   const [tthRefresh,  setTthRefresh]  = useState(secureStorage.getSensitive('slh_tthotel_refresh', ''));
   const [tthDemoMode, setTthDemoMode] = useState(secureStorage.getFlag('slh_tthotel_demo'));
 
-  // Tuya — all reads auth-gated via secureStorage
-  const [tuyaId,      setTuyaId]      = useState(secureStorage.getSensitive('slh_tuya_id',     ''));
-  const [tuyaSec,     setTuyaSec]     = useState(secureStorage.getSensitive('slh_tuya_secret', ''));
-  const [tuyaShowPw,  setTuyaShowPw]  = useState(false);
+  // Tuya — credentials managed by Super Admin; read from global localStorage
   const [tuyaLoading, setTuyaLoading] = useState(false);
-  const [tuyaReg,     setTuyaReg]     = useState(secureStorage.getSensitive('slh_tuya_region', 'eu'));
   const [tuyaErr,     setTuyaErr]     = useState('');
   const [tuyaToken,   setTuyaToken]   = useState(secureStorage.getSensitive('slh_tuya_token',  ''));
   const [tuyaDemoMode,setTuyaDemoMode]= useState(secureStorage.getFlag('slh_tuya_demo'));
@@ -245,7 +241,7 @@ const SmartLockHub = () => {
       setTuyaDevices(p => p.map(l => l.id === lock.id ? { ...l, locked: !l.locked } : l));
       if (tuyaToken && !tuyaDemoMode && lock.locked) {
         try {
-          await tuyaAPI.unlock(tuyaId, tuyaSec, tuyaToken, lock.lockId, tuyaReg);
+          await tuyaAPI.unlock(resolveTuyaId(), resolveTuyaSec(), tuyaToken, lock.lockId, resolveTuyaReg());
         } catch (err) { handleApiError('smartlock.toggle', err); setApiError(err.message); toast.error(err.message || 'Erreur verrou Tuya'); }
       }
     }
@@ -393,18 +389,18 @@ const SmartLockHub = () => {
   const connectTuya = async (e) => {
     e.preventDefault(); setTuyaErr(''); setTuyaLoading(true);
     try {
-      if (!tuyaId || !tuyaSec) throw new Error('Client ID et Client Secret requis');
+      const tuyaId  = resolveTuyaId();
+      const tuyaSec = resolveTuyaSec();
+      const tuyaReg = resolveTuyaReg();
+      if (!tuyaId || !tuyaSec) throw new Error('Credentials Tuya non configurés — contactez votre administrateur.');
       let devices = [];
-      let isDemo  = false;
       try {
-        // ── Real API call — get platform token ──
         const auth = await tuyaAPI.getToken(tuyaId, tuyaSec, tuyaReg);
         const tok  = auth.result?.access_token;
         if (!tok) throw new Error('Token Tuya non reçu');
         localStorage.setItem('slh_tuya_token', tok);
         localStorage.removeItem('slh_tuya_demo');
         setTuyaToken(tok); setTuyaDemoMode(false);
-        // ── Fetch lock devices ──
         let res = await tuyaAPI.getDevices(tuyaId, tuyaSec, tok, tuyaReg);
         if (!res.result?.devices?.length) {
           res = await tuyaAPI.getAllDevices(tuyaId, tuyaSec, tok, tuyaReg);
@@ -424,18 +420,15 @@ const SmartLockHub = () => {
           }));
         } else {
           devices = TUYA_DEMO_LOCKS;
-          isDemo  = true;
+          localStorage.setItem('slh_tuya_demo', '1');
+          setTuyaDemoMode(true);
         }
-      } catch (apiErr) {
+      } catch {
         devices = TUYA_DEMO_LOCKS;
-        isDemo  = true;
         localStorage.setItem('slh_tuya_demo', '1');
         setTuyaDemoMode(true);
       }
       localStorage.setItem('slh_tuya',         '1');
-      localStorage.setItem('slh_tuya_id',      tuyaId);
-      localStorage.setItem('slh_tuya_secret',  tuyaSec);
-      localStorage.setItem('slh_tuya_region',  tuyaReg);
       localStorage.setItem('slh_tuya_devices', JSON.stringify(devices));
       setTuyaDevices(devices);
       setConnTuya(true);
@@ -569,7 +562,7 @@ const SmartLockHub = () => {
             {connTuya ? (
               <div className="slh-setup-connected-info">
                 <Wifi size={14} color="#16A34A"/>
-                <span>Client ID <strong>{(tuyaId || secureStorage.getSensitive('slh_tuya_id', '')).slice(0,10)}…</strong></span>
+                <span>Tuya Smart <strong>connecté</strong></span>
                 <span className="slh-setup-dev-count">{tuyaDevices.length} appareil{tuyaDevices.length !== 1 ? 's' : ''}</span>
                 {tuyaDemoMode && <span className="slh-demo-badge">Mode Démo</span>}
                 <button className="slh-setup-disconnect" onClick={() => disconnect('tuya')}><Unlink size={12}/> Déconnecter</button>
@@ -577,28 +570,8 @@ const SmartLockHub = () => {
             ) : (
               <form onSubmit={connectTuya} className="slh-setup-form">
                 {tuyaErr && <div className="slh-setup-err"><AlertTriangle size={13}/> {tuyaErr}</div>}
-                <div className="slh-sf-group">
-                  <label>Client ID (Access ID)</label>
-                  <div className="slh-sf-input"><Key size={13}/><input type="text" value={tuyaId} onChange={e => setTuyaId(e.target.value)} placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" required/></div>
-                </div>
-                <div className="slh-sf-group">
-                  <label>Client Secret</label>
-                  <div className="slh-sf-input">
-                    <Shield size={13}/>
-                    <input type={tuyaShowPw ? 'text' : 'password'} value={tuyaSec} onChange={e => setTuyaSec(e.target.value)} placeholder="••••••••••••••••••••••••••••••••" required/>
-                    <button type="button" className="slh-sf-eye" onClick={() => setTuyaShowPw(v => !v)}>{tuyaShowPw ? <EyeOff size={13}/> : <Eye size={13}/>}</button>
-                  </div>
-                </div>
-                <div className="slh-sf-group">
-                  <label>Région Cloud</label>
-                  <select className="slh-sf-select" value={tuyaReg} onChange={e => setTuyaReg(e.target.value)}>
-                    {Object.entries(TUYA_REGIONS).map(([k, v]) => (
-                      <option key={k} value={k}>{v.label} ({v.base.replace('https://','')})</option>
-                    ))}
-                  </select>
-                </div>
                 <div className="slh-sf-hint">
-                  <Shield size={11}/> Créez un projet gratuit sur <strong>iot.tuya.com</strong> → Développement Cloud → obtenez Client ID + Secret
+                  <Shield size={11}/> Les credentials Tuya sont configurés par l'administrateur. Cliquez pour vous connecter et importer tous vos appareils.
                 </div>
                 <button type="submit" className="slh-sf-submit" style={{ background: '#059669' }} disabled={tuyaLoading}>
                   {tuyaLoading ? <><RefreshCcw size={13} className="slh-spin"/> Connexion & import…</> : <><Wifi size={13}/> Connecter et importer les appareils</>}
