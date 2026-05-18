@@ -39,7 +39,7 @@ const fmt = (n) => n.toLocaleString('fr-FR', { minimumFractionDigits: 0, maximum
 
 const PricingSimulator = ({ onStart }) => {
   const [planId, setPlanId] = useState('pro');
-  const [rooms, setRooms] = useState(10);
+  const [rooms, setRooms] = useState(1);
   const [engId, setEngId] = useState('monthly');
 
   const plan = PLANS.find(p => p.id === planId);
@@ -50,7 +50,7 @@ const PricingSimulator = ({ onStart }) => {
   const total          = discountedMonthly * eng.months;
   const savings        = (baseMonthly * eng.months) - total;
 
-  const changeRooms = (delta) => setRooms(r => Math.max(1, Math.min(500, r + delta)));
+  const changeRooms = (delta) => setRooms(r => Math.max(1, Math.min(2000, r + delta)));
 
   return (
     <div className="ps-wrap">
@@ -128,13 +128,13 @@ const PricingSimulator = ({ onStart }) => {
             <div className="ps-step-display">
               <input
                 type="number"
-                min={1} max={500}
+                min={1} max={2000}
                 value={rooms}
-                onChange={e => setRooms(Math.max(1, Math.min(500, parseInt(e.target.value) || 1)))}
+                onChange={e => setRooms(Math.max(1, Math.min(2000, parseInt(e.target.value) || 1)))}
                 className="ps-step-input"
               />
             </div>
-            <button className="ps-step-btn" onClick={() => changeRooms(1)} disabled={rooms >= 500}>
+            <button className="ps-step-btn" onClick={() => changeRooms(1)} disabled={rooms >= 2000}>
               <Plus size={16}/>
             </button>
           </div>
