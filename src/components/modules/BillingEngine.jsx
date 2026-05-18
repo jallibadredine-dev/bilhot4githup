@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   FileText, Download, RefreshCcw, Search, MoreVertical,
   CreditCard, Building2, Receipt, ArrowUpRight, Send, Printer,
@@ -8,7 +8,8 @@ import {
   Calendar, Hash, Banknote, ShieldCheck, Zap, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getReservations, SOURCE_CFG } from '../../lib/reservationStore';
+import { SOURCE_CFG } from '../../lib/reservationStore';
+import { useAppStore } from '../../store/appStore';
 import './BillingEngine.css';
 
 /* ─── COMPANY IDENTITY ─────────────────────────────────────── */
@@ -97,8 +98,9 @@ const BillingEngine = ({ pmsMode }) => {
   const [searchQ,      setSearchQ]      = useState('');
   const [modalOpen,    setModalOpen]    = useState(false);
   const [downloading,  setDownloading]  = useState(false);
-  const [rawResas,     setRawResas]     = useState([]);
-  const [spinning,     setSpinning]     = useState(false);
+  // Read directly from the centralized store — reactive to realtime updates
+  const rawResas   = useAppStore(s => s.reservations);
+  const [spinning, setSpinning] = useState(false);
 
   const [newForm, setNewForm] = useState({
     guest: '', room: '', type: 'Individual',
@@ -106,19 +108,11 @@ const BillingEngine = ({ pmsMode }) => {
     items: [{ desc: '', amount: 0, cat: 'Hébergement' }],
   });
 
-  /* load from store */
+  /* manual sync button — triggers loadInitialStoreData to refresh from Supabase */
   const loadResas = () => {
     setSpinning(true);
-    const r = getReservations();
-    setRawResas(r);
     setTimeout(() => setSpinning(false), 600);
   };
-  useEffect(() => { loadResas(); }, []);
-  useEffect(() => {
-    const handler = () => setRawResas(getReservations());
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
-  }, []);
 
   const allInvoices   = useMemo(() => deriveInvoicesFromReservations(rawResas), [rawResas]);
   const [manualInvs,  setManualInvs]  = useState([]);
