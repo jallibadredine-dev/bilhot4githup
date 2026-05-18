@@ -125,6 +125,15 @@ const _tthotelDeactivate = async (lockId, cardUid) => {
  * Returns the created card object.
  */
 export async function issueCard(data) {
+  const sb = await sbReady();
+
+  // Resolve created_by from the authenticated session so RLS INSERT check passes
+  let createdBy = data.created_by || null;
+  if (sb && supabase) {
+    const { data: authData } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+    createdBy = authData?.user?.id || null;
+  }
+
   const card = {
     id:             uid(),
     reservation_id: data.reservation_id || null,
@@ -139,13 +148,21 @@ export async function issueCard(data) {
     expires_at:     data.expires_at     || null,
     guest_name:     data.guest_name     || 'Client',
     notes:          data.notes          || null,
+    created_by:     createdBy,
     created_at:     now(),
     updated_at:     now(),
   };
 
-  if (await sbReady()) {
+  if (sb) {
     const { data: row, error } = await supabase.from('access_cards').insert(card).select().single();
-    if (!error && row) card.id = row.id;
+    if (error) {
+      console.warn('[CardMgmt] insert failed, falling back to localStorage:', error.message);
+      const cards = _lsGetCards();
+      cards.unshift(card);
+      _lsSaveCards(cards);
+    } else if (row) {
+      card.id = row.id;
+    }
   } else {
     const cards = _lsGetCards();
     cards.unshift(card);
@@ -223,7 +240,12 @@ export async function renewCard(cardId, newExpiresAt) {
 export async function updateCard(cardId, updates) {
   const patch = { ...updates, updated_at: now() };
   if (await sbReady()) {
-    await supabase.from('access_cards').update(patch).eq('id', cardId);
+    const { error } = await supabase.from('access_cards').update(patch).eq('id', cardId);
+    if (error) {
+      console.warn('[CardMgmt] update failed, applying to localStorage:', error.message);
+      const cards = _lsGetCards().map(c => c.id === cardId ? { ...c, ...patch } : c);
+      _lsSaveCards(cards);
+    }
   } else {
     const cards = _lsGetCards().map(c => c.id === cardId ? { ...c, ...patch } : c);
     _lsSaveCards(cards);
@@ -430,7 +452,11 @@ export async function deactivateCardsForReservation(reservationId) {
 export async function logEvent({ card_id, lock_id = null, event_type, performed_by = null, details = {} }) {
   const event = { id: uid(), card_id, lock_id, event_type, performed_by, details, created_at: now() };
   if (await sbReady()) {
-    await supabase.from('card_events').insert(event);
+    const { error } = await supabase.from('card_events').insert(event);
+    if (error) {
+      console.warn('[CardMgmt] event insert failed, logging to localStorage:', error.message);
+      _lsAddEvent(event);
+    }
   } else {
     _lsAddEvent(event);
   }

@@ -270,7 +270,14 @@ export const AutomationEngine = {
               });
               automationEvents.emit('card-activated', { reservationId: booking.id, count });
             }
-          } catch (_) {}
+          } catch (hookErr) {
+            addLogEntry({
+              type: 'error',
+              status: 'warning',
+              bookingId: booking.id,
+              message: `Erreur activation cartes (arrivée Rés. ${booking.id.slice(0, 8)}): ${hookErr.message}`,
+            });
+          }
         }
 
         // Checkout day: immediately revoke all active cards (access revocation)
@@ -287,7 +294,14 @@ export const AutomationEngine = {
               });
               automationEvents.emit('card-deactivated', { reservationId: booking.id, count });
             }
-          } catch (_) {}
+          } catch (hookErr) {
+            addLogEntry({
+              type: 'error',
+              status: 'warning',
+              bookingId: booking.id,
+              message: `Erreur désactivation cartes (départ Rés. ${booking.id.slice(0, 8)}): ${hookErr.message}`,
+            });
+          }
         }
       }
 
