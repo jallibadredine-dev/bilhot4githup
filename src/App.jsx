@@ -314,7 +314,9 @@ function App() {
             setActiveView={setActiveView}
             currentUser={currentUser}
             onLogout={() => {
+              supabase.auth.signOut();
               setIsAuthenticated(false);
+              setCurrentUser(null);
               setActiveView('dashboard');
             }}
           />
