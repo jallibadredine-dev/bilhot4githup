@@ -50,7 +50,7 @@ const PricingSimulator = ({ onStart }) => {
   const total          = discountedMonthly * eng.months;
   const savings        = (baseMonthly * eng.months) - total;
 
-  const changeRooms = (delta) => setRooms(r => Math.max(1, Math.min(2000, r + delta)));
+  const changeRooms = (delta) => setRooms(r => Math.max(1, Math.min(350, r + delta)));
 
   return (
     <div className="ps-wrap">
@@ -128,13 +128,13 @@ const PricingSimulator = ({ onStart }) => {
             <div className="ps-step-display">
               <input
                 type="number"
-                min={1} max={2000}
+                min={1} max={350}
                 value={rooms}
-                onChange={e => setRooms(Math.max(1, Math.min(2000, parseInt(e.target.value) || 1)))}
+                onChange={e => setRooms(Math.max(1, Math.min(350, parseInt(e.target.value) || 1)))}
                 className="ps-step-input"
               />
             </div>
-            <button className="ps-step-btn" onClick={() => changeRooms(1)} disabled={rooms >= 2000}>
+            <button className="ps-step-btn" onClick={() => changeRooms(1)} disabled={rooms >= 350}>
               <Plus size={16}/>
             </button>
           </div>

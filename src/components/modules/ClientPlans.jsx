@@ -352,13 +352,13 @@ const ClientPlans = ({ pmsMode }) => {
             <div className="cp-sim-label">CHAMBRES</div>
             <div className="cp-sim-rooms-wrap">
               <input
-                type="range" min={1} max={2000} value={rooms}
+                type="range" min={1} max={350} value={rooms}
                 className="cp-sim-slider"
                 onChange={e => setRooms(parseInt(e.target.value))}
               />
               <div className="cp-sim-rooms-info">
                 <span className="cp-sim-rooms-num">{rooms}</span>
-                <div className="cp-sim-rooms-edge"><span>1 CH.</span><span>2000 CH.</span></div>
+                <div className="cp-sim-rooms-edge"><span>1 CH.</span><span>350 CH.</span></div>
               </div>
             </div>
           </div>
