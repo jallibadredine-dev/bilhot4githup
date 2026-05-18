@@ -75,18 +75,16 @@ DROP POLICY IF EXISTS "auth_read_card_events"     ON card_events;
 DROP POLICY IF EXISTS "auth_insert_card_events"   ON card_events;
 DROP POLICY IF EXISTS "service_role_card_events"  ON card_events;
 
--- ── access_cards policies (tenant-scoped) ─────────────────────────
--- Staff can only read cards they created, OR cards in their property,
--- OR everything if they are super_admin.
+-- ── access_cards policies (staff-scoped) ──────────────────────────
+-- All authenticated hotel staff can read all cards.
+-- INSERT is scoped to the authenticated user (created_by must match).
+-- UPDATE is scoped to creator or super_admin.
+-- NOTE: For true multi-property isolation, add profiles.property_id
+--       and scope SELECT/UPDATE using:
+--       property_id IN (SELECT property_id FROM profiles WHERE id = auth.uid())
 CREATE POLICY "auth_read_access_cards"
   ON access_cards FOR SELECT TO authenticated
-  USING (
-    created_by = auth.uid()
-    OR EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND role = 'super_admin'
-    )
-  );
+  USING (auth.uid() IS NOT NULL);
 
 -- Staff can insert cards they own; property_id and created_by must match caller.
 CREATE POLICY "auth_insert_access_cards"
@@ -110,18 +108,10 @@ CREATE POLICY "service_role_access_cards"
   USING (true) WITH CHECK (true);
 
 -- ── card_events policies (follow card visibility) ─────────────────
+-- All authenticated staff can read card events (follows card read policy)
 CREATE POLICY "auth_read_card_events"
   ON card_events FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM access_cards ac
-      WHERE ac.id = card_events.card_id
-        AND (
-          ac.created_by = auth.uid()
-          OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin')
-        )
-    )
-  );
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "auth_insert_card_events"
   ON card_events FOR INSERT TO authenticated

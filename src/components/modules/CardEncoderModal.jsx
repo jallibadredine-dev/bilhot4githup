@@ -31,7 +31,7 @@ const STEP = {
      cardData   : { guestName, room, floor, checkIn, checkOut, pin }
      demoMode   : bool (skip real serial — dev/testing)
 ════════════════════════════════════════════════════════════ */
-export default function CardEncoderModal({ open, onClose, cardData = {}, demoMode = false }) {
+export default function CardEncoderModal({ open, onClose, cardData = {}, demoMode = false, onEncoded = null }) {
   const [step,       setStep]       = useState(STEP.CONNECT);
   const [errorMsg,   setErrorMsg]   = useState('');
   const [cardUid,    setCardUid]    = useState(null);
@@ -95,6 +95,13 @@ export default function CardEncoderModal({ open, onClose, cardData = {}, demoMod
     if (isConnected()) disconnect().catch(() => {});
     onClose();
   }, [onClose]);
+
+  /* ── Success / Terminer: persist encoded UID then close ── */
+  const handleSuccess = useCallback(() => {
+    if (isConnected()) disconnect().catch(() => {});
+    if (cardUid && onEncoded) onEncoded(cardUid);
+    onClose();
+  }, [cardUid, onEncoded, onClose]);
 
   if (!open) return null;
 
@@ -254,7 +261,7 @@ export default function CardEncoderModal({ open, onClose, cardData = {}, demoMod
                   <button className="cem-btn-secondary" onClick={() => setStep(STEP.PLACE)}>
                     <RefreshCw size={14} /> Encoder une autre carte
                   </button>
-                  <button className="cem-btn-primary" onClick={handleClose}>
+                  <button className="cem-btn-primary" onClick={handleSuccess}>
                     <CheckCircle2 size={15} /> Terminer
                   </button>
                 </div>

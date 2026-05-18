@@ -106,6 +106,50 @@ let engineRunning = false;
 export const AutomationEngine = {
   get isRunning() { return engineRunning; },
 
+  /**
+   * Run card date hooks from the hosflow_processed_bookings cache.
+   * Activates cards on arrival day, deactivates on departure day.
+   * Runs independently of Channex/TTLock token availability.
+   */
+  async runCardDateHooks() {
+    let processed = {};
+    try { processed = getProcessedBookings(); } catch { return; }
+    const todayStr = new Date().toISOString().split('T')[0];
+    const { activateCardsForReservation, deactivateCardsForReservation } = await import('./cardManagement.js');
+
+    for (const [bookingId, entry] of Object.entries(processed)) {
+      if (!entry || (!entry.arrivalDate && !entry.departureDate)) continue;
+
+      if (entry.arrivalDate === todayStr) {
+        try {
+          const count = await activateCardsForReservation(bookingId);
+          if (count > 0) {
+            addLogEntry({ type: 'card-checkin', status: 'success',
+              message: `${count} carte(s) activée(s) (cache) — Rés. ${bookingId.slice(0, 8)}` });
+            automationEvents.emit('card-activated', { reservationId: bookingId, count });
+          }
+        } catch (err) {
+          addLogEntry({ type: 'error', status: 'warning',
+            message: `Activation cartes (arrivée ${entry.arrivalDate}) : ${err.message}` });
+        }
+      }
+
+      if (entry.departureDate === todayStr) {
+        try {
+          const count = await deactivateCardsForReservation(bookingId);
+          if (count > 0) {
+            addLogEntry({ type: 'card-checkout', status: 'info',
+              message: `${count} carte(s) désactivée(s) (cache) — Rés. ${bookingId.slice(0, 8)}` });
+            automationEvents.emit('card-deactivated', { reservationId: bookingId, count });
+          }
+        } catch (err) {
+          addLogEntry({ type: 'error', status: 'warning',
+            message: `Désactivation cartes (départ ${entry.departureDate}) : ${err.message}` });
+        }
+      }
+    }
+  },
+
   async runCardLifecycle() {
     try {
       const expired   = await autoExpireCards();
@@ -345,11 +389,14 @@ export const AutomationEngine = {
     automationEvents.emit('status', { running: true });
 
     // Run immediately, then on interval
+    // runCardDateHooks runs independently of Channex/TTLock tokens
     this.runOnce(channexToken, ttlockToken);
     this.runCardLifecycle();
+    this.runCardDateHooks();
     engineInterval = setInterval(() => {
       this.runOnce(channexToken, ttlockToken);
       this.runCardLifecycle();
+      this.runCardDateHooks();
     }, intervalMinutes * 60 * 1000);
   },
 

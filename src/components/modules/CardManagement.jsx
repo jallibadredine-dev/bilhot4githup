@@ -9,8 +9,8 @@ import {
 } from 'lucide-react';
 import {
   issueCard, activateCard, deactivateCard, markCardLost,
-  reEncodeCard, renewCard, getAllCards, getCardEvents, getAllCardEvents,
-  getCardStats, seedDemoCards, CARD_STATUS, CARD_EVENT
+  reEncodeCard, renewCard, updateCard, getAllCards, getCardEvents, getAllCardEvents,
+  getCardStats, logEvent, seedDemoCards, CARD_STATUS, CARD_EVENT
 } from '../../lib/cardManagement';
 import CardEncoderModal from './CardEncoderModal';
 import './CardManagement.css';
@@ -109,7 +109,7 @@ export default function CardManagement() {
     const updated = await reEncodeCard(card.id);
     await load();
     openCard(updated);
-    setEncoderData({ guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10) || '', checkOut: card.expires_at?.slice(0,10) || '', pin: '' });
+    setEncoderData({ cardId: updated.id, guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10) || '', checkOut: card.expires_at?.slice(0,10) || '', pin: '' });
     setShowEncoder(true);
   };
 
@@ -317,7 +317,7 @@ export default function CardManagement() {
                 )}
                 {(selected.status === 'active' || selected.status === 'pending') && (
                   <button className="rcm-act-btn indigo" onClick={() => {
-                    setEncoderData({ guestName: selected.guest_name, room: selected.room_id, checkIn: selected.activated_at?.slice(0,10)||'', checkOut: selected.expires_at?.slice(0,10)||'', pin: '' });
+                    setEncoderData({ cardId: selected.id, guestName: selected.guest_name, room: selected.room_id, checkIn: selected.activated_at?.slice(0,10)||'', checkOut: selected.expires_at?.slice(0,10)||'', pin: '' });
                     setShowEncoder(true);
                   }}>
                     <CreditCard size={13} /> Encoder
@@ -437,7 +437,7 @@ export default function CardManagement() {
               setShowIssue(false);
               await load();
               openCard(card);
-              setEncoderData({ guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10)||'', checkOut: card.expires_at?.slice(0,10)||'', pin: '' });
+              setEncoderData({ cardId: card.id, guestName: card.guest_name, room: card.room_id, checkIn: card.activated_at?.slice(0,10)||'', checkOut: card.expires_at?.slice(0,10)||'', pin: '' });
               setShowEncoder(true);
             }}
           />
@@ -451,6 +451,16 @@ export default function CardManagement() {
             open={showEncoder}
             onClose={() => setShowEncoder(false)}
             cardData={encoderData}
+            onEncoded={async (uid) => {
+              if (encoderData.cardId) {
+                await _wrapOp(async () => {
+                  await updateCard(encoderData.cardId, { card_uid: uid, status: CARD_STATUS.ACTIVE });
+                  await logEvent({ card_id: encoderData.cardId, event_type: CARD_EVENT.ENCODED, details: { card_uid: uid } });
+                });
+                await load();
+                if (selected?.id === encoderData.cardId) openCard({ ...selected, card_uid: uid, status: CARD_STATUS.ACTIVE });
+              }
+            }}
           />
         )}
       </AnimatePresence>
