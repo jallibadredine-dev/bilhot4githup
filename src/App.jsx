@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import './App.css';
-import { supabase } from './lib/supabase';
+import { supabase, SUPABASE_READY } from './lib/supabase';
 import { LayoutDashboard, Monitor, MessageSquare, UserCheck, Menu } from 'lucide-react';
 import { getCheckinTokenFromURL } from './lib/checkin';
 import { clearSensitiveLocalState } from './lib/secureStorage';
@@ -76,6 +76,11 @@ function App() {
       setCurrentUser({ id: 'sa-local', email: 'admin@hova.app', user_metadata: { full_name: 'Super Admin' } });
       setIsAuthenticated(true);
       setActiveView('super-admin');
+      setSessionChecked(true);
+      return;
+    }
+
+    if (!SUPABASE_READY) {
       setSessionChecked(true);
       return;
     }
