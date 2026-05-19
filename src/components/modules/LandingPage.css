@@ -723,6 +723,11 @@ html {
   background: var(--lp-bg-alt);
   border-top: 1px solid var(--lp-border);
 }
+.lp-pricing-section-top {
+  background: var(--lp-bg);
+  border-top: 1px solid var(--lp-border);
+  border-bottom: 1px solid var(--lp-border);
+}
 .lp-pricing-toggle {
   display: flex;
   justify-content: center;

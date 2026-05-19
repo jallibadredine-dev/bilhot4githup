@@ -91,36 +91,6 @@ const LandingPage = ({ onLogin }) => {
     },
   ];
 
-  const plans = [
-    {
-      name: "Starter",
-      price: "299",
-      unit: "MAD/mois",
-      desc: "Idéal pour 1 à 3 propriétés",
-      features: ["Jusqu'à 3 propriétés", "Synchronisation 2 canaux", "Messagerie automatique", "Support email"],
-      cta: "Démarrer avec Starter",
-      highlight: false,
-    },
-    {
-      name: "Pro",
-      price: "599",
-      unit: "MAD/mois",
-      desc: "Pour les gestionnaires actifs",
-      features: ["Jusqu'à 15 propriétés", "Canaux illimités", "IA Conciergerie", "Serrures IoT", "Support prioritaire 24/7"],
-      cta: "Démarrer avec Pro",
-      highlight: true,
-    },
-    {
-      name: "Entreprise",
-      price: "1 490",
-      unit: "MAD/mois",
-      desc: "Pour les grandes conciergeries",
-      features: ["Propriétés illimitées", "API dédiée", "Manager dédié", "Onboarding personnalisé", "SLA garanti 99.9%"],
-      cta: "Contacter l'équipe",
-      highlight: false,
-    },
-  ];
-
   const testimonials = [
     { initials: 'JD', name: 'Jean Dupont', role: 'Host à Paris · 12 appartements', text: '"Le gain de temps est phénoménal. La synchronisation avec les serrures est un game changer total pour ma logistique. Je gère tout depuis mon téléphone."', rating: 5 },
     { initials: 'SM', name: 'Sarah Martin', role: 'Directrice de Résidence · Marrakech', text: '"L\'interface est la plus belle du marché. L\'IA répond aux clients en arabe, français et anglais automatiquement. C\'est un plaisir à utiliser."', rating: 5 },
@@ -277,7 +247,24 @@ const LandingPage = ({ onLogin }) => {
       </section>
 
       {/* ══════════════════════════════════
-          4. EXAMPLES / REVIEWS
+          4. PRICING SIMULATOR (original)
+      ══════════════════════════════════ */}
+      <section className="lp-pricing-section lp-pricing-section-top" id="pricing">
+        <motion.div className="lp-section-center" {...fadeUp}>
+          <p className="lp-section-eyebrow">Tarification</p>
+          <h2 className="lp-section-h2">
+            Un PMS professionnel<br />pour 8× moins cher qu'un système traditionnel
+          </h2>
+          <p className="lp-section-desc">
+            Le coût moyen d'un PMS classique dépasse 5 000 MAD/mois en licence + maintenance.
+            BilHot commence à <strong>35 MAD / chambre / mois</strong>.
+          </p>
+        </motion.div>
+        <PricingSimulator onStart={handleOpenAuth} />
+      </section>
+
+      {/* ══════════════════════════════════
+          5. EXAMPLES / REVIEWS
       ══════════════════════════════════ */}
       <section className="lp-examples-section" id="examples">
         <motion.div className="lp-section-center" {...fadeUp}>
@@ -429,60 +416,6 @@ const LandingPage = ({ onLogin }) => {
               <span>{f.desc}</span>
             </motion.div>
           ))}
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════
-          7. PRICING
-      ══════════════════════════════════ */}
-      <section className="lp-pricing-section" id="pricing">
-        <motion.div className="lp-section-center" {...fadeUp}>
-          <p className="lp-section-eyebrow">Tarification</p>
-          <h2 className="lp-section-h2">
-            Un PMS professionnel<br />pour 8× moins cher qu'un système traditionnel
-          </h2>
-          <p className="lp-section-desc">
-            Le coût moyen d'un PMS classique dépasse 5 000 MAD/mois en licence + maintenance.
-            BilHot commence à <strong>299 MAD/mois</strong>.
-          </p>
-        </motion.div>
-
-        {/* Plan toggle */}
-        <div className="lp-pricing-toggle">
-          <button className={planType === 'standard' ? 'active' : ''} onClick={() => setPlanType('standard')}>Individuel</button>
-          <button className={planType === 'corporate' ? 'active' : ''} onClick={() => setPlanType('corporate')}>Équipes</button>
-        </div>
-
-        <div className="lp-pricing-grid">
-          {plans.map((plan, i) => (
-            <motion.div key={i} className={`lp-plan-card ${plan.highlight ? 'lp-plan-highlight' : ''}`} {...fadeUp} transition={{ delay: i * 0.1 }}>
-              {plan.highlight && <div className="lp-plan-badge">Recommandé</div>}
-              <div className="lp-plan-name">{plan.name}</div>
-              <div className="lp-plan-price">
-                <span className="lp-plan-amount">{plan.price}</span>
-                <span className="lp-plan-unit">{plan.unit}</span>
-              </div>
-              <p className="lp-plan-desc">{plan.desc}</p>
-              <ul className="lp-plan-features">
-                {plan.features.map((f, j) => (
-                  <li key={j}><Check size={14} /> {f}</li>
-                ))}
-              </ul>
-              <button className={`lp-plan-cta ${plan.highlight ? 'lp-plan-cta-highlight' : ''}`} onClick={handleOpenAuth}>
-                {plan.cta}
-              </button>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Logo cloud */}
-        <div className="lp-partners-strip">
-          <p>Utilisé par des établissements dans tout le Maghreb</p>
-          <div className="lp-partners-logos">
-            {['Airbnb', 'Booking.com', 'Expedia', 'TripAdvisor', 'Stripe', 'TTLock', 'Channex', 'EmailJS'].map(n => (
-              <span key={n}>{n}</span>
-            ))}
-          </div>
         </div>
       </section>
 
