@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import './SmartInventory.css';
 import { persistInventory, getInventoryBuildings } from '../../lib/inventoryStore';
 import { secureStorage } from '../../lib/secureStorage';
+import SmartDoorLock from '../icons/SmartDoorLock';
 import CardAccessModal from './CardAccessModal';
 
 /* ─── CONSTANTS ─────────────────────────────────────────────── */
@@ -579,24 +580,24 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                           ) : room.status === 'occupied' ? (
                             <span className={`tth-si occupied${room.lock?.locked === false ? ' unlocked' : ''}`}
                               title={room.lock?.locked === false ? 'Occupée · Porte ouverte' : 'Occupée · Verrouillée'}>
-                              {room.lock?.locked === false ? <Unlock size={15}/> : <Lock size={15}/>}
+                              <SmartDoorLock size={16} color="white"/>
                             </span>
                           ) : (room.status === 'maintenance' || room.status === 'blocked') ? (
                             <span className="tth-si broken" title="En panne / Hors service">
-                              <Lock size={15}/>
+                              <SmartDoorLock size={16} color="white"/>
                             </span>
                           ) : !hasLock ? (
                             <span className="tth-si no-lock" title="Aucune serrure"
                               onClick={e => { e.stopPropagation(); setLockModal({ room, buildingId: selectedBuilding.id, floorId: floor.id }); }}>
-                              <Unlock size={15}/>
+                              <SmartDoorLock size={16} color="#DC2626"/>
                             </span>
                           ) : room.lock?.locked ? (
                             <span className="tth-si available locked" title="Disponible · Verrouillée">
-                              <Lock size={15}/>
+                              <SmartDoorLock size={16} color="white"/>
                             </span>
                           ) : (
                             <span className="tth-si available" title="Disponible · Déverrouillée">
-                              <Unlock size={15}/>
+                              <SmartDoorLock size={16} color="#64748B"/>
                             </span>
                           )}
 
