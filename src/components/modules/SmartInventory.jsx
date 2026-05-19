@@ -129,6 +129,16 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
   const [generating,     setGenerating]     = useState(false);
   const [showCardModal,  setShowCardModal]  = useState(false);
 
+  /* ── TTHotel-style navigation state ── */
+  const [selectedBuildingId, setSelectedBuildingId] = useState(() => (getInventoryBuildings() || createInitialData())[0]?.id || null);
+  const [selectedFloorFilter, setSelectedFloorFilter] = useState('all');
+  const [roomTypeFilter, setRoomTypeFilter] = useState('all');
+
+  const selectedBuilding = useMemo(
+    () => buildings.find(b => b.id === selectedBuildingId) || buildings[0],
+    [buildings, selectedBuildingId]
+  );
+
   /* ── Add Building wizard ── */
   const [newBldFloorDefs, setNewBldFloorDefs] = useState([]);
   const [addBldStep,      setAddBldStep]      = useState(1); // 1=info, 2=floors, 3=preview
@@ -379,192 +389,243 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
   const folioCharges = (roomNum) => roomFolios[roomNum]?.charges || [];
 
   return (
-    <div className="si-root">
+    <div className="tth-root">
 
-      {/* ══ TOPBAR ════════════════════════════════════════════ */}
-      <div className="si-topbar">
-        <div className="si-topbar-left">
-          <div className="si-title-block">
-            <div className="si-title-icon"><Package size={20}/></div>
-            <div>
-              <h1>Gestion des Chambres</h1>
-              <p>IoT · Serrures connectées · Facturation services</p>
-            </div>
+      {/* ══ HEADER ════════════════════════════════════════════ */}
+      <div className="tth-header">
+        <div className="tth-header-left">
+          <div className="tth-header-icon"><Package size={18}/></div>
+          <div>
+            <h1>Gestion des Chambres</h1>
+            <p>IoT · Serrures connectées · Inventaire</p>
           </div>
         </div>
-        <div className="si-topbar-right">
-          <div className="si-search-wrap">
-            <Search size={15} color="#94A3B8"/>
-            <input placeholder="Chambre ou client…" value={searchQ} onChange={e => setSearchQ(e.target.value)}/>
-          </div>
-          <select className="si-filter-sel" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="all">Tous les statuts</option>
-            {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
-          <button className="si-btn-primary" onClick={openAddBuilding}>
-            <Plus size={15}/> Ajouter bâtiment
-          </button>
-        </div>
-      </div>
-
-      {/* ══ STATS ROW ═════════════════════════════════════════ */}
-      <div className="si-stats-row">
-        {[
-          { label: 'Total chambres', value: stats.total,       icon: <Layers size={18}/>,      bg: '#EFF6FF', col: '#2563EB' },
-          { label: 'Disponibles',    value: stats.available,   icon: <CheckCircle size={18}/>, bg: '#DCFCE7', col: '#16A34A' },
-          { label: 'Occupées',       value: stats.occupied,    icon: <DoorOpen size={18}/>,    bg: '#DBEAFE', col: '#1D4ED8' },
-          { label: 'Maintenance',    value: stats.maintenance, icon: <Wrench size={18}/>,      bg: '#FEF3C7', col: '#B45309' },
-          { label: 'Serrures online',value: stats.connected,   icon: <Wifi size={18}/>,        bg: '#F0FDF4', col: '#15803D' },
-          { label: 'Sans serrure',   value: stats.noLock,      icon: <Lock size={18}/>,        bg: '#FFF1F2', col: '#E11D48' },
-        ].map(s => (
-          <div className="si-stat-card" key={s.label}>
-            <div className="si-stat-icon" style={{ background: s.bg, color: s.col }}>{s.icon}</div>
-            <div>
-              <span className="si-stat-val">{s.value}</span>
-              <span className="si-stat-lbl">{s.label}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ══ MAIN CONTENT ══════════════════════════════════════ */}
-      <div className={`si-content ${selectedRoom ? 'panel-open' : ''}`}>
-
-        {/* ─── Buildings / Floors / Rooms ─── */}
-        <div className="si-rooms-col">
-          {buildings.map(building => (
-            <div className="si-building" key={building.id}>
-              <div className="si-building-header">
-                <Building2 size={18} color="#2563EB"/>
-                <span className="si-building-name">{building.name}</span>
-                <span className="si-building-count">{building.floors.reduce((s, f) => s + f.rooms.length, 0)} ch.</span>
-              </div>
-
-              {building.floors.map(floor => {
-                const isOpen = expandedFloors[floor.id] !== false;
-                const fRooms = filterRooms(floor.rooms);
-
-                return (
-                  <div className="si-floor" key={floor.id}>
-                    <div className="si-floor-header" onClick={() => setExpandedFloors(p => ({ ...p, [floor.id]: !isOpen }))}>
-                      <div className="si-floor-left">
-                        {isOpen ? <ChevronDown size={16}/> : <ChevronRight size={16}/>}
-                        <span>{floor.label}</span>
-                        <span className="si-floor-chip">{floor.rooms.length}</span>
-                      </div>
-                      <div className="si-floor-actions" onClick={e => e.stopPropagation()}>
-                        <button className="si-floor-add si-floor-add-bulk"
-                          onClick={() => openBulkRoomModal(building.id, floor)}
-                          title="Ajouter plusieurs chambres en masse">
-                          <Layers size={12}/> En masse
-                        </button>
-                        <button className="si-floor-add"
-                          onClick={() => openAddRoomModal(building.id, floor)}
-                          title="Ajouter une chambre">
-                          <Plus size={13}/> Chambre
-                        </button>
-                      </div>
-                    </div>
-
-                    <AnimatePresence>
-                      {isOpen && fRooms.length > 0 && (
-                        <motion.div className="si-rooms-grid" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
-                          {fRooms.map(room => {
-                            const sCfg  = STATUS_CFG[room.status] || STATUS_CFG.available;
-                            const rType = ROOM_TYPES[room.type] || ROOM_TYPES.standard;
-                            const prov  = room.lock ? LOCK_PROVIDERS[room.lock.provider] : null;
-                            const dev   = room.lock ? LOCK_POOL[room.lock.provider]?.find(d => d.devId === room.lock.devId) : null;
-                            const guest = GUEST_MAP[room.number];
-                            const folio = folioTotal(room.number);
-                            const isActive = selectedRoom?.id === room.id;
-
-                            return (
-                              <motion.div
-                                key={room.id}
-                                className={`si-room-card ${isActive ? 'active' : ''} status-${room.status}`}
-                                layout
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                onClick={() => openRoom(room, building.id, floor.id, building.name, floor.label)}
-                              >
-                                {/* Card top: number + type + status */}
-                                <div className="si-card-top">
-                                  <div className="si-card-num-wrap">
-                                    <span className="si-card-num">{room.number}</span>
-                                    <span className="si-card-type">{rType.icon} {rType.short}</span>
-                                  </div>
-                                  <span className="si-card-status" style={{ background: sCfg.bg, color: sCfg.color }}>
-                                    {sCfg.label}
-                                  </span>
-                                </div>
-
-                                {/* Lock widget */}
-                                {room.lock ? (
-                                  <div className="si-card-lock">
-                                    <span className="si-card-lock-prov" style={{ color: prov?.color }}>
-                                      {prov?.logo} {dev?.name || prov?.name}
-                                    </span>
-                                    <div className="si-card-lock-right">
-                                      <BattIcon level={room.lock.battery} size={12}/>
-                                      <span className={`si-card-lock-bat ${room.lock.battery < 20 ? 'crit' : ''}`}>{room.lock.battery}%</span>
-                                      {room.lock.online
-                                        ? <span className="si-dot online" title="En ligne"/>
-                                        : <span className="si-dot offline" title="Hors ligne"/>
-                                      }
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <button className="si-card-nolock" onClick={e => { e.stopPropagation(); setLockModal({ room, buildingId: building.id, floorId: floor.id }); }}>
-                                    <Lock size={12}/> Connecter serrure
-                                  </button>
-                                )}
-
-                                {/* Guest + folio */}
-                                <div className="si-card-bottom">
-                                  <span className="si-card-guest">
-                                    {guest ? <><UserCheck size={11}/> {guest.name}</> : '— Libre —'}
-                                  </span>
-                                  {folio > 0 && (
-                                    <span className="si-card-folio-badge">
-                                      <CreditCard size={10}/>
-                                      {folio.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €
-                                    </span>
-                                  )}
-                                </div>
-
-                                {/* PIN indicator */}
-                                {room.lock?.pin && (
-                                  <div className="si-card-pin"><Key size={10}/> {room.lock.pin}</div>
-                                )}
-
-                                {/* Cleaning status badge (from StaffHub) */}
-                                {(() => {
-                                  const cs = cleaningStatus[room.number];
-                                  if (!cs || cs.status === 'inspected') return null;
-                                  const cfg = {
-                                    dirty:       { label: '🧹 À nettoyer', bg: '#FEE2E2', color: '#DC2626' },
-                                    in_progress: { label: '⏳ Ménage en cours', bg: '#FEF3C7', color: '#D97706' },
-                                    clean:       { label: '✓ Propre', bg: '#ECFDF5', color: '#059669' },
-                                  }[cs.status];
-                                  if (!cfg) return null;
-                                  return (
-                                    <div className="si-card-cleaning" style={{ background: cfg.bg, color: cfg.color }}>
-                                      {cfg.label}
-                                    </div>
-                                  );
-                                })()}
-                              </motion.div>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
+        <div className="tth-header-stats">
+          {[
+            { label: 'Total', value: stats.total, color: '#2563EB' },
+            { label: 'Libres', value: stats.available, color: '#16A34A' },
+            { label: 'Occupées', value: stats.occupied, color: '#2563EB' },
+            { label: 'Maintenance', value: stats.maintenance, color: '#D97706' },
+            { label: 'Connectées', value: stats.connected, color: '#16A34A' },
+            { label: 'Sans serrure', value: stats.noLock, color: '#DC2626' },
+          ].map(s => (
+            <div key={s.label} className="tth-hstat">
+              <span className="tth-hstat-val" style={{ color: s.color }}>{s.value}</span>
+              <span className="tth-hstat-lbl">{s.label}</span>
             </div>
           ))}
         </div>
+        <button className="tth-add-bld-btn" onClick={openAddBuilding}>
+          <Plus size={14}/> Bâtiment
+        </button>
+      </div>
+
+      {/* ══ BODY: 3 PANELS ════════════════════════════════════ */}
+      <div className="tth-body">
+
+        {/* ─── LEFT NAV: Building + Floor ─── */}
+        <div className="tth-left-nav">
+          <div className="tth-nav-section">
+            <span className="tth-nav-title">Bâtiment</span>
+            {buildings.map((b, i) => (
+              <button
+                key={b.id}
+                className={`tth-nav-item ${selectedBuildingId === b.id ? 'active' : ''}`}
+                onClick={() => { setSelectedBuildingId(b.id); setSelectedFloorFilter('all'); }}
+                title={b.name}
+              >
+                {i + 1}
+                {selectedBuildingId === b.id && <span className="tth-nav-dot"/>}
+              </button>
+            ))}
+            <button className="tth-nav-add" onClick={openAddBuilding} title="Ajouter bâtiment">+</button>
+          </div>
+
+          <div className="tth-nav-divider"/>
+
+          <div className="tth-nav-section">
+            <span className="tth-nav-title">Etage</span>
+            <button
+              className={`tth-nav-item text ${selectedFloorFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setSelectedFloorFilter('all')}
+            >Tous</button>
+            {selectedBuilding?.floors.map(f => (
+              <button
+                key={f.id}
+                className={`tth-nav-item ${selectedFloorFilter === f.number ? 'active' : ''}`}
+                onClick={() => setSelectedFloorFilter(f.number)}
+              >{f.number}</button>
+            ))}
+            <button className="tth-nav-add"
+              onClick={() => {
+                if (!selectedBuilding) return;
+                const floor = selectedFloorFilter !== 'all'
+                  ? selectedBuilding.floors.find(f => f.number === selectedFloorFilter)
+                  : selectedBuilding.floors[selectedBuilding.floors.length - 1];
+                if (floor) openBulkRoomModal(selectedBuilding.id, floor);
+              }}
+              title="Ajouter chambres">+</button>
+          </div>
+        </div>
+
+        {/* ─── CENTER: Room Grid ─── */}
+        <div className="tth-center">
+          <div className="tth-grid">
+            {selectedBuilding?.floors
+              .filter(f => selectedFloorFilter === 'all' || f.number === selectedFloorFilter)
+              .flatMap(floor =>
+                filterRooms(floor.rooms)
+                  .filter(r => roomTypeFilter === 'all' || r.type === roomTypeFilter)
+                  .map(room => {
+                    const guest = GUEST_MAP[room.number];
+                    const rType = ROOM_TYPES[room.type] || ROOM_TYPES.standard;
+                    const isSelected = selectedRoom?.id === room.id;
+                    const lockOnline = room.lock?.online === true;
+                    const hasLock    = !!room.lock;
+                    const cs = cleaningStatus[room.number];
+
+                    return (
+                      <motion.div
+                        key={room.id}
+                        className={`tth-card status-${room.status}${isSelected ? ' selected' : ''}`}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.15 }}
+                        onClick={() => openRoom(room, selectedBuilding.id, floor.id, selectedBuilding.name, floor.label)}
+                      >
+                        <div className="tth-card-head">
+                          <span className="tth-card-num">{room.number}</span>
+                          {room.status === 'occupied' && <RefreshCw size={12} className="tth-spin-icon"/>}
+                        </div>
+
+                        <span className="tth-card-type">{rType.label}</span>
+                        {guest && <span className="tth-card-guest">{guest.name.split(' ')[0]}</span>}
+
+                        <div className="tth-card-footer">
+                          {/* Lock icon: blue=connected, red=offline/no lock */}
+                          <span
+                            className={`tth-lock-icon ${hasLock ? (lockOnline ? 'lock-blue' : 'lock-orange') : 'lock-red'}`}
+                            title={hasLock ? (lockOnline ? 'Serrure connectée' : 'Serrure hors ligne') : 'Aucune serrure'}
+                            onClick={e => {
+                              e.stopPropagation();
+                              if (!hasLock) setLockModal({ room, buildingId: selectedBuilding.id, floorId: floor.id });
+                            }}
+                          >
+                            <Lock size={13}/>
+                          </span>
+
+                          {hasLock && room.lock.battery < 25 && (
+                            <span className="tth-badge-icon battery" title={`Batterie ${room.lock.battery}%`}>
+                              <BatteryLow size={12}/>
+                            </span>
+                          )}
+                          {cs?.status === 'dirty' && (
+                            <span className="tth-badge-icon clean" title="À nettoyer">🧹</span>
+                          )}
+                          {cs?.status === 'in_progress' && (
+                            <span className="tth-badge-icon" title="Ménage en cours">⏳</span>
+                          )}
+                          {room.status === 'maintenance' && !cs && (
+                            <span className="tth-badge-icon repair" title="Maintenance">🔧</span>
+                          )}
+                        </div>
+
+                        {room.lock?.pin && (
+                          <div className="tth-pin-tag"><Key size={9}/> {room.lock.pin}</div>
+                        )}
+                      </motion.div>
+                    );
+                  })
+              )}
+
+            {/* + Add room card */}
+            {selectedBuilding && (
+              <button
+                className="tth-add-card"
+                onClick={() => {
+                  const floor = selectedFloorFilter !== 'all'
+                    ? selectedBuilding.floors.find(f => f.number === selectedFloorFilter)
+                    : selectedBuilding.floors[selectedBuilding.floors.length - 1];
+                  if (floor) openAddRoomModal(selectedBuilding.id, floor);
+                }}
+              >
+                <Plus size={20}/>
+                <span>Créer une chambre</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ─── RIGHT PANEL: Filters + Operations ─── */}
+        {!selectedRoom && (
+          <div className="tth-right-panel">
+            <div className="tth-rp-block">
+              <label className="tth-rp-label">Chercher par nom</label>
+              <div className="tth-search-row">
+                <input
+                  className="tth-rp-input"
+                  placeholder="Numéro de chambre"
+                  value={searchQ}
+                  onChange={e => setSearchQ(e.target.value)}
+                />
+                <button className="tth-rp-search-btn"><Search size={15}/></button>
+              </div>
+            </div>
+
+            <div className="tth-rp-block">
+              <label className="tth-rp-label">Recherche de type de chambre</label>
+              <select className="tth-rp-select" value={roomTypeFilter} onChange={e => setRoomTypeFilter(e.target.value)}>
+                <option value="all">Tous</option>
+                {Object.entries(ROOM_TYPES).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="tth-rp-block">
+              <label className="tth-rp-label">Filtre.</label>
+              {[
+                { key: 'available',   label: 'Libre',              dot: '#94A3B8' },
+                { key: 'occupied',    label: 'Enregistré',         dot: '#2563EB' },
+                { key: 'maintenance', label: 'Réparation',         dot: '#EF4444' },
+                { key: 'blocked',     label: 'Hors service',       dot: '#7C3AED' },
+              ].map(f => (
+                <label key={f.key} className="tth-filter-row">
+                  <input
+                    type="checkbox"
+                    checked={filterStatus === f.key}
+                    onChange={e => setFilterStatus(e.target.checked ? f.key : 'all')}
+                  />
+                  <span className="tth-filter-dot" style={{ background: f.dot }}/>
+                  <span>{f.label}</span>
+                </label>
+              ))}
+              <label className="tth-filter-row">
+                <input type="checkbox" checked={filterStatus === 'all' && searchQ === ''} onChange={() => { setFilterStatus('all'); setSearchQ(''); setRoomTypeFilter('all'); }} />
+                <span className="tth-filter-dot" style={{ background: '#E2E8F0' }}/>
+                <span>Réinitialiser</span>
+              </label>
+            </div>
+
+            <div className="tth-rp-block">
+              <label className="tth-rp-label">Opérations de carte</label>
+              <button className="tth-op-btn" onClick={() => { if (selectedRoom?.lock) { setShowCardModal(true); } }}>
+                Voir la carte
+              </button>
+              <button className="tth-op-btn" onClick={() => {
+                if (selectedRoom) handleUnlinkLock(selectedRoom.buildingId, selectedRoom.floorId, selectedRoom.id);
+              }}>
+                Supprimer la carte
+              </button>
+              <button className="tth-op-btn" onClick={() => {
+                if (selectedRoom) handleGeneratePin(selectedRoom.buildingId, selectedRoom.floorId, selectedRoom.id);
+              }}>
+                Renouveler la carte
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ══ ROOM DETAIL PANEL ═════════════════════════════ */}
         <AnimatePresence>
