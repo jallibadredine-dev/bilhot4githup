@@ -5,7 +5,8 @@ import {
   Wrench, BatteryFull, BatteryMedium, BatteryLow, Package,
   X, Smartphone, MessageSquare, Mail, UserCheck, LogOut,
   RefreshCw, Shield, Zap, CreditCard, MoreHorizontal, Grid3x3,
-  DoorOpen, AlertTriangle, Settings, Activity, Star, ChevronLeft
+  DoorOpen, AlertTriangle, Settings, Activity, Star, ChevronLeft,
+  GripVertical, Pencil
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SmartInventory.css';
@@ -138,6 +139,15 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
     () => buildings.find(b => b.id === selectedBuildingId) || buildings[0],
     [buildings, selectedBuildingId]
   );
+
+  /* ── Floor rename ── */
+  const [editFloorModal, setEditFloorModal] = useState(null); // { buildingId, floorId, currentLabel }
+  const [editFloorLabel, setEditFloorLabel] = useState('');
+
+  /* ── Drag-and-drop room reorder ── */
+  const [dragRoomId,  setDragRoomId]  = useState(null);
+  const [dragOverId,  setDragOverId]  = useState(null);
+  const [dragFloorId, setDragFloorId] = useState(null);
 
   /* ── Add Building wizard ── */
   const [newBldFloorDefs, setNewBldFloorDefs] = useState([]);
@@ -361,6 +371,39 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
     if (selectedRoom?.buildingId === buildingId) setSelectedRoom(null);
   };
 
+  /* ── Rename floor label ── */
+  const handleRenameFloor = () => {
+    if (!editFloorModal || !editFloorLabel.trim()) return;
+    const { buildingId, floorId } = editFloorModal;
+    setBuildings(prev => prev.map(b => b.id !== buildingId ? b : {
+      ...b,
+      floors: b.floors.map(f => f.id !== floorId ? f : { ...f, label: editFloorLabel.trim() }),
+    }));
+    setEditFloorModal(null);
+  };
+
+  /* ── Reorder rooms via drag-and-drop ── */
+  const handleRoomDrop = (buildingId, floorId, targetRoomId) => {
+    if (!dragRoomId || dragRoomId === targetRoomId) {
+      setDragRoomId(null); setDragOverId(null); setDragFloorId(null);
+      return;
+    }
+    setBuildings(prev => prev.map(b => b.id !== buildingId ? b : {
+      ...b,
+      floors: b.floors.map(f => {
+        if (f.id !== floorId) return f;
+        const rooms   = [...f.rooms];
+        const fromIdx = rooms.findIndex(r => r.id === dragRoomId);
+        const toIdx   = rooms.findIndex(r => r.id === targetRoomId);
+        if (fromIdx < 0 || toIdx < 0) return f;
+        const [moved] = rooms.splice(fromIdx, 1);
+        rooms.splice(toIdx, 0, moved);
+        return { ...f, rooms };
+      }),
+    }));
+    setDragRoomId(null); setDragOverId(null); setDragFloorId(null);
+  };
+
   /* ── Checkout ── */
   const handleCheckout = () => {
     if (!checkoutModal) return;
@@ -450,11 +493,22 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
               onClick={() => setSelectedFloorFilter('all')}
             >Tous</button>
             {selectedBuilding?.floors.map(f => (
-              <button
-                key={f.id}
-                className={`tth-nav-item ${selectedFloorFilter === f.number ? 'active' : ''}`}
-                onClick={() => setSelectedFloorFilter(f.number)}
-              >{f.number}</button>
+              <div key={f.id} className="tth-floor-row">
+                <button
+                  className={`tth-nav-item ${selectedFloorFilter === f.number ? 'active' : ''}`}
+                  onClick={() => setSelectedFloorFilter(f.number)}
+                  title={f.label}
+                >{f.number}</button>
+                <button
+                  className="tth-floor-rename-btn"
+                  title={`Renommer: ${f.label}`}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setEditFloorModal({ buildingId: selectedBuilding.id, floorId: f.id, currentLabel: f.label });
+                    setEditFloorLabel(f.label);
+                  }}
+                ><Pencil size={9}/></button>
+              </div>
             ))}
             <button className="tth-nav-add"
               onClick={() => {
@@ -484,17 +538,26 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                     const hasLock    = !!room.lock;
                     const cs = cleaningStatus[room.number];
 
+                    const isDragging  = dragRoomId === room.id;
+                    const isDragOver  = dragOverId === room.id && dragFloorId === floor.id && !isDragging;
+
                     return (
                       <motion.div
                         key={room.id}
-                        className={`tth-card status-${room.status}${isSelected ? ' selected' : ''}`}
-                        layout
+                        className={`tth-card status-${room.status}${isSelected ? ' selected' : ''}${isDragging ? ' tth-dragging' : ''}${isDragOver ? ' tth-drag-over' : ''}`}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.15 }}
+                        draggable
+                        onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDragRoomId(room.id); setDragFloorId(floor.id); }}
+                        onDragEnd={() => { setDragRoomId(null); setDragOverId(null); setDragFloorId(null); }}
+                        onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverId(room.id); setDragFloorId(floor.id); }}
+                        onDragLeave={() => setDragOverId(null)}
+                        onDrop={e => { e.preventDefault(); handleRoomDrop(selectedBuilding.id, floor.id, room.id); }}
                         onClick={() => openRoom(room, selectedBuilding.id, floor.id, selectedBuilding.name, floor.label)}
                       >
                         <div className="tth-card-head">
+                          <span className="tth-grip"><GripVertical size={11}/></span>
                           <span className="tth-card-num">{room.number}</span>
                           {room.status === 'occupied' && <RefreshCw size={12} className="tth-spin-icon"/>}
                         </div>
@@ -849,6 +912,42 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
           })()}
         </AnimatePresence>
       </div>
+
+      {/* ══ FLOOR RENAME MODAL ════════════════════════════════ */}
+      <AnimatePresence>
+        {editFloorModal && (
+          <div className="si-modal-overlay" onClick={() => setEditFloorModal(null)}>
+            <motion.div className="si-modal si-modal-sm" initial={{opacity:0,scale:0.96}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.96}} onClick={e => e.stopPropagation()}>
+              <div className="si-modal-head">
+                <div>
+                  <h2><Pencil size={15} style={{display:'inline',verticalAlign:'middle',marginRight:6}}/>Renommer l'étage</h2>
+                  <p>Étage {editFloorModal.currentLabel}</p>
+                </div>
+                <button className="si-close-btn" onClick={() => setEditFloorModal(null)}><X size={17}/></button>
+              </div>
+              <div className="si-wizard-body">
+                <div className="si-form-group">
+                  <label>Nouveau nom de l'étage <span className="si-req">*</span></label>
+                  <input
+                    className="si-input"
+                    value={editFloorLabel}
+                    onChange={e => setEditFloorLabel(e.target.value)}
+                    placeholder="ex: Rez-de-chaussée, 1er Étage…"
+                    autoFocus
+                    onKeyDown={e => e.key === 'Enter' && editFloorLabel.trim() && handleRenameFloor()}
+                  />
+                </div>
+              </div>
+              <div className="si-modal-foot">
+                <button className="si-btn-ghost" onClick={() => setEditFloorModal(null)}>Annuler</button>
+                <button className="si-btn-primary" onClick={handleRenameFloor} disabled={!editFloorLabel.trim()}>
+                  <CheckCircle size={14}/> Renommer
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ══ LOCK MODAL ════════════════════════════════════════ */}
       <AnimatePresence>

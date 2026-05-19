@@ -176,6 +176,39 @@
   background: #2563EB;
 }
 
+/* ─── Floor row with rename btn ─── */
+.tth-floor-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tth-floor-rename-btn {
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px; height: 20px;
+  border-radius: 5px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #2563EB;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+.tth-floor-row:hover .tth-floor-rename-btn { opacity: 1; }
+.tth-floor-rename-btn:hover { background: #DBEAFE; }
+
+[data-theme="dark"] .tth-floor-rename-btn {
+  background: #1E3A8A;
+  border-color: #1E40AF;
+  color: #93C5FD;
+}
+
 .tth-nav-add {
   width: 38px; height: 28px;
   border: 1.5px dashed #CBD5E1;
@@ -349,6 +382,30 @@
 .tth-card.selected .tth-pin-tag {
   background: rgba(255,255,255,0.18);
   color: #DDD6FE;
+}
+
+/* ─── Grip handle ─── */
+.tth-grip {
+  display: none;
+  align-items: center;
+  color: #CBD5E1;
+  cursor: grab;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+.tth-card:hover .tth-grip { display: flex; }
+.tth-card.selected .tth-grip { color: rgba(255,255,255,0.45); }
+
+/* ─── Drag states ─── */
+.tth-card.tth-dragging {
+  opacity: 0.4;
+  transform: scale(0.97);
+  box-shadow: none;
+}
+.tth-card.tth-drag-over {
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.30), inset 0 0 0 2px rgba(37,99,235,0.08) !important;
+  transform: scale(1.02);
 }
 
 /* ─── Add-room card ─── */
