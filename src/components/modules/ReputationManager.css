@@ -27,7 +27,7 @@
 
 .rm-icon-badge {
   width: 40px; height: 40px;
-  background: #FFF1F2; border-radius: 12px;
+  background: #EFF6FF; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
@@ -88,18 +88,18 @@
 .rm-banner {
   display: flex; align-items: center; justify-content: space-between;
   gap: 14px; padding: 14px 24px;
-  background: #FFF9F9; border-bottom: 1px solid #FECDD3;
+  background: #EFF6FF; border-bottom: 1px solid #FECDD3;
 }
 .rm-banner > :nth-child(2) { flex: 1; }
 .rm-banner strong { display: block; font-size: 0.85rem; font-weight: 700; color: #222222; }
 .rm-banner p { font-size: 0.75rem; color: #717171; margin: 2px 0 0; }
 .rm-btn-primary {
   display: flex; align-items: center; gap: 5px;
-  padding: 8px 14px; background: #FF385C; color: white;
+  padding: 8px 14px; background: #2563EB; color: white;
   border: none; border-radius: 9px; font-size: 0.78rem; font-weight: 700;
   cursor: pointer; transition: background 0.12s; white-space: nowrap; min-height: unset; font-family: inherit;
 }
-.rm-btn-primary:hover { background: #E61E4D; }
+.rm-btn-primary:hover { background: #1D4ED8; }
 
 /* ─── SOURCE PILLS ─── */
 .rm-source-bar {
@@ -168,7 +168,7 @@
 .rm-config-header {
   display: flex; align-items: center; gap: 14px;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #FF385C, #E61E4D);
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
   color: white;
 }
 .rm-config-header h2 { font-size: 1.1rem; font-weight: 800; margin: 0; }
@@ -197,7 +197,7 @@
   border-radius: 7px; font-size: 0.68rem; font-weight: 700; color: #717171;
   cursor: pointer; min-height: unset; font-family: inherit; transition: all 0.12s;
 }
-.rm-btn-connect:hover { border-color: #FF385C; color: #FF385C; }
+.rm-btn-connect:hover { border-color: #2563EB; color: #2563EB; }
 .rm-badge-connected {
   font-size: 0.65rem; font-weight: 800; color: #059669;
   background: #ECFDF5; padding: 3px 8px; border-radius: 7px; border: 1px solid #A7F3D0;
@@ -228,7 +228,7 @@
   padding: 8px 12px; font-size: 0.8rem; font-weight: 600; color: #222222;
   outline: none; font-family: inherit;
 }
-.rm-ai-signature input:focus { border-color: #FF385C; }
+.rm-ai-signature input:focus { border-color: #2563EB; }
 
 /* ─── FEED ─── */
 .rm-feed    { display: flex; flex-direction: column; gap: 12px; padding: 20px 24px; }
@@ -243,7 +243,7 @@
   overflow: hidden; transition: box-shadow 0.15s;
 }
 .rm-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
-.rm-card.pending { border-left: 3px solid #FF385C; }
+.rm-card.pending { border-left: 3px solid #2563EB; }
 .rm-card.replied { border-left: 3px solid #10B981; }
 
 .rm-card-left {
@@ -279,7 +279,7 @@
   padding: 3px 9px; border-radius: 8px; font-size: 0.65rem; font-weight: 800;
 }
 .rm-status-badge.replied { background: #ECFDF5; color: #059669; }
-.rm-status-badge.pending { background: #FFF1F2; color: #FF385C; }
+.rm-status-badge.pending { background: #EFF6FF; color: #2563EB; }
 
 .rm-review-text {
   font-size: 0.85rem; color: #444444; line-height: 1.6;
@@ -301,12 +301,12 @@
 /* Reply button */
 .rm-btn-reply {
   display: flex; align-items: center; gap: 7px;
-  padding: 9px 16px; background: #FFF1F2;
+  padding: 9px 16px; background: #EFF6FF;
   border: 1.5px solid #FECDD3; border-radius: 10px;
-  font-size: 0.78rem; font-weight: 700; color: #FF385C;
+  font-size: 0.78rem; font-weight: 700; color: #2563EB;
   cursor: pointer; transition: all 0.12s; min-height: unset; font-family: inherit;
 }
-.rm-btn-reply:hover { background: #FF385C; color: white; border-color: #FF385C; }
+.rm-btn-reply:hover { background: #2563EB; color: white; border-color: #2563EB; }
 
 /* Reply editor */
 .rm-reply-editor {
@@ -337,7 +337,7 @@
   background: white; outline: none; resize: vertical; min-height: 120px; line-height: 1.6;
   display: block; box-sizing: border-box;
 }
-.rm-textarea:focus { border-color: #FF385C; box-shadow: 0 0 0 3px rgba(255,56,92,0.06); }
+.rm-textarea:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.06); }
 .rm-reply-actions {
   display: flex; align-items: center; justify-content: flex-end;
   gap: 8px; margin-top: 10px;
@@ -350,11 +350,11 @@
 .rm-btn-cancel:hover { border-color: #AAAAAA; color: #222222; }
 .rm-btn-send {
   display: flex; align-items: center; gap: 7px;
-  padding: 9px 18px; background: #FF385C; color: white;
+  padding: 9px 18px; background: #2563EB; color: white;
   border: none; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
   cursor: pointer; transition: background 0.12s; min-height: unset; font-family: inherit;
 }
-.rm-btn-send:hover:not(:disabled) { background: #E61E4D; }
+.rm-btn-send:hover:not(:disabled) { background: #1D4ED8; }
 .rm-btn-send:disabled { background: #CCCCCC; cursor: not-allowed; }
 
 /* ─── RESPONSIVE ─── */

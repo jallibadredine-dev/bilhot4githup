@@ -40,7 +40,7 @@
   height: 38px;
   border-radius: 10px;
   background: rgba(255,56,92,0.2);
-  color: #FF385C;
+  color: #2563EB;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,7 +130,7 @@
   flex-direction: column;
   gap: 4px;
 }
-.rai2-kpi.accent { background: rgba(255,56,92,0.12); border-left: 1px solid rgba(255,56,92,0.25); }
+.rai2-kpi.accent { background: rgba(37,99,235,0.12); border-left: 1px solid rgba(37,99,235,0.25); }
 
 .rai2-kpi-divider {
   width: 1px;
@@ -229,8 +229,8 @@
 .rai2-badge-ai {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #FF385C;
-  background: #FFF1F3;
+  color: #2563EB;
+  background: #EFF6FF;
   border: 1px solid #FFD6DC;
   padding: 3px 9px;
   border-radius: 20px;
@@ -285,7 +285,7 @@
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #FF385C, #FF6B8A);
+  background: linear-gradient(135deg, #2563EB, #FF6B8A);
   color: white;
   font-size: 0.9rem;
   font-weight: 800;
@@ -341,7 +341,7 @@
   display: inline-block;
   padding: 3px 10px;
   border-radius: 20px;
-  background: #FF385C;
+  background: #2563EB;
   color: white;
   font-size: 0.72rem;
   font-weight: 700;
@@ -393,7 +393,7 @@
   border-radius: 5px 5px 0 0;
   transition: height 0.5s;
 }
-.rai2-bar-fill.current { background: #FF385C; }
+.rai2-bar-fill.current { background: #2563EB; }
 
 .rai2-bar-month {
   font-size: 0.7rem;

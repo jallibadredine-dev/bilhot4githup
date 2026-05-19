@@ -10,7 +10,7 @@ const UserAvatar = ({ name, email, size = 30 }) => {
     ? name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : email?.[0]?.toUpperCase() ?? 'U';
 
-  const colors = ['#FF385C', '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EC4899'];
+  const colors = ['#2563EB', '#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EC4899'];
   const colorIndex = (name || email || '').charCodeAt(0) % colors.length;
 
   return (

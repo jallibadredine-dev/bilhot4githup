@@ -28,8 +28,8 @@
   align-items: center;
   gap: 8px;
   padding: 6px 12px 6px 8px;
-  background: #F7F7F7;
-  border: 1px solid #EBEBEB;
+  background: #F8FAFC;
+  border: 1px solid #E5E7EB;
   border-radius: 50px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -43,7 +43,7 @@
 .th-property-icon {
   width: 24px;
   height: 24px;
-  background: #FF385C;
+  background: #2563EB;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -54,10 +54,10 @@
 .th-property-name {
   font-size: 0.84rem;
   font-weight: 600;
-  color: #222222;
+  color: #111827;
   white-space: nowrap;
 }
-.th-property-chevron { color: #717171; }
+.th-property-chevron { color: #6B7280; }
 
 /* Live status pills */
 .th-stats {
@@ -84,7 +84,7 @@
 }
 .th-stat-blue    { background: #EFF6FF; color: #2563EB; border-color: #DBEAFE; }
 .th-stat-amber   { background: #FFFBEB; color: #D97706; border-color: #FEF3C7; }
-.th-stat-red     { background: #FFF1F2; color: #FF385C; border-color: #FECDD3; }
+.th-stat-red     { background: #EFF6FF; color: #2563EB; border-color: #FECDD3; }
 
 /* ─── CENTER: search ─── */
 .th-center {
@@ -102,32 +102,32 @@
   gap: 10px;
   width: 100%;
   background: #FFFFFF;
-  border: 1.5px solid #EBEBEB;
+  border: 1.5px solid #E5E7EB;
   border-radius: 50px;
   padding: 8px 16px;
   transition: border-color 0.15s, box-shadow 0.15s;
   cursor: text;
 }
 .th-search:focus-within {
-  border-color: #222222;
+  border-color: #111827;
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
-.th-search-icon { color: #AAAAAA; flex-shrink: 0; }
+.th-search-icon { color: #9CA3AF; flex-shrink: 0; }
 .th-search input {
   border: none;
   background: transparent;
   outline: none;
   width: 100%;
   font-size: 0.875rem;
-  color: #222222;
+  color: #111827;
   font-family: inherit;
 }
-.th-search input::placeholder { color: #AAAAAA; }
+.th-search input::placeholder { color: #9CA3AF; }
 .th-search-kbd {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #AAAAAA;
-  background: #F7F7F7;
+  color: #9CA3AF;
+  background: #F8FAFC;
   border: 1px solid #E5E5E5;
   padding: 2px 7px;
   border-radius: 5px;
@@ -152,7 +152,7 @@
   width: 38px;
   height: 38px;
   background: transparent;
-  border: 1.5px solid #EBEBEB;
+  border: 1.5px solid #E5E7EB;
   border-radius: 50%;
   color: #555555;
   cursor: pointer;
@@ -161,9 +161,9 @@
   padding: 0;
 }
 .th-icon-btn:hover {
-  border-color: #AAAAAA;
-  color: #222222;
-  background: #F7F7F7;
+  border-color: #9CA3AF;
+  color: #111827;
+  background: #F8FAFC;
 }
 
 /* Text action buttons */
@@ -184,26 +184,26 @@
 }
 .th-btn-ghost {
   background: transparent;
-  border-color: #EBEBEB;
+  border-color: #E5E7EB;
   color: #555555;
 }
 .th-btn-ghost:hover {
-  border-color: #AAAAAA;
-  color: #222222;
-  background: #F7F7F7;
+  border-color: #9CA3AF;
+  color: #111827;
+  background: #F8FAFC;
 }
 .th-btn-primary {
-  background: #FF385C;
+  background: #2563EB;
   color: #FFFFFF;
   border-color: transparent;
-  box-shadow: 0 2px 6px rgba(255,56,92,0.25);
+  box-shadow: 0 2px 6px rgba(37,99,235,0.25);
 }
 .th-btn-primary:hover {
-  background: #E61E4D;
-  box-shadow: 0 3px 10px rgba(255,56,92,0.35);
+  background: #1D4ED8;
+  box-shadow: 0 3px 10px rgba(37,99,235,0.35);
 }
 .th-btn-dark {
-  background: #222222;
+  background: #111827;
   color: #FFFFFF;
   border-color: transparent;
 }
@@ -220,7 +220,7 @@
   gap: 8px;
   padding: 5px 10px 5px 5px;
   background: #FFFFFF;
-  border: 1.5px solid #EBEBEB;
+  border: 1.5px solid #E5E7EB;
   border-radius: 50px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -229,7 +229,7 @@
 }
 .th-user-btn:hover,
 .th-user-btn.open {
-  border-color: #AAAAAA;
+  border-color: #9CA3AF;
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
@@ -249,7 +249,7 @@
 .th-user-name {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #222222;
+  color: #111827;
   white-space: nowrap;
   max-width: 110px;
   overflow: hidden;
@@ -257,7 +257,7 @@
 }
 
 .th-chevron {
-  color: #717171;
+  color: #6B7280;
   transition: transform 0.2s;
   flex-shrink: 0;
 }
@@ -290,7 +290,7 @@
 .th-dd-name {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #222222;
+  color: #111827;
   margin: 0 0 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -299,7 +299,7 @@
 }
 .th-dd-email {
   font-size: 0.74rem;
-  color: #AAAAAA;
+  color: #9CA3AF;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -322,18 +322,18 @@
   border-radius: 8px;
   font-size: 0.86rem;
   font-weight: 500;
-  color: #222222;
+  color: #111827;
   cursor: pointer;
   transition: background 0.12s;
   text-align: left;
   font-family: inherit;
   min-height: unset;
 }
-.th-dd-item:hover { background: #F7F7F7; }
-.th-dd-item svg   { color: #717171; flex-shrink: 0; }
-.th-dd-item.danger     { color: #FF385C; }
-.th-dd-item.danger svg { color: #FF385C; }
-.th-dd-item.danger:hover { background: #FFF1F2; }
+.th-dd-item:hover { background: #F8FAFC; }
+.th-dd-item svg   { color: #6B7280; flex-shrink: 0; }
+.th-dd-item.danger     { color: #2563EB; }
+.th-dd-item.danger svg { color: #2563EB; }
+.th-dd-item.danger:hover { background: #EFF6FF; }
 .th-dd-item:disabled   { opacity: 0.6; cursor: not-allowed; }
 
 /* ═══ RESPONSIVE: TABLET 1024px ════════════════════════════ */
@@ -370,7 +370,7 @@
   .th-user-btn  {
     padding: 4px;
     border-radius: 50%;
-    border-color: #EBEBEB;
+    border-color: #E5E7EB;
   }
 
   .th-dropdown {

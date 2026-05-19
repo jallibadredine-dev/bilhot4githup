@@ -11,7 +11,7 @@
   flex-direction: column;
   height: 100%;
   background: #FFFFFF;
-  border-right: 1px solid #EBEBEB;
+  border-right: 1px solid #E5E7EB;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0;
@@ -29,7 +29,7 @@
 .logo-icon {
   width: 34px;
   height: 34px;
-  background: #FF385C;
+  background: #2563EB;
   color: white;
   border-radius: 10px;
   display: flex;
@@ -46,7 +46,7 @@
 .sidebar-logo h2 {
   font-size: 1.2rem;
   font-weight: 800;
-  color: #222222;
+  color: #111827;
   letter-spacing: -0.5px;
   margin: 0;
 }
@@ -63,7 +63,7 @@
   gap: 10px;
   width: 100%;
   padding: 11px 16px;
-  background: #FF385C;
+  background: #2563EB;
   border: none;
   border-radius: 10px;
   font-weight: 600;
@@ -72,13 +72,13 @@
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
   min-height: unset;
-  box-shadow: 0 2px 8px rgba(255,56,92,0.25);
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
 }
 
 .btn-create:hover {
-  background: #E61E4D;
+  background: #1D4ED8;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255,56,92,0.35);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.35);
 }
 
 .plus-icon {
@@ -119,7 +119,7 @@
   padding: 12px 20px 4px;
   font-size: 0.62rem;
   font-weight: 700;
-  color: #AAAAAA;
+  color: #9CA3AF;
   text-transform: uppercase;
   letter-spacing: 1.2px;
 }
@@ -148,13 +148,13 @@
 .menu-item svg { flex-shrink: 0; color: inherit; }
 
 .menu-item:hover {
-  background: #F7F7F7;
-  color: #222222;
+  background: #F8FAFC;
+  color: #111827;
 }
 
 .menu-item.active {
-  color: #FF385C;
-  background: #FFF1F2;
+  color: #2563EB;
+  background: #EFF6FF;
   font-weight: 600;
 }
 
@@ -167,15 +167,15 @@
   width: 3px;
   height: 60%;
   min-height: 16px;
-  background: #FF385C;
+  background: #2563EB;
   border-radius: 0 3px 3px 0;
 }
 
-.menu-item.active svg { color: #FF385C; }
+.menu-item.active svg { color: #2563EB; }
 
 .badge-alert {
   margin-left: auto;
-  background: #FF385C;
+  background: #2563EB;
   color: white;
   font-size: 0.68rem;
   padding: 2px 7px;
@@ -197,7 +197,7 @@
   align-items: center;
   font-size: 0.62rem;
   font-weight: 700;
-  color: #AAAAAA;
+  color: #9CA3AF;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   padding: 0 6px;
@@ -205,7 +205,7 @@
 }
 
 .btn-add-small {
-  color: #AAAAAA;
+  color: #9CA3AF;
   font-size: 1.1rem;
   line-height: 1;
   min-height: unset;
@@ -215,7 +215,7 @@
   cursor: pointer;
   transition: color 0.12s;
 }
-.btn-add-small:hover { color: #222222; }
+.btn-add-small:hover { color: #111827; }
 
 .project-list {
   display: flex;
@@ -235,10 +235,10 @@
   cursor: pointer;
   transition: background 0.12s;
 }
-.project-item:hover { background: #F7F7F7; color: #222222; }
+.project-item:hover { background: #F8FAFC; color: #111827; }
 
 .project-item.active-project {
-  background: #FF385C;
+  background: #2563EB;
   color: white;
 }
 
@@ -250,7 +250,7 @@
   flex-shrink: 0;
 }
 .circle-indicator.green { background: #00A699; border-color: #00A699; }
-.circle-indicator.red   { background: #FF385C; border-color: #FF385C; }
+.circle-indicator.red   { background: #2563EB; border-color: #2563EB; }
 .circle-indicator.white { border-color: white; }
 
 .project-progress {
@@ -293,7 +293,7 @@
 .mobile-sidebar-close {
   display: none;
   margin-left: auto;
-  color: #717171;
+  color: #6B7280;
   cursor: pointer;
   background: transparent;
   border: none;
@@ -301,7 +301,7 @@
   border-radius: 6px;
   min-height: unset;
 }
-.mobile-sidebar-close:hover { color: #222222; background: #F7F7F7; }
+.mobile-sidebar-close:hover { color: #111827; background: #F8FAFC; }
 
 /* ═══ RESPONSIVE: TABLET 1024px (icon-only) ════════════════ */
 @media (max-width: 1024px) and (min-width: 769px) {
@@ -331,7 +331,7 @@
   .badge-alert { display: none; }
 
   .menu-item.active {
-    background: #FFF1F2;
+    background: #EFF6FF;
   }
   .menu-item.active::after {
     content: '';
@@ -342,7 +342,7 @@
     width: 3px;
     height: 60%;
     min-height: 16px;
-    background: #FF385C;
+    background: #2563EB;
     border-radius: 3px 0 0 3px;
   }
 
@@ -353,7 +353,7 @@
     left: calc(100% + 10px);
     top: 50%;
     transform: translateY(-50%);
-    background: #222222;
+    background: #111827;
     color: white;
     font-size: 0.75rem;
     font-weight: 600;
@@ -367,7 +367,7 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     width: auto;
     height: auto;
-    background: #222222;
+    background: #111827;
     border-radius: 7px;
   }
   .menu-item:hover[title]::before { opacity: 1; }

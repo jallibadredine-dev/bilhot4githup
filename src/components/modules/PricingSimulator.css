@@ -21,8 +21,8 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  background: #FFF1F3;
-  color: #FF385C;
+  background: #EFF6FF;
+  color: #2563EB;
   border: 1px solid #FECDD3;
   border-radius: 100px;
   padding: 5px 14px;
@@ -150,7 +150,7 @@
   position: absolute;
   top: -8px;
   right: 10px;
-  background: #FF385C;
+  background: #2563EB;
   color: white;
   font-size: 0.62rem;
   font-weight: 800;
@@ -290,7 +290,7 @@
   font-weight: 600;
 }
 
-.ps-pack-info svg { color: #FF385C; }
+.ps-pack-info svg { color: #2563EB; }
 .ps-pack-unused { color: #94A3B8; font-weight: 500; }
 
 /* ── Engagement ── */
@@ -407,7 +407,7 @@
 .ps-cta-btn {
   width: 100%;
   padding: 15px;
-  background: #FF385C;
+  background: #2563EB;
   color: white;
   border: none;
   border-radius: 12px;

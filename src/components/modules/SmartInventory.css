@@ -243,7 +243,7 @@
 .si-card-nolock {
   display: flex; align-items: center; gap: 5px;
   padding: 6px 8px;
-  background: #FFF1F2; border: 1.5px dashed #FCA5A5;
+  background: #EFF6FF; border: 1.5px dashed #FCA5A5;
   border-radius: 8px; font-size: 0.68rem; font-weight: 700;
   color: #E11D48; cursor: pointer; min-height: unset;
   justify-content: center; transition: all 0.15s;

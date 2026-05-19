@@ -3,22 +3,22 @@
 :root {
   --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --bg-base: #F7F7F7;
+  --bg-base: #F8FAFC;
   --bg-surface: #FFFFFF;
-  --bg-surface-hover: #F7F7F7;
+  --bg-surface-hover: #F8FAFC;
 
-  --text-primary: #222222;
-  --text-secondary: #717171;
-  --text-muted: #AAAAAA;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
 
-  --accent-blue: #2E65F3;
-  --accent-blue-light: #E6EEFE;
+  --accent-blue: #2563EB;
+  --accent-blue-light: #EFF6FF;
 
-  /* Airbnb design tokens */
-  --coral: #FF385C;
-  --coral-dark: #E61E4D;
-  --coral-light: #FFF1F2;
-  --border-default: #EBEBEB;
+  /* Primary design tokens */
+  --coral: #2563EB;
+  --coral-dark: #1D4ED8;
+  --coral-light: #EFF6FF;
+  --border-default: #E5E7EB;
 
   --status-green: #5AC282;
   --status-green-light: #E7F7ED;

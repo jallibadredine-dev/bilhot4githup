@@ -1,4 +1,4 @@
-export default function LoadingSpinner({ size = 28, color = 'var(--accent, #FF385C)', label = 'Chargement…', style = {} }) {
+export default function LoadingSpinner({ size = 28, color = 'var(--accent, #2563EB)', label = 'Chargement…', style = {} }) {
   return (
     <div
       role="status"

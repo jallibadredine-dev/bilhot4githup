@@ -106,8 +106,8 @@ const SettingsDashboard = () => {
           </Row>
           <Row label="Couleur d'accentuation">
             <div className="sd-color-row">
-              <input type="color" className="sd-color-pick" defaultValue="#FF385C" />
-              <input className="sd-input mono w120" defaultValue="#FF385C" />
+              <input type="color" className="sd-color-pick" defaultValue="#2563EB" />
+              <input className="sd-input mono w120" defaultValue="#2563EB" />
             </div>
           </Row>
           <Row label="Domaine white-label" hint="CNAME pointant vers bookings.hosflow.app" last>
@@ -119,7 +119,7 @@ const SettingsDashboard = () => {
         </Block>
 
         {/* ── Propriétés & OTA ──────────────────────────── */}
-        <Block id="properties" icon={Home} color="#FF385C" title="Propriétés & OTA" desc="Synchronisation des annonces et majorations tarifaires par canal">
+        <Block id="properties" icon={Home} color="#2563EB" title="Propriétés & OTA" desc="Synchronisation des annonces et majorations tarifaires par canal">
           <Row label="Plateforme source principale" hint="Priorité pour noms, photos et descriptions">
             <div className="sd-radio-row">
               {['Airbnb', 'Booking.com', 'Vrbo', 'Direct'].map(p => {
@@ -136,7 +136,7 @@ const SettingsDashboard = () => {
           <Row label="Majorations par OTA (%)">
             <div className="sd-markup-grid">
               {[
-                { name: 'Airbnb',      val: 15, accent: '#FF385C' },
+                { name: 'Airbnb',      val: 15, accent: '#2563EB' },
                 { name: 'Booking.com', val: 18, accent: '#003580' },
                 { name: 'Vrbo',        val: 12, accent: '#1E40AF' },
                 { name: 'Agoda',       val: 20, accent: '#4F46E5' },

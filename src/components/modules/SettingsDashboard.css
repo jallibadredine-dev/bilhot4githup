@@ -112,7 +112,7 @@
   box-sizing: border-box;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.sd-input:focus { border-color: #FF385C; box-shadow: 0 0 0 3px rgba(255,56,92,0.08); outline: none; background: #fff; }
+.sd-input:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); outline: none; background: #fff; }
 .sd-input.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; }
 .sd-input.w120 { max-width: 120px; }
 .sd-input.w200 { max-width: 200px; }
@@ -130,7 +130,7 @@
   transition: border-color 0.15s;
   width: 100%;
 }
-.sd-select:focus { outline: none; border-color: #FF385C; }
+.sd-select:focus { outline: none; border-color: #2563EB; }
 .sd-select.w160 { max-width: 160px; }
 .sd-select.w200 { max-width: 200px; }
 
@@ -140,7 +140,7 @@
   align-items: center;
   gap: 7px;
   padding: 9px 20px;
-  background: #FF385C;
+  background: #2563EB;
   color: white;
   border: none;
   border-radius: 9px;
@@ -286,7 +286,7 @@
   background: white;
 }
 .sd-radio input { display: none; }
-.sd-radio.active { border-color: #FF385C; background: #FFF1F3; color: #FF385C; }
+.sd-radio.active { border-color: #2563EB; background: #EFF6FF; color: #2563EB; }
 
 /* ── Markup grid ──────────────────────────────────────── */
 .sd-markup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }

@@ -360,10 +360,10 @@
   gap: 3px;
   cursor: pointer;
   transition: all 0.2s;
-  background: linear-gradient(135deg, #FF385C 0%, #E61E4D 100%);
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
   border: none;
   color: white;
-  box-shadow: 0 4px 14px rgba(255, 56, 92, 0.35);
+  box-shadow: 0 4px 14px rgba(37,99,235,0.35);
   font-family: inherit;
   position: relative;
   overflow: hidden;
@@ -377,7 +377,7 @@
 }
 .btn-demo-access:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 56, 92, 0.45);
+  box-shadow: 0 6px 20px rgba(37,99,235,0.45);
 }
 .btn-demo-icon {
   font-size: 1.3rem;

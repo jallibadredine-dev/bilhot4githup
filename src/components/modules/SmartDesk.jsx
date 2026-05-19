@@ -68,7 +68,7 @@ const SmartDesk = () => {
     { label: 'Départs',      value: '5',   sub: 'Aujourd\'hui',    color: '#7C3AED', bg: '#F5F3FF', icon: LogOut },
     { label: 'Enregistrés',  value: '3',   sub: 'Déjà check-in',   color: '#059669', bg: '#ECFDF5', icon: CheckCircle },
     { label: 'En attente',   value: '2',   sub: 'Nécessite action', color: '#D97706', bg: '#FFFBEB', icon: AlertTriangle },
-    { label: 'Taux Occup.',  value: '76%', sub: 'Capacité dispo',   color: '#FF385C', bg: '#FFF1F2', icon: Building2 },
+    { label: 'Taux Occup.',  value: '76%', sub: 'Capacité dispo',   color: '#2563EB', bg: '#FFF1F2', icon: Building2 },
     { label: 'Revenu/nuit',  value: '318€', sub: 'ADR moyen',       color: '#0891B2', bg: '#ECFEFF', icon: CreditCard },
   ];
 
@@ -182,7 +182,7 @@ const SmartDesk = () => {
         <div className="sd-arrivals-panel">
           <div className="sd-panel-head">
             <div className="sd-panel-title">
-              <Users size={17} color="#FF385C"/>
+              <Users size={17} color="#2563EB"/>
               <h3>File d'Arrivée</h3>
               <span className="sd-badge-count">{filtered.length} guest{filtered.length > 1 ? 's' : ''}</span>
             </div>
@@ -214,7 +214,7 @@ const SmartDesk = () => {
                   onClick={() => setSelectedGuest(isSelected ? null : guest)}
                 >
                   <div className="sd-guest-left">
-                    <div className="sd-guest-avatar" style={{ background: guest.type === 'VIP' ? '#FFF1F2' : guest.type === 'Elite' ? '#EFF6FF' : '#F7F7F7', color: guest.type === 'VIP' ? '#FF385C' : guest.type === 'Elite' ? '#2563EB' : '#555555' }}>
+                    <div className="sd-guest-avatar" style={{ background: guest.type === 'VIP' ? '#FFF1F2' : guest.type === 'Elite' ? '#EFF6FF' : '#F7F7F7', color: guest.type === 'VIP' ? '#2563EB' : guest.type === 'Elite' ? '#2563EB' : '#555555' }}>
                       {guest.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
                     <div className="sd-guest-info">
@@ -261,7 +261,7 @@ const SmartDesk = () => {
           {/* Scanner panel header */}
           <div className="sd-panel-head sd-panel-head-scanner">
             <div className="sd-panel-title">
-              <Sparkles size={17} color="#FF385C"/>
+              <Sparkles size={17} color="#2563EB"/>
               <h3>AI Document Scanner</h3>
             </div>
             <div className="sd-scanner-connection">
@@ -423,7 +423,7 @@ const SmartDesk = () => {
               {scanMode === 'manual' && (
                 <motion.div key="manual" className="sd-manual-form" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
                   <div className="sd-manual-header">
-                    <FileText size={16} color="#FF385C"/>
+                    <FileText size={16} color="#2563EB"/>
                     <span>Saisie Manuelle — {currentDocCfg?.label}</span>
                     <button className="sd-icon-btn" onClick={resetScanner}><X size={14}/></button>
                   </div>

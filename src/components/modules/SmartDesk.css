@@ -40,7 +40,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(135deg, #FF385C, #E61E4D);
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
   color: white;
   padding: 3px 9px;
   border-radius: 8px;
@@ -95,8 +95,8 @@
 }
 .sd-btn-ghost { background: transparent; border-color: #EBEBEB; color: #555555; }
 .sd-btn-ghost:hover { border-color: #AAAAAA; color: #222222; background: #F7F7F7; }
-.sd-btn-primary { background: #FF385C; color: white; box-shadow: 0 2px 6px rgba(255,56,92,0.25); }
-.sd-btn-primary:hover { background: #E61E4D; }
+.sd-btn-primary { background: #2563EB; color: white; box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
+.sd-btn-primary:hover { background: #1D4ED8; }
 
 /* ─── STATS BAR ─── */
 .sd-stats-bar {
@@ -220,7 +220,7 @@
   transition: all 0.15s;
 }
 .sd-guest-card:hover   { border-color: #CCCCCC; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-.sd-guest-card.selected { border-color: #FF385C; background: #FFF9F9; box-shadow: 0 0 0 3px rgba(255,56,92,0.08); }
+.sd-guest-card.selected { border-color: #2563EB; background: #EFF6FF; box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
 .sd-guest-card.has-alert { border-left: 3px solid #EF4444; }
 
 .sd-guest-left { display: flex; align-items: flex-start; gap: 11px; flex: 1; min-width: 0; }
@@ -238,7 +238,7 @@
 
 .sd-vip-badge {
   font-size: 0.6rem; font-weight: 800; padding: 2px 7px;
-  background: #FFF1F2; color: #FF385C; border-radius: 6px;
+  background: #EFF6FF; color: #2563EB; border-radius: 6px;
   border: 1px solid #FECDD3; text-transform: uppercase; letter-spacing: 0.5px;
 }
 .sd-elite-badge {
@@ -278,13 +278,13 @@
 .sd-checkin-btn {
   display: flex; align-items: center; gap: 4px;
   padding: 6px 12px;
-  background: #FF385C; color: white;
+  background: #2563EB; color: white;
   border: none; border-radius: 8px;
   font-size: 0.72rem; font-weight: 700;
   cursor: pointer; min-height: unset;
   transition: background 0.12s; font-family: inherit;
 }
-.sd-checkin-btn:hover { background: #E61E4D; }
+.sd-checkin-btn:hover { background: #1D4ED8; }
 
 /* ─── SCANNER PANEL ─── */
 .sd-scanner-panel {
@@ -367,12 +367,12 @@
   flex-direction: column; gap: 8px; background: #FAFAFA;
   transition: border-color 0.2s;
 }
-.sd-scan-frame.active { border-color: #FF385C; border-style: solid; }
+.sd-scan-frame.active { border-color: #2563EB; border-style: solid; }
 .sd-scan-corner {
   position: absolute; width: 14px; height: 14px;
   border-color: #AAAAAA; border-style: solid;
 }
-.sd-scan-frame.active .sd-scan-corner { border-color: #FF385C; }
+.sd-scan-frame.active .sd-scan-corner { border-color: #2563EB; }
 .sd-scan-corner.tl { top: -2px; left: -2px;  border-width: 2px 0 0 2px; border-radius: 3px 0 0 0; }
 .sd-scan-corner.tr { top: -2px; right: -2px; border-width: 2px 2px 0 0; border-radius: 0 3px 0 0; }
 .sd-scan-corner.bl { bottom: -2px; left: -2px;  border-width: 0 0 2px 2px; border-radius: 0 0 0 3px; }
@@ -388,8 +388,8 @@
   transition: all 0.15s; border: 1.5px solid transparent; font-family: inherit;
   min-height: unset;
 }
-.sd-scan-btn-primary { background: #FF385C; color: white; }
-.sd-scan-btn-primary:hover { background: #E61E4D; }
+.sd-scan-btn-primary { background: #2563EB; color: white; }
+.sd-scan-btn-primary:hover { background: #1D4ED8; }
 .sd-scan-btn-ghost { background: white; border-color: #EBEBEB; color: #555555; }
 .sd-scan-btn-ghost:hover { border-color: #AAAAAA; color: #222222; }
 
@@ -401,7 +401,7 @@
 }
 .sd-scan-laser {
   position: absolute; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, #FF385C, transparent);
+  background: linear-gradient(90deg, transparent, #2563EB, transparent);
   animation: laser-scan 1.5s ease-in-out infinite;
   z-index: 5;
 }
@@ -411,14 +411,14 @@
   100% { top: 100%; opacity: 0.6; }
 }
 .sd-scanning-icon-wrap { display: flex; align-items: center; justify-content: center; }
-.sd-spin-slow { animation: spin-slow 2s linear infinite; color: #FF385C; }
+.sd-spin-slow { animation: spin-slow 2s linear infinite; color: #2563EB; }
 @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .sd-scan-progress-wrap { width: 100%; max-width: 240px; display: flex; flex-direction: column; gap: 6px; }
 .sd-scan-progress-bar {
   height: 5px; background: #F0F0F0; border-radius: 3px; overflow: hidden;
 }
 .sd-scan-progress-fill {
-  height: 100%; background: linear-gradient(90deg, #FF385C, #FF8A00);
+  height: 100%; background: linear-gradient(90deg, #2563EB, #FF8A00);
   border-radius: 3px; transition: width 0.3s ease;
 }
 .sd-scan-phase { font-size: 0.74rem; color: #717171; text-align: center; margin: 0; }
@@ -488,7 +488,7 @@
   font-size: 0.72rem; font-weight: 700;
 }
 .sd-risk-badge.low   { background: #ECFDF5; color: #059669; border: 1px solid #86EFAC; }
-.sd-risk-badge.match { background: #FFF1F2; color: #FF385C; border: 1px solid #FECDD3; }
+.sd-risk-badge.match { background: #EFF6FF; color: #2563EB; border: 1px solid #FECDD3; }
 
 .sd-result-actions { display: flex; gap: 8px; padding-top: 4px; flex-shrink: 0; }
 .sd-result-actions .sd-scan-btn { flex: 1; }
@@ -508,7 +508,7 @@
 .sd-mf-row { display: flex; gap: 10px; }
 .sd-mf-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
 .sd-mf-group label { font-size: 0.67rem; font-weight: 700; color: #555555; }
-.sd-req { color: #FF385C; }
+.sd-req { color: #2563EB; }
 .sd-mf-group input, .sd-mf-group select {
   height: 36px; padding: 0 10px;
   background: #F7F7F7; border: 1.5px solid #EBEBEB;
@@ -517,8 +517,8 @@
   width: 100%;
 }
 .sd-mf-group input:focus, .sd-mf-group select:focus {
-  border-color: #FF385C; background: white;
-  box-shadow: 0 0 0 3px rgba(255,56,92,0.08);
+  border-color: #2563EB; background: white;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
 }
 .sd-mf-actions { display: flex; gap: 8px; }
 .sd-mf-actions .sd-scan-btn { flex: 1; }
@@ -548,7 +548,7 @@
   width: 36px; height: 36px;
   background: rgba(255,56,92,0.2); border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  color: #FF385C; flex-shrink: 0;
+  color: #2563EB; flex-shrink: 0;
 }
 .sd-mass-bar-left strong { display: block; font-size: 0.9rem; font-weight: 700; }
 .sd-mass-bar-left span  { display: block; font-size: 0.74rem; color: rgba(255,255,255,0.6); }
@@ -557,13 +557,13 @@
 .sd-mass-btn {
   display: flex; align-items: center; gap: 7px;
   padding: 9px 18px;
-  background: #FF385C; color: white;
+  background: #2563EB; color: white;
   border: none; border-radius: 10px;
   font-size: 0.82rem; font-weight: 700;
   cursor: pointer; min-height: unset; font-family: inherit;
   transition: background 0.15s;
 }
-.sd-mass-btn:hover { background: #E61E4D; }
+.sd-mass-btn:hover { background: #1D4ED8; }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 1100px) {

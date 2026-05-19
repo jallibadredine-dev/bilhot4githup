@@ -266,7 +266,7 @@ const ReputationManager = ({ pmsMode, setActiveView }) => {
       <div className="rm-topbar">
         <div className="rm-topbar-left">
           <div className="rm-icon-badge">
-            <Star size={18} color="#FF385C" fill="#FF385C"/>
+            <Star size={18} color="#2563EB" fill="#2563EB"/>
           </div>
           <div>
             <h1 className="rm-title">E-Réputation & Avis</h1>
@@ -294,7 +294,7 @@ const ReputationManager = ({ pmsMode, setActiveView }) => {
         </div>
         <div className="rm-kpi">
           <span className="rm-kpi-label">À répondre</span>
-          <div className="rm-kpi-val" style={{ color: pending > 0 ? '#FF385C' : '#222222' }}>{pending}</div>
+          <div className="rm-kpi-val" style={{ color: pending > 0 ? '#2563EB' : '#222222' }}>{pending}</div>
           <span className="rm-kpi-sub">{pending > 0 ? 'En attente' : 'Tout traité ✓'}</span>
         </div>
         <div className="rm-kpi">
@@ -312,7 +312,7 @@ const ReputationManager = ({ pmsMode, setActiveView }) => {
       {/* ── NO CONNECTION BANNER ── */}
       {!hasAnyConn && (
         <div className="rm-banner">
-          <Globe size={18} color="#FF385C"/>
+          <Globe size={18} color="#2563EB"/>
           <div>
             <strong>Connectez vos plateformes pour importer vos vrais avis</strong>
             <p>Configurez Airbnb, Booking.com, Channex.io et plus encore pour centraliser tous vos avis ici.</p>
@@ -368,7 +368,7 @@ const ReputationManager = ({ pmsMode, setActiveView }) => {
               {tab.icon || null}
               {tab.label}
               {tab.count !== undefined && tab.count > 0 && (
-                <span className="rm-tab-badge" style={tab.id === 'pending' ? { background: '#FF385C', color: 'white' } : {}}>{tab.count}</span>
+                <span className="rm-tab-badge" style={tab.id === 'pending' ? { background: '#2563EB', color: 'white' } : {}}>{tab.count}</span>
               )}
             </button>
           ))}

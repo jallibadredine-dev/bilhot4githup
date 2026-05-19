@@ -23,7 +23,7 @@ const OTA_DEFS = [
   { id: 'agoda',       name: 'Agoda',         color: '#E0113A', bg: '#FFE8EC', logo: '🌏', keywords: ['agoda'] },
   { id: 'google',      name: 'Google Hotels', color: '#4285F4', bg: '#E8F0FF', logo: '🔍', keywords: ['google'] },
   { id: 'whatsapp',    name: 'WhatsApp',      color: '#25D366', bg: '#E8FDF0', logo: '💬', keywords: ['whatsapp'] },
-  { id: 'direct',      name: 'Direct',        color: '#FF385C', bg: '#FFF1F2', logo: '🏨', keywords: ['direct'] },
+  { id: 'direct',      name: 'Direct',        color: '#2563EB', bg: '#FFF1F2', logo: '🏨', keywords: ['direct'] },
 ];
 
 /* ─── DEMO CONVERSATIONS (per OTA) ─────────────────────────── */
@@ -350,7 +350,7 @@ const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
       {/* ── TOP BAR ── */}
       <div className="ui-topbar">
         <div className="ui-topbar-left">
-          <MessageSquare size={20} color="#FF385C"/>
+          <MessageSquare size={20} color="#2563EB"/>
           <h1 className="ui-title">Inbox Omnicanal</h1>
           {totalUnread > 0 && <span className="ui-unread-badge">{totalUnread}</span>}
           <span className="ui-ai-badge"><Sparkles size={10}/> AI</span>
@@ -383,7 +383,7 @@ const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
       {!hasAnyConnection && (
         <div className="ui-connect-banner">
           <div className="ui-connect-banner-left">
-            <Globe size={20} color="#FF385C"/>
+            <Globe size={20} color="#2563EB"/>
             <div>
               <strong>Aucune plateforme connectée</strong>
               <p>Connectez Airbnb, Booking.com, Expedia ou Channex.io pour centraliser tous vos messages ici.</p>
@@ -457,7 +457,7 @@ const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
                   </div>
                   <div className="ui-conv-row2">
                     <span className="ui-conv-last">{conv.lastMsg}</span>
-                    {unread > 0 && <span className="ui-unread-dot" style={{ background: ota?.color || '#FF385C' }}>{unread}</span>}
+                    {unread > 0 && <span className="ui-unread-dot" style={{ background: ota?.color || '#2563EB' }}>{unread}</span>}
                   </div>
                   <div className="ui-conv-row3">
                     <span className="ui-conv-platform" style={{ color: ota?.color || '#717171' }}>

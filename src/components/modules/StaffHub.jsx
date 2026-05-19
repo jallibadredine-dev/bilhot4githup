@@ -22,7 +22,7 @@ import './StaffHub.css';
 /* ─── ROLE DEFINITIONS ─────────────────────────────────────── */
 const ROLE_DEFS = {
   manager: {
-    id: 'manager', label: 'Manager', emoji: '👑', color: '#FF385C', bg: '#FFF1F2',
+    id: 'manager', label: 'Manager', emoji: '👑', color: '#2563EB', bg: '#FFF1F2',
     desc: 'Accès complet à toutes les fonctionnalités du PMS',
     modules: { dashboard:true, frontdesk:true, checkin:true, distribution:true, inbox:true, inventory:true, locks:true, revenue:true, reputation:true, guests:true, staff:true, billing:true, settings:true, services:true, housekeeping:true, maintenance:true },
   },
@@ -243,7 +243,7 @@ const StaffHub = ({ onNavigate }) => {
       {/* ── TOP BAR ── */}
       <div className="sh-topbar">
         <div className="sh-topbar-left">
-          <div className="sh-icon-badge"><Users size={18} color="#FF385C"/></div>
+          <div className="sh-icon-badge"><Users size={18} color="#2563EB"/></div>
           <div>
             <h1 className="sh-title">Équipe & RH</h1>
             <p className="sh-subtitle">Gestion des accès, rôles et tableau ménage</p>
@@ -279,7 +279,7 @@ const StaffHub = ({ onNavigate }) => {
           >
             {tab.label}
             {tab.count !== null && (
-              <span className="sh-tab-badge" style={tab.urgent ? { background:'#FF385C', color:'white' } : {}}>
+              <span className="sh-tab-badge" style={tab.urgent ? { background:'#2563EB', color:'white' } : {}}>
                 {tab.count}
               </span>
             )}
@@ -587,7 +587,7 @@ const StaffHub = ({ onNavigate }) => {
           <div className="sh-notif-card">
             <div className="sh-notif-card-head">
               <div className="sh-notif-card-title">
-                <div className="sh-notif-icon" style={{background:'#FFF1F2', color:'#FF385C'}}><MessageCircle size={16}/></div>
+                <div className="sh-notif-icon" style={{background:'#FFF1F2', color:'#2563EB'}}><MessageCircle size={16}/></div>
                 <div>
                   <strong>SMS — Twilio</strong>
                   <span>Envoi SMS direct via l'API Twilio REST</span>
@@ -1023,7 +1023,7 @@ const StaffHub = ({ onNavigate }) => {
                     {/* Password preview box */}
                     <div className="sh-pwd-preview">
                       <div className="sh-pwd-preview-head">
-                        <Lock size={13} color="#FF385C"/>
+                        <Lock size={13} color="#2563EB"/>
                         <span>Mot de passe temporaire généré</span>
                       </div>
                       <div className="sh-pwd-preview-body">

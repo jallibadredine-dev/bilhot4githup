@@ -423,7 +423,7 @@ const SystemAdmin = () => {
             <div className="admin-notif-card">
               <div className="admin-notif-card-head">
                 <div className="admin-notif-card-title">
-                  <div className="admin-notif-icon" style={{ background: '#FFF1F2', color: '#FF385C' }}><MessageCircle size={16} /></div>
+                  <div className="admin-notif-icon" style={{ background: '#FFF1F2', color: '#2563EB' }}><MessageCircle size={16} /></div>
                   <div>
                     <strong>SMS — Twilio</strong>
                     <span>Envoi SMS via l'API Twilio REST (invitations, alertes…)</span>

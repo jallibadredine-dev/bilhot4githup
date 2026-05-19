@@ -58,7 +58,7 @@ const PROPERTIES = [
 
 const OTA_MIX = [
   { name: 'Booking.com', pct: 42, rev: 20160, color: '#003580' },
-  { name: 'Airbnb',      pct: 35, rev: 16800, color: '#FF385C' },
+  { name: 'Airbnb',      pct: 35, rev: 16800, color: '#2563EB' },
   { name: 'Direct',      pct: 13, rev: 6240,  color: '#10B981' },
   { name: 'Expedia',     pct:  7, rev: 3360,  color: '#FFB400' },
   { name: 'Autres',      pct:  3, rev: 1440,  color: '#94A3B8' },
@@ -68,7 +68,7 @@ const MONTHS = ['Déc', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai'];
 const MONTHLY_TOTAL = [34200, 38600, 36800, 42400, 44200, 48000];
 
 const AI_TIPS = [
-  { icon: Zap,          color: '#FF385C', bg: '#FFF1F3', title: 'Hausse tarifaire suggérée',        body: 'Les 3 prochains week-ends affichent une demande +34% vs N-1. Recommandation : +€45/nuit sur la Suite Prestige.' },
+  { icon: Zap,          color: '#2563EB', bg: '#FFF1F3', title: 'Hausse tarifaire suggérée',        body: 'Les 3 prochains week-ends affichent une demande +34% vs N-1. Recommandation : +€45/nuit sur la Suite Prestige.' },
   { icon: Target,       color: '#6366F1', bg: '#F5F3FF', title: 'Réduire dépendance Booking.com',   body: 'Les commissions OTA vous coûtent 8 420 MAD ce mois. Pousser les offres directes permettrait d\'économiser ≈ €1 200.' },
   { icon: AlertTriangle,color: '#F59E0B', bg: '#FFFBEB', title: 'Taux faible — Appartement Gueliz', body: 'Occupation en baisse de -6 pts vs trimestre précédent. Vérifiez la parité tarifaire et les photos de l\'annonce.' },
 ];
@@ -250,7 +250,7 @@ const RevenueAI = () => {
                       <td>
                         <div className="rai2-sparkline">
                           {p.trend.map((v, i) => (
-                            <div key={i} className="rai2-spark-bar" style={{ height: `${Math.round((v / maxT) * 28)}px`, background: i === p.trend.length - 1 ? '#FF385C' : '#E2E8F0' }}/>
+                            <div key={i} className="rai2-spark-bar" style={{ height: `${Math.round((v / maxT) * 28)}px`, background: i === p.trend.length - 1 ? '#2563EB' : '#E2E8F0' }}/>
                           ))}
                         </div>
                       </td>

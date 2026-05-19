@@ -15,7 +15,7 @@ const GROUPS = [
   ]},
   {cat:'Distribution OTA',items:[
     {id:'channex', name:'Channex.io',       em:'🔗',col:'#2563EB',st:'connected',   desc:'Channel Manager — Airbnb, Booking…', feat:['Rate Sync','Availability','Reviews'],since:'Jan 2026'},
-    {id:'airbnb',  name:'Airbnb',           em:'🏠',col:'#FF385C',st:'connected',   desc:'Connexion directe iCal / API',       feat:['iCal','Messaging','Reviews'],since:'Fév 2026'},
+    {id:'airbnb',  name:'Airbnb',           em:'🏠',col:'#2563EB',st:'connected',   desc:'Connexion directe iCal / API',       feat:['iCal','Messaging','Reviews'],since:'Fév 2026'},
     {id:'booking', name:'Booking.com',      em:'🅱️',col:'#003580',st:'connected',   desc:'Via Channex',                        feat:['Rate Sync','Reservations'],since:'Fév 2026'},
     {id:'beds24',  name:'Beds24',           em:'🛏️',col:'#1E40AF',st:'disconnected',desc:'Moteur de réservation',              feat:['Booking Engine','iCal'],since:null},
   ]},

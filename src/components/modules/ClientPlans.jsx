@@ -52,7 +52,7 @@ const PLANS = [
     unitLabel: '30 MAD/chambre',
     formula: calcPro,
     period: '/mois',
-    color: '#FF385C',
+    color: '#2563EB',
     bg: '#FFF1F3',
     featured: true,
     features: [
@@ -424,8 +424,8 @@ const ClientPlans = ({ pmsMode }) => {
         {/* ─ PMS Intégral (featured) ─ */}
         <motion.div className="cp-card featured" whileHover={{ y: -3 }} transition={{ duration: 0.18 }}>
           <div className="cp-recommended">RECOMMANDÉ</div>
-          <div className="cp-card-top" style={{ '--plan-color': '#FF385C' }}>
-            <div className="cp-plan-tier" style={{ color: '#FF385C' }}>PRO</div>
+          <div className="cp-card-top" style={{ '--plan-color': '#2563EB' }}>
+            <div className="cp-plan-tier" style={{ color: '#2563EB' }}>PRO</div>
             <div className="cp-plan-name">PMS Intégral</div>
             <div className="cp-plan-price">
               <span className="amount">{priceInteg}<span className="currency"> MAD</span></span>

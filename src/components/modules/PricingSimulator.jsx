@@ -22,7 +22,7 @@ const PLANS = [
     badge: 'Populaire',
     unitLabel: '55 MAD/ch',
     formula: (rooms) => rooms * 55,
-    color: '#FF385C',
+    color: '#2563EB',
     features: ['Tout Standard', 'Channel Manager', 'Revenue AI', 'Serrures IoT'],
     integrations: true,
   },

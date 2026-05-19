@@ -698,7 +698,7 @@ input[type="checkbox"] {
 }
 
 .admin-notif-field input:focus,
-.admin-notif-textarea:focus { border-color: #FF385C; }
+.admin-notif-textarea:focus { border-color: #2563EB; }
 .admin-notif-textarea { resize: vertical; }
 
 .admin-notif-hint {
@@ -721,7 +721,7 @@ input[type="checkbox"] {
   cursor: pointer; text-decoration: underline; padding: 0; font-family: inherit;
   align-self: flex-start;
 }
-.admin-notif-reset:hover { color: #FF385C; }
+.admin-notif-reset:hover { color: #2563EB; }
 
 .admin-notif-save-row {
   display: flex;
