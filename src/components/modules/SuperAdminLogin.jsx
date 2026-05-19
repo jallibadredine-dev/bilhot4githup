@@ -62,7 +62,7 @@ export default function SuperAdminLogin({ onSuccess }) {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <div style={{ display: 'inline-block', background: 'white', borderRadius: 14, padding: '10px 20px', marginBottom: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.3)' }}>
-            <img src="/hova-logo.png" alt="Hova" style={{ height: 36, width: 'auto', display: 'block' }}/>
+            <img src="/hova-logo.png" alt="BilHot" style={{ height: 36, width: 'auto', display: 'block' }}/>
           </div>
           <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>
             Super Admin

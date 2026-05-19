@@ -287,6 +287,14 @@
   background: white;
   border-radius: 50%;
   box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  transition: left 0.2s ease;
+}
+
+.toggle-switch.toggle-on {
+  background: #2563EB;
+}
+.toggle-switch.toggle-on::after {
+  left: 15px;
 }
 
 /* ─── MOBILE CLOSE BUTTON ─── */

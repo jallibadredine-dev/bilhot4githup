@@ -74,7 +74,7 @@ export default function SuperAdmin({ onLogout }) {
   const SidebarContent = () => (
     <div className="sa2-sidebar-inner">
       <div className="sa2-sidebar-logo">
-        <img src="/hova-logo.png" alt="Hova" className="sa2-logo-img"/>
+        <img src="/hova-logo.png" alt="BilHot" className="sa2-logo-img"/>
         {!collapsed && <span className="sa2-logo-text">Control Center</span>}
       </div>
 

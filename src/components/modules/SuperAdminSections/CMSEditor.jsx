@@ -29,7 +29,7 @@ export default function CMSEditor() {
   const [hero,setHero]=useState({
     title:'Gérez vos propriétés\nen mode pilote automatique.',
     sub:'Le PMS nouvelle génération qui connecte vos canaux, vos serrures et vos clients.',
-    cta1:'Essayer Hova Gratuitement',cta2:'Voir la démo',badge:'+2,500 établissements',
+    cta1:'Essayer BilHot Gratuitement',cta2:'Voir la démo',badge:'+2,500 établissements',
   });
 
   const save=async()=>{setSaving(true);await new Promise(r=>setTimeout(r,700));setSaving(false);};

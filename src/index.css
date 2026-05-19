@@ -49,6 +49,97 @@
   --glass-blur: blur(14px);
 }
 
+/* ─── DARK MODE ─── */
+[data-theme="dark"] {
+  --bg-base: #0F172A;
+  --bg-surface: #1E293B;
+  --bg-surface-hover: #263248;
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  --accent-blue: #3B82F6;
+  --accent-blue-light: #1E3A5F;
+
+  --coral: #3B82F6;
+  --coral-dark: #2563EB;
+  --coral-light: #1E3A5F;
+  --border-default: #334155;
+
+  --border-light: rgba(51, 65, 85, 0.7);
+  --border-medium: rgba(71, 85, 105, 0.7);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+  --glass-bg: rgba(30, 41, 59, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-blur: blur(14px);
+}
+
+/* Dark mode overrides for hardcoded colors */
+[data-theme="dark"] body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .sidebar-container {
+  background: #1E293B !important;
+  border-right-color: #334155 !important;
+}
+[data-theme="dark"] .sidebar-logo { border-bottom-color: #2D3F55; }
+[data-theme="dark"] .menu-item { color: #94A3B8; }
+[data-theme="dark"] .menu-item:hover { background: #263248; color: #F1F5F9; }
+[data-theme="dark"] .menu-item.active { background: #1E3A5F; color: #3B82F6; }
+[data-theme="dark"] .menu-item.active::before { background: #3B82F6; }
+[data-theme="dark"] .group-title { color: #475569; }
+[data-theme="dark"] .sidebar-footer { border-top-color: #2D3F55; }
+[data-theme="dark"] .sidebar-section { color: #64748B; }
+[data-theme="dark"] .project-item { color: #94A3B8; }
+[data-theme="dark"] .project-item:hover { background: #263248; color: #F1F5F9; }
+[data-theme="dark"] .project-item.active-project { background: #3B82F6; }
+[data-theme="dark"] .btn-create { background: #3B82F6; }
+[data-theme="dark"] .btn-create:hover { background: #2563EB; }
+
+[data-theme="dark"] .th-header {
+  background: #1E293B !important;
+  border-bottom-color: #334155 !important;
+}
+[data-theme="dark"] .th-property-pill {
+  background: #263248; border-color: #334155;
+}
+[data-theme="dark"] .th-property-name { color: #F1F5F9; }
+[data-theme="dark"] .th-search {
+  background: #263248; border-color: #334155;
+}
+[data-theme="dark"] .th-search input { color: #F1F5F9; }
+[data-theme="dark"] .th-search input::placeholder { color: #475569; }
+[data-theme="dark"] .th-search-kbd { background: #0F172A; border-color: #334155; color: #64748B; }
+[data-theme="dark"] .th-icon-btn { background: transparent; border-color: #334155; color: #94A3B8; }
+[data-theme="dark"] .th-icon-btn:hover { background: #263248; color: #F1F5F9; }
+[data-theme="dark"] .th-user-btn { background: #1E293B; border-color: #334155; }
+[data-theme="dark"] .th-user-name { color: #F1F5F9; }
+[data-theme="dark"] .th-dropdown { background: #1E293B; box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 0 1px #334155; }
+[data-theme="dark"] .th-dd-item { color: #F1F5F9; }
+[data-theme="dark"] .th-dd-item:hover { background: #263248; }
+[data-theme="dark"] .th-dd-divider { background: #334155; }
+
+[data-theme="dark"] .app-container { background: #0F172A; }
+[data-theme="dark"] .app-header { background: #1E293B !important; border-bottom-color: #334155 !important; }
+[data-theme="dark"] .app-header.glass-panel { background: #1E293B !important; border-bottom-color: #334155 !important; }
+[data-theme="dark"] .app-panel { background: #1E293B; border-color: #334155; }
+[data-theme="dark"] .mobile-bottom-nav { background: #1E293B; border-top-color: #334155; }
+[data-theme="dark"] .mobile-hamburger .bar { background: #F1F5F9; }
+
+[data-theme="dark"] .card-panel { background: #1E293B; }
+[data-theme="dark"] .glass-panel { background: rgba(30,41,59,0.85); border-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .glass-card { background: rgba(30,41,59,0.6); border-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #334155; }
+
+[data-theme="dark"] .toggle-switch { background: #334155; }
+
 /* ─── BASE RESET ─── */
 *, *::before, *::after {
   box-sizing: border-box;

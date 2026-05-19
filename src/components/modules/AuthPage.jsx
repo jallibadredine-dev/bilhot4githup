@@ -154,7 +154,7 @@ const LoginForm = ({ onLogin, onSwitchRegister }) => {
     <>
       <div className="auth-form-header">
         <h1>Bon retour 👋</h1>
-        <p>Connectez-vous à votre espace Hova.</p>
+        <p>Connectez-vous à votre espace BilHot.</p>
       </div>
 
       {authError && (
@@ -273,7 +273,9 @@ const AuthPage = ({ onLogin, onClose }) => {
 
       <header className="auth-header">
         <div className="logo-group" onClick={handleLogoClick} style={{ cursor: 'default', userSelect: 'none' }}>
-          <img src="/hova-logo.png" alt="Hova" style={{ height: 30, width: 'auto', objectFit: 'contain' }}/>
+          <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: -0.5, lineHeight: 1, userSelect: 'none' }}>
+            <span style={{ color: '#2563EB' }}>Bil</span><span style={{ color: '#111827' }}>Hot</span>
+          </span>
         </div>
         {onClose && (
           <button className="auth-close-btn" onClick={onClose} aria-label="Fermer">

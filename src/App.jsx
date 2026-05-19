@@ -85,6 +85,12 @@ function App() {
   const [trialInfo, setTrialInfo] = useState(null); // { daysLeft: number, expired: boolean } | null
   const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
   const [googleOnboardingUser, setGoogleOnboardingUser] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('bilhot_darkMode') === 'true');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    localStorage.setItem('bilhot_darkMode', darkMode);
+  }, [darkMode]);
 
   useEffect(() => {
     if (!SUPABASE_READY) {
@@ -676,6 +682,8 @@ function App() {
         }} 
         pmsMode={pmsMode}
         onClose={() => setIsMobileMenuOpen(false)}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
       />
 
       <main className="app-main-content">

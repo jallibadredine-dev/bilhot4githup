@@ -57,7 +57,7 @@ const DEMO_THREADS = {
       guestName: 'Yuki Tanaka',       reservation: 'BKG-55012', checkIn: '2026-05-21', checkOut: '2026-05-25', room: 'Suite Junior', nights: 4, amount: 760, unread: 1,
       msgs: [
         { id: 'm1', sender: 'guest', text: 'こんにちは。Wi-Fiのパスワードを教えていただけますか？', time: 'Yesterday' },
-        { id: 'm2', sender: 'ai',    text: 'Bonjour Yuki ! 🌸 Le réseau Wi-Fi est "Hova_Guest" — Mot de passe: Hova2026#. Bonne connexion !', time: 'Yesterday', isAI: true },
+        { id: 'm2', sender: 'ai',    text: 'Bonjour Yuki ! 🌸 Le réseau Wi-Fi est "BilHot_Guest" — Mot de passe: Hova2026#. Bonne connexion !', time: 'Yesterday', isAI: true },
       ],
     },
   ],
@@ -104,7 +104,7 @@ const getSuggestions = (lastGuestMsg = '') => {
   if (t.includes('check') || t.includes('arrive') || t.includes('time') || t.includes('heure'))
     return ['Check-in dès 14h00. Votre chambre sera prête.', 'Je vous envoie le code d\'accès 1h avant votre arrivée.', 'L\'accueil est ouvert jusqu\'à 22h.'];
   if (t.includes('wifi') || t.includes('internet') || t.includes('password') || t.includes('パスワード'))
-    return ['Wi-Fi: "Hova_Guest" | Mot de passe: Hova2026#', 'Le Wi-Fi est gratuit et disponible partout.'];
+    return ['Wi-Fi: "BilHot_Guest" | Mot de passe: Hova2026#', 'Le Wi-Fi est gratuit et disponible partout.'];
   if (t.includes('parking') || t.includes('park'))
     return ['Parking gratuit sur place, accès par badge.', 'Parking public à 200m, €2/h.'];
   if (t.includes('baby') || t.includes('cot') || t.includes('bébé') || t.includes('lit'))
@@ -637,7 +637,7 @@ const UnifiedInbox = ({ pmsMode = 'pro', setActiveView }) => {
               <div className="ui-quick-actions">
                 {[
                   { icon: Key,       label: 'Envoyer code d\'accès',  action: () => setInput('Votre code d\'accès est : 4829. Bonne arrivée ! 🗝️') },
-                  { icon: Wifi,      label: 'Envoyer infos Wi-Fi',     action: () => setInput('Wi-Fi: "Hova_Guest" | Mot de passe: Hova2026#') },
+                  { icon: Wifi,      label: 'Envoyer infos Wi-Fi',     action: () => setInput('Wi-Fi: "BilHot_Guest" | Mot de passe: Hova2026#') },
                   { icon: FileText,  label: 'Envoyer instructions',    action: () => setInput('Voici les instructions d\'accès et le règlement de la maison…') },
                   { icon: Calendar,  label: 'Rappel check-out',        action: () => setInput(`Bonjour ! Petit rappel : votre check-out est prévu le ${selectedConv.checkOut}. Merci !`) },
                 ].map(({ icon: Icon, label, action }) => (

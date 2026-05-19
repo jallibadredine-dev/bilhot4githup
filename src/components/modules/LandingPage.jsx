@@ -54,7 +54,9 @@ const LandingPage = ({ onLogin }) => {
       <nav className={`td-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="td-nav-container">
           <div className="td-logo">
-            <img src="/hova-logo.png" alt="Hova" style={{ height: 32, width: 'auto', objectFit: 'contain' }}/>
+            <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: -0.5, lineHeight: 1, userSelect: 'none' }}>
+              <span style={{ color: '#2563EB' }}>Bil</span><span style={{ color: '#111827' }}>Hot</span>
+            </span>
           </div>
           <div className="td-nav-links hide-mobile">
             <a href="#how-it-works">Fonctionnement</a>
@@ -122,7 +124,7 @@ const LandingPage = ({ onLogin }) => {
           
           <div className="hp-hero-cta-group">
             <button className="td-btn-primary large" onClick={handleOpenAuth}>
-              Essayer Hova Gratuitement
+              Essayer BilHot Gratuitement
             </button>
             <p className="hp-cta-subtext">
               <Check size={14} className="hp-check" /> Pas de carte de crédit • Annulation possible à tout moment
@@ -258,7 +260,7 @@ const LandingPage = ({ onLogin }) => {
       {/* Comparison Section */}
       <section className="hp-comparison" id="comparison">
         <div className="hp-section-header">
-          <h2>L'avantage Hova</h2>
+          <h2>L'avantage BilHot</h2>
           <p>Pourquoi nos clients ne reviendront jamais en arrière.</p>
         </div>
         
@@ -267,7 +269,7 @@ const LandingPage = ({ onLogin }) => {
             <thead>
               <tr>
                 <th className="hp-table-col-label">Fonctionnalité</th>
-                <th className="hp-table-col-hosflow">Hova</th>
+                <th className="hp-table-col-hosflow">BilHot</th>
                 <th className="hp-table-col-old">Autres PMS</th>
               </tr>
             </thead>
@@ -314,7 +316,7 @@ const LandingPage = ({ onLogin }) => {
       {/* Testimonials */}
       <section className="hp-testimonials" id="testimonials">
         <div className="hp-section-header">
-          <h2>Ils adorent Hova</h2>
+          <h2>Ils adorent BilHot</h2>
           <p>Rejoignez les milliers de gestionnaires qui ont repris le contrôle.</p>
         </div>
         
@@ -354,7 +356,7 @@ const LandingPage = ({ onLogin }) => {
               </div>
             </div>
             <p className="hp-testimonial-text">
-              "Hova nous a permis de scaler notre conciergerie sans recruter massivement. L'automatisation fait tout le travail."
+              "BilHot nous a permis de scaler notre conciergerie sans recruter massivement. L'automatisation fait tout le travail."
             </p>
           </motion.div>
         </div>
@@ -366,7 +368,7 @@ const LandingPage = ({ onLogin }) => {
           <div className="td-footer-brand">
             <div className="td-logo">
               <div className="td-logo-icon">H</div>
-              <span style={{ color: 'white' }}>Hova</span>
+              <span style={{ color: 'white' }}>BilHot</span>
             </div>
             <p>Le futur du Property Management. Simple, puissant et automatisé.</p>
           </div>

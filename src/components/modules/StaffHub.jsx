@@ -568,7 +568,7 @@ const StaffHub = ({ onNavigate }) => {
                   </div>
                   <div className="sh-notif-field">
                     <label>Nom expéditeur</label>
-                    <input placeholder="Hova PMS" value={notifConfig.fromName||''} onChange={e=>setNotifConfig(p=>({...p,fromName:e.target.value}))}/>
+                    <input placeholder="BilHot PMS" value={notifConfig.fromName||''} onChange={e=>setNotifConfig(p=>({...p,fromName:e.target.value}))}/>
                   </div>
                 </div>
                 <div className="sh-notif-field">

@@ -27,13 +27,15 @@ const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCo
   );
 };
 
-const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
+const Sidebar = ({ activeView, setActiveView, pmsMode, onClose, darkMode, setDarkMode }) => {
   return (
     <nav className="sidebar-container hide-scrollbar" aria-label="Main Navigation">
 
       {/* ── Logo ── */}
       <div className="sidebar-logo">
-        <img src="/hova-logo.png" alt="Hova" style={{ height: 30, width: 'auto', objectFit: 'contain', flexShrink: 0 }}/>
+        <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: -0.5, flexShrink: 0, lineHeight: 1, userSelect: 'none' }}>
+          <span style={{ color: 'var(--accent-blue)' }}>Bil</span><span style={{ color: 'var(--text-primary)' }}>Hot</span>
+        </span>
         <button
           className="mobile-sidebar-close"
           onClick={onClose}
@@ -135,10 +137,18 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose }) => {
           <Settings size={17} />
           <span>Paramètres</span>
         </button>
-        <div className="menu-item toggle-item" style={{ cursor: 'pointer' }}>
+        <div
+          className="menu-item toggle-item"
+          style={{ cursor: 'pointer' }}
+          onClick={() => setDarkMode && setDarkMode(prev => !prev)}
+          role="switch"
+          aria-checked={darkMode}
+          tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && setDarkMode && setDarkMode(prev => !prev)}
+        >
           <Moon size={17} />
           <span>Mode sombre</span>
-          <div className="toggle-switch"></div>
+          <div className={`toggle-switch${darkMode ? ' toggle-on' : ''}`}></div>
         </div>
       </div>
 
