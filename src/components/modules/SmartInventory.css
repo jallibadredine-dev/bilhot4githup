@@ -349,54 +349,50 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   flex-shrink: 0;
-  transition: transform 0.12s, box-shadow 0.12s;
+  transition: transform 0.13s, box-shadow 0.13s;
+  position: relative;
 }
-.tth-si:hover { transform: scale(1.08); }
+.tth-si:hover { transform: scale(1.07); }
 
 .tth-si.occupied {
-  background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
-  color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(37,99,235,0.35);
+  background: linear-gradient(145deg, #1E40AF 0%, #2563EB 100%);
+  box-shadow: 0 3px 8px rgba(37,99,235,0.40);
 }
 .tth-si.occupied.unlocked {
-  background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
-  color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(59,130,246,0.30);
+  background: linear-gradient(145deg, #2563EB 0%, #3B82F6 100%);
+  box-shadow: 0 3px 8px rgba(59,130,246,0.35);
 }
 .tth-si.broken {
-  background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
-  color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(220,38,38,0.35);
+  background: linear-gradient(145deg, #B91C1C 0%, #EF4444 100%);
+  box-shadow: 0 3px 8px rgba(220,38,38,0.40);
 }
 .tth-si.cleaning {
-  background: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
-  color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(234,88,12,0.35);
+  background: linear-gradient(145deg, #C2410C 0%, #F97316 100%);
+  box-shadow: 0 3px 8px rgba(234,88,12,0.40);
 }
 .tth-si.available.locked {
-  background: linear-gradient(135deg, #15803D 0%, #16A34A 100%);
-  color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(22,163,74,0.30);
+  background: linear-gradient(145deg, #15803D 0%, #22C55E 100%);
+  box-shadow: 0 3px 8px rgba(22,163,74,0.35);
 }
 .tth-si.available {
-  background: #E2E8F0;
-  color: #64748B;
+  background: #F1F5F9;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
 }
 .tth-si.no-lock {
-  background: #FEE2E2;
-  color: #DC2626;
+  background: #FEF2F2;
   border: 1.5px dashed #FCA5A5;
   cursor: pointer;
+  box-shadow: none;
 }
 
 /* Pulse animation for cleaning */
 @keyframes tth-pulse-orange {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(234,88,12,0.45); }
-  50%       { box-shadow: 0 0 0 7px rgba(234,88,12,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.50); }
+  50%       { box-shadow: 0 0 0 8px rgba(249,115,22,0); }
 }
 .tth-si-pulse {
   animation: tth-pulse-orange 2s ease-in-out infinite;
@@ -405,43 +401,21 @@
 /* Override when card is selected */
 .tth-card.selected .tth-si {
   background: rgba(255,255,255,0.22) !important;
-  color: rgba(255,255,255,0.95) !important;
   box-shadow: none !important;
   border-color: rgba(255,255,255,0.25) !important;
   animation: none !important;
 }
 
-/* ─── Battery warning badge ─── */
-.tth-si.battery-low {
-  background: #FEF3C7;
-  color: #D97706;
-  box-shadow: none;
-}
-
-/* ─── Connectivity dot ─── */
-.tth-conn-dot {
-  width: 7px;
-  height: 7px;
+/* ─── Micro battery dot ─── */
+.tth-micro-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-left: 1px;
 }
-.tth-conn-dot.online  { background: #22C55E; box-shadow: 0 0 0 2px rgba(34,197,94,0.20); }
-.tth-conn-dot.offline { background: #94A3B8; }
-
-/* ─── PIN tag ─── */
-.tth-pin-tag {
-  display: flex; align-items: center; gap: 3px;
-  font-size: 0.56rem; font-weight: 700;
-  color: #6D28D9;
-  background: #F5F3FF;
-  border-radius: 4px;
-  padding: 2px 5px;
-  white-space: nowrap;
-}
-.tth-card.selected .tth-pin-tag {
-  background: rgba(255,255,255,0.18);
-  color: #DDD6FE;
+.tth-micro-dot.battery {
+  background: #F59E0B;
+  box-shadow: 0 0 0 2px rgba(245,158,11,0.25);
 }
 
 /* ─── Grip handle ─── */

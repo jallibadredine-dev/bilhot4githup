@@ -575,50 +575,35 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                           {(cs?.status === 'dirty' || cs?.status === 'in_progress') ? (
                             <span className={`tth-si cleaning${cs?.status === 'in_progress' ? ' tth-si-pulse' : ''}`}
                               title="Prêt au ménage">
-                              <Sparkles size={15}/>
+                              <Sparkles size={18}/>
                             </span>
                           ) : room.status === 'occupied' ? (
                             <span className={`tth-si occupied${room.lock?.locked === false ? ' unlocked' : ''}`}
                               title={room.lock?.locked === false ? 'Occupée · Porte ouverte' : 'Occupée · Verrouillée'}>
-                              <SmartDoorLock size={16} color="white"/>
+                              <SmartDoorLock size={19} color="white"/>
                             </span>
                           ) : (room.status === 'maintenance' || room.status === 'blocked') ? (
                             <span className="tth-si broken" title="En panne / Hors service">
-                              <SmartDoorLock size={16} color="white"/>
+                              <SmartDoorLock size={19} color="white"/>
                             </span>
                           ) : !hasLock ? (
-                            <span className="tth-si no-lock" title="Aucune serrure"
+                            <span className="tth-si no-lock" title="Aucune serrure — cliquer pour en ajouter"
                               onClick={e => { e.stopPropagation(); setLockModal({ room, buildingId: selectedBuilding.id, floorId: floor.id }); }}>
-                              <SmartDoorLock size={16} color="#DC2626"/>
+                              <SmartDoorLock size={19} color="#DC2626"/>
                             </span>
                           ) : room.lock?.locked ? (
                             <span className="tth-si available locked" title="Disponible · Verrouillée">
-                              <SmartDoorLock size={16} color="white"/>
+                              <SmartDoorLock size={19} color="white"/>
                             </span>
                           ) : (
                             <span className="tth-si available" title="Disponible · Déverrouillée">
-                              <SmartDoorLock size={16} color="#64748B"/>
+                              <SmartDoorLock size={19} color="#475569"/>
                             </span>
                           )}
 
-                          {/* Battery warning badge */}
+                          {/* Low battery micro-dot only */}
                           {hasLock && room.lock.battery < 25 && (
-                            <span className="tth-si battery-low" title={`Batterie ${room.lock.battery}%`}>
-                              <BatteryLow size={13}/>
-                            </span>
-                          )}
-
-                          {/* Connectivity dot */}
-                          {hasLock && (
-                            <span
-                              className={`tth-conn-dot ${lockOnline ? 'online' : 'offline'}`}
-                              title={lockOnline ? 'Serrure connectée' : 'Serrure hors ligne'}
-                            />
-                          )}
-
-                          {/* PIN tag */}
-                          {room.lock?.pin && (
-                            <span className="tth-pin-tag"><Key size={9}/> {room.lock.pin}</span>
+                            <span className="tth-micro-dot battery" title={`Batterie faible ${room.lock.battery}%`}/>
                           )}
                         </div>
                       </motion.div>
