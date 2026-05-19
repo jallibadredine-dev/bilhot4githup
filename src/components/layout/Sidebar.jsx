@@ -33,9 +33,18 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose, darkMode, setDar
 
       {/* ── Logo ── */}
       <div className="sidebar-logo">
-        <span style={{ fontWeight: 800, fontSize: 20, letterSpacing: -0.5, flexShrink: 0, lineHeight: 1, userSelect: 'none' }}>
-          <span style={{ color: 'var(--accent-blue)' }}>Bil</span><span style={{ color: 'var(--text-primary)' }}>Hot</span>
-        </span>
+        <div className="logo-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 1L21 11L11 21L1 11Z" fill="white" opacity="0.95"/>
+            <path d="M8 15V9.5H10V12H12V9.5H14V15H12V13H10V15H8Z" fill="#2563EB"/>
+          </svg>
+        </div>
+        <div className="logo-text-block">
+          <span className="logo-wordmark">
+            <span style={{ color: '#2563EB' }}>Bil</span><span className="logo-wordmark-dark">Hot</span>
+          </span>
+          <span className="logo-tagline">PMS</span>
+        </div>
         <button
           className="mobile-sidebar-close"
           onClick={onClose}

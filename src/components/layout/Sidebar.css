@@ -30,17 +30,40 @@
   width: 34px;
   height: 34px;
   background: #2563EB;
-  color: white;
-  border-radius: 10px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 1.1rem;
-  font-style: italic;
-  font-family: Georgia, serif;
   flex-shrink: 0;
-  transform: none;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.30);
+}
+
+.logo-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 1;
+}
+
+.logo-wordmark {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.logo-wordmark-dark {
+  color: #111827;
+}
+
+.logo-tagline {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  margin-top: 1px;
 }
 
 .sidebar-logo h2 {

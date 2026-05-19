@@ -247,7 +247,55 @@ const LandingPage = ({ onLogin }) => {
       </section>
 
       {/* ══════════════════════════════════
-          4. PRICING SIMULATOR (original)
+          4. PARTNERS BANNER (scrolling)
+      ══════════════════════════════════ */}
+      <section className="lp-partners-banner">
+        <p className="lp-partners-banner-label">Connecté à toutes vos plateformes</p>
+        <div className="lp-partners-scroll-wrap">
+          <div className="lp-partners-scroll-track">
+            {[
+              { name: 'Airbnb',        icon: '🏠' },
+              { name: 'Booking.com',   icon: '🔵' },
+              { name: 'Expedia',       icon: '✈️' },
+              { name: 'VRBO',          icon: '🏡' },
+              { name: 'TripAdvisor',   icon: '🦉' },
+              { name: 'Google Hotels', icon: '🔍' },
+              { name: 'Agoda',         icon: '🌏' },
+              { name: 'Hotels.com',    icon: '🏨' },
+              { name: 'Stripe',        icon: '💳' },
+              { name: 'TTLock',        icon: '🔐' },
+              { name: 'WhatsApp',      icon: '💬' },
+              { name: 'Beds24',        icon: '📅' },
+              { name: 'Hostelworld',   icon: '🎒' },
+              { name: 'iCal',          icon: '📆' },
+              { name: 'HomeAway',      icon: '🌴' },
+              { name: 'Airbnb',        icon: '🏠' },
+              { name: 'Booking.com',   icon: '🔵' },
+              { name: 'Expedia',       icon: '✈️' },
+              { name: 'VRBO',          icon: '🏡' },
+              { name: 'TripAdvisor',   icon: '🦉' },
+              { name: 'Google Hotels', icon: '🔍' },
+              { name: 'Agoda',         icon: '🌏' },
+              { name: 'Hotels.com',    icon: '🏨' },
+              { name: 'Stripe',        icon: '💳' },
+              { name: 'TTLock',        icon: '🔐' },
+              { name: 'WhatsApp',      icon: '💬' },
+              { name: 'Beds24',        icon: '📅' },
+              { name: 'Hostelworld',   icon: '🎒' },
+              { name: 'iCal',          icon: '📆' },
+              { name: 'HomeAway',      icon: '🌴' },
+            ].map((p, i) => (
+              <div key={i} className="lp-partner-chip">
+                <span className="lp-partner-icon">{p.icon}</span>
+                <span className="lp-partner-name">{p.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════
+          5. PRICING SIMULATOR (original)
       ══════════════════════════════════ */}
       <section className="lp-pricing-section lp-pricing-section-top" id="pricing">
         <motion.div className="lp-section-center" {...fadeUp}>

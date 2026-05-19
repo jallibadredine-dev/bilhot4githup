@@ -90,6 +90,8 @@
   border-right-color: #334155 !important;
 }
 [data-theme="dark"] .sidebar-logo { border-bottom-color: #2D3F55; }
+[data-theme="dark"] .logo-wordmark-dark { color: #F1F5F9; }
+[data-theme="dark"] .logo-tagline { color: #475569; }
 [data-theme="dark"] .menu-item { color: #94A3B8; }
 [data-theme="dark"] .menu-item:hover { background: #263248; color: #F1F5F9; }
 [data-theme="dark"] .menu-item.active { background: #1E3A5F; color: #3B82F6; }
