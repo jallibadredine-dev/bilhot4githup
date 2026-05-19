@@ -103,7 +103,7 @@
 .app-header {
   height: auto;
   background: #FFFFFF;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #EEF0F3;
   display: flex;
   align-items: stretch;
   flex-shrink: 0;
@@ -115,7 +115,7 @@
 .app-header.glass-panel {
   background: #FFFFFF;
   border: none;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #EEF0F3;
   border-radius: 0;
   box-shadow: none;
 }

@@ -1,11 +1,12 @@
 import React from 'react';
 import {
-  LayoutDashboard, Calendar, ClipboardCheck, Settings, Moon, Key,
+  LayoutDashboard, Calendar, ClipboardCheck, Settings, Moon,
   Globe2, UserCheck, Sparkles, Zap, Layers, Users, Receipt, Database,
   CreditCard, Bot, Building2, Star, XCircle,
   UtensilsCrossed, MessageSquare, Monitor, BarChart3, Code,
   Workflow, ClipboardList, Home, ScanLine
 } from 'lucide-react';
+import SmartDoorLock from '../icons/SmartDoorLock';
 import './Sidebar.css';
 
 const SidebarItem = ({ id, icon: Icon, label, activeView, setActiveView, alertCount, color, isBold, extraStyle }) => {
@@ -75,7 +76,7 @@ const Sidebar = ({ activeView, setActiveView, pmsMode, onClose, darkMode, setDar
             <span className="group-title">Opérations</span>
             <SidebarItem id="frontdesk"        icon={Monitor}       label="Front Desk"             activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="inventory"        icon={Layers}        label="Gestion Inventaire"     activeView={activeView} setActiveView={setActiveView} />
-            <SidebarItem id="locks"            icon={Key}           label="Serrures Connectées"    activeView={activeView} setActiveView={setActiveView} />
+            <SidebarItem id="locks"            icon={(props) => <SmartDoorLock size={props.size || 17} color="currentColor" />} label="Serrures Connectées" activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="card-management" icon={ScanLine}      label="Cartes d'Accès RFID"    activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="services-hub"     icon={UtensilsCrossed} label="Hub de Services"      activeView={activeView} setActiveView={setActiveView} />
             <SidebarItem id="housekeeping"     icon={ClipboardCheck} label="Housekeeping"          activeView={activeView} setActiveView={setActiveView} />

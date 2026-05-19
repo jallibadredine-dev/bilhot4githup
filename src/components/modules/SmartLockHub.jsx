@@ -8,6 +8,7 @@ import {
   Link2, Unlink, ChevronDown, Settings, ArrowRight,
   Download, CheckCircle2, CreditCard
 } from 'lucide-react';
+import SmartDoorLock from '../icons/SmartDoorLock';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ttlockAPI } from '../../lib/ttlock';
 import { tthotelAPI } from '../../lib/tthotel';
@@ -481,7 +482,7 @@ const SmartLockHub = () => {
     return (
       <div className="slh-root">
         <div className="slh-setup-header">
-          <div className="slh-setup-header-icon"><Lock size={22}/></div>
+          <div className="slh-setup-header-icon"><SmartDoorLock size={24} color="#2563EB"/></div>
           <div>
             <h1>Connexion Serrures Intelligentes</h1>
             <p>Entrez vos identifiants pour chaque fournisseur afin d'importer tous vos appareils</p>
@@ -687,7 +688,7 @@ const SmartLockHub = () => {
       {/* ── Topbar ── */}
       <div className="slh-topbar">
         <div className="slh-topbar-left">
-          <div className="slh-title-icon"><Lock size={20}/></div>
+          <div className="slh-title-icon"><SmartDoorLock size={22} color="#2563EB"/></div>
           <div>
             <h1>Serrures Intelligentes</h1>
             <p>
@@ -779,7 +780,7 @@ const SmartLockHub = () => {
           {/* Empty */}
           {allDevices.length === 0 && (
             <div className="slh-empty-state">
-              <div className="slh-empty-icon"><Lock size={44} strokeWidth={1}/></div>
+              <div className="slh-empty-icon"><SmartDoorLock size={48} color="#CBD5E1"/></div>
               <h3>Aucun appareil importé</h3>
               <p>Cliquez sur <strong>Importer les appareils</strong> pour charger tous vos appareils connectés.</p>
               <button className="slh-sf-submit" style={{ background: '#2563EB', width: 'auto', padding: '10px 24px' }} onClick={syncAll} disabled={syncing}>

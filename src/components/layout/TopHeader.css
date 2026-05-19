@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   TOP HEADER — Airbnb Dashboard Style
+   TOP HEADER — HotelSync Style
    Single clean bar: property info | search | stats + user
 ═══════════════════════════════════════════════════════════ */
 
@@ -7,10 +7,11 @@
   display: flex;
   align-items: center;
   width: 100%;
-  height: 64px;
-  padding: 0 24px;
-  gap: 20px;
+  height: 58px;
+  padding: 0 22px;
+  gap: 16px;
   background: #FFFFFF;
+  border-bottom: 1px solid #EEF0F3;
   flex-shrink: 0;
 }
 
@@ -26,19 +27,19 @@
 .th-property-pill {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 8px;
-  background: #F8FAFC;
+  gap: 7px;
+  padding: 5px 10px 5px 7px;
+  background: #F3F6FA;
   border: 1px solid #E5E7EB;
   border-radius: 50px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, background 0.15s;
   min-height: unset;
   font-family: inherit;
 }
 .th-property-pill:hover {
-  border-color: #B0B0B0;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  border-color: #C0C7D0;
+  background: #EEF2F7;
 }
 .th-property-icon {
   width: 24px;
@@ -99,18 +100,19 @@
 .th-search {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   width: 100%;
-  background: #FFFFFF;
-  border: 1.5px solid #E5E7EB;
+  background: #F3F6FA;
+  border: 1.5px solid transparent;
   border-radius: 50px;
-  padding: 8px 16px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  padding: 7px 14px;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
   cursor: text;
 }
 .th-search:focus-within {
-  border-color: #111827;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
 .th-search-icon { color: #9CA3AF; flex-shrink: 0; }
 .th-search input {
