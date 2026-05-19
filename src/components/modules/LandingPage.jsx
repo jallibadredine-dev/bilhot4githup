@@ -18,6 +18,7 @@ const LandingPage = ({ onLogin }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [planType, setPlanType] = useState('standard');
+  const [integFilter, setIntegFilter] = useState('Tous');
   const [openFaq, setOpenFaq] = useState(null);
 
   const handleOpenAuth = () => setShowAuthModal(true);
@@ -35,6 +36,28 @@ const LandingPage = ({ onLogin }) => {
     viewport: { once: true, margin: '-40px' },
     transition: { duration: 0.55, ease: 'easeOut' }
   };
+
+  const integrations = [
+    { name: 'Airbnb',        cat: 'OTA',           emoji: '🏠', color: '#FF5A5F', bg: '#FFF0F0', desc: 'Sync disponibilités, tarifs et réservations en temps réel',  status: 'live' },
+    { name: 'Booking.com',   cat: 'OTA',           emoji: '🔵', color: '#003580', bg: '#EBF0FF', desc: 'Channel manager officiel certifié Booking.com Connectivity',  status: 'live' },
+    { name: 'Expedia',       cat: 'OTA',           emoji: '✈️', color: '#1C64F2', bg: '#EFF6FF', desc: 'Connexion directe Hotels.com, VRBO et tout le groupe Expedia', status: 'live' },
+    { name: 'Agoda',         cat: 'OTA',           emoji: '🌏', color: '#E5440B', bg: '#FFF4EF', desc: 'Marché Asie-Pacifique — 4M+ hôtels connectés',               status: 'live' },
+    { name: 'VRBO',          cat: 'OTA',           emoji: '🏡', color: '#1B6EBF', bg: '#EFF6FF', desc: 'Résidences et maisons de vacances premium',                  status: 'live' },
+    { name: 'TripAdvisor',   cat: 'OTA',           emoji: '🦉', color: '#00A680', bg: '#EDFAF6', desc: 'TripConnect méta-search, avis et visibilité directe',        status: 'live' },
+    { name: 'Google Hotels', cat: 'OTA',           emoji: '🔍', color: '#4285F4', bg: '#EFF6FF', desc: 'Méta-search Google — visibilité organique + ads hôteliers',  status: 'soon' },
+    { name: 'Stripe',        cat: 'Paiement',      emoji: '💳', color: '#635BFF', bg: '#F5F4FF', desc: 'Paiements en ligne, remboursements et gestion des cautions',  status: 'live' },
+    { name: 'PayPal',        cat: 'Paiement',      emoji: '🅿️', color: '#003087', bg: '#EBF2FF', desc: 'Paiements internationaux sécurisés en 200+ devises',         status: 'soon' },
+    { name: 'TTLock',        cat: 'IoT',           emoji: '🔐', color: '#2563EB', bg: '#EFF6FF', desc: 'Serrures connectées — codes générés et révoqués auto',       status: 'live' },
+    { name: 'Nuki',          cat: 'IoT',           emoji: '🔒', color: '#F97316', bg: '#FFF7ED', desc: 'Smart lock européen certifié, compatible Bluetooth & Wi-Fi', status: 'live' },
+    { name: 'Yale Connect',  cat: 'IoT',           emoji: '🛡️', color: '#1D4ED8', bg: '#EFF6FF', desc: 'Gamme Yale Smart Home — cylindres et verrous connectés',    status: 'soon' },
+    { name: 'WhatsApp',      cat: 'Communication', emoji: '💬', color: '#25D366', bg: '#EDFAF1', desc: 'Messagerie automatique bilingue — confirmations & check-in', status: 'live' },
+    { name: 'Gmail',         cat: 'Communication', emoji: '📧', color: '#EA4335', bg: '#FFF0EF', desc: 'Templates automatiques envoyés au bon moment du séjour',    status: 'live' },
+    { name: 'Beds24',        cat: 'Gestion',       emoji: '📅', color: '#7C3AED', bg: '#F5F3FF', desc: 'Synchronisation PMS secondaire, calendriers et tarifs',      status: 'live' },
+    { name: 'iCal',          cat: 'Gestion',       emoji: '📆', color: '#6B7280', bg: '#F9FAFB', desc: 'Import/export universel — compatible toutes plateformes',   status: 'live' },
+  ];
+
+  const integCats = ['Tous', 'OTA', 'Paiement', 'IoT', 'Communication', 'Gestion'];
+  const filteredInteg = integFilter === 'Tous' ? integrations : integrations.filter(i => i.cat === integFilter);
 
   const faqs = [
     {
@@ -465,6 +488,72 @@ const LandingPage = ({ onLogin }) => {
             </motion.div>
           ))}
         </div>
+      </section>
+
+      {/* ══════════════════════════════════
+          7b. INTEGRATIONS
+      ══════════════════════════════════ */}
+      <section className="lp-integ-section" id="integrations">
+        <motion.div className="lp-section-center" {...fadeUp}>
+          <p className="lp-section-eyebrow">150+ Intégrations</p>
+          <h2 className="lp-section-h2">
+            Connecté à toutes<br />vos plateformes favorites
+          </h2>
+          <p className="lp-section-desc">
+            BilHot s'intègre nativement avec les OTA, les systèmes de paiement, les serrures IoT et les outils de communication — sans configuration complexe.
+          </p>
+        </motion.div>
+
+        {/* Category filter */}
+        <div className="lp-integ-filter">
+          {integCats.map(cat => (
+            <button
+              key={cat}
+              className={`lp-integ-filter-btn ${integFilter === cat ? 'active' : ''}`}
+              onClick={() => setIntegFilter(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Integration cards grid */}
+        <div className="lp-integ-grid">
+          {filteredInteg.map((integ, i) => (
+            <motion.div
+              key={integ.name}
+              className="lp-integ-card"
+              {...fadeUp}
+              transition={{ delay: i * 0.05 }}
+            >
+              <div className="lp-integ-card-top">
+                <div className="lp-integ-icon" style={{ background: integ.bg }}>
+                  <span style={{ fontSize: '1.6rem' }}>{integ.emoji}</span>
+                </div>
+                <span className={`lp-integ-status ${integ.status === 'live' ? 'live' : 'soon'}`}>
+                  {integ.status === 'live' ? '● Disponible' : '◎ Bientôt'}
+                </span>
+              </div>
+              <h4 className="lp-integ-name">{integ.name}</h4>
+              <span className="lp-integ-cat">{integ.cat}</span>
+              <p className="lp-integ-desc">{integ.desc}</p>
+              <button
+                className={`lp-integ-btn ${integ.status === 'soon' ? 'soon' : ''}`}
+                onClick={integ.status === 'live' ? handleOpenAuth : undefined}
+                disabled={integ.status === 'soon'}
+              >
+                {integ.status === 'live' ? 'Connecter →' : 'Notifier à la sortie'}
+              </button>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div className="lp-section-cta" {...fadeUp}>
+          <p className="lp-integ-cta-note">Et +134 intégrations supplémentaires via notre API REST ouverte</p>
+          <button className="lp-btn-primary-lg" onClick={handleOpenAuth}>
+            Voir toutes les intégrations <ArrowRight size={16} />
+          </button>
+        </motion.div>
       </section>
 
       {/* ══════════════════════════════════

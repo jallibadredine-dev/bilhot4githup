@@ -961,6 +961,185 @@ html {
 .lp-partners-logos span:hover { color: var(--lp-muted); }
 
 /* ═══════════════════════════════
+   INTEGRATIONS
+═══════════════════════════════ */
+.lp-integ-section {
+  padding: 5rem 2rem;
+  background: var(--lp-bg-alt);
+  border-top: 1px solid var(--lp-border);
+}
+
+/* Filter bar */
+.lp-integ-filter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 2.5rem auto 2.5rem;
+  max-width: 700px;
+}
+
+.lp-integ-filter-btn {
+  padding: 0.45rem 1.1rem;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1.5px solid var(--lp-border);
+  background: #fff;
+  color: var(--lp-text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: unset;
+  font-family: inherit;
+}
+
+.lp-integ-filter-btn:hover {
+  border-color: #2563EB;
+  color: #2563EB;
+  background: #EFF6FF;
+}
+
+.lp-integ-filter-btn.active {
+  background: #2563EB;
+  color: #fff;
+  border-color: #2563EB;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+
+/* Cards grid */
+.lp-integ-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+  .lp-integ-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .lp-integ-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .lp-integ-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+}
+
+/* Single card */
+.lp-integ-card {
+  background: #fff;
+  border: 1.5px solid var(--lp-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+}
+
+.lp-integ-card:hover {
+  border-color: #2563EB;
+  box-shadow: 0 4px 18px rgba(37,99,235,0.10);
+  transform: translateY(-2px);
+}
+
+.lp-integ-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.lp-integ-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.lp-integ-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 50px;
+  white-space: nowrap;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.lp-integ-status.live {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.lp-integ-status.soon {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.lp-integ-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--lp-text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.lp-integ-cat {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--lp-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.lp-integ-desc {
+  font-size: 0.8rem;
+  color: var(--lp-text-muted);
+  line-height: 1.5;
+  flex: 1;
+  margin: 0;
+}
+
+.lp-integ-btn {
+  margin-top: auto;
+  padding: 0.5rem 0;
+  background: none;
+  border: none;
+  border-top: 1.5px solid var(--lp-border);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2563EB;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: color 0.15s;
+  min-height: unset;
+}
+
+.lp-integ-btn:hover {
+  color: #1D4ED8;
+}
+
+.lp-integ-btn.soon {
+  color: var(--lp-text-muted);
+  cursor: default;
+  font-weight: 500;
+}
+
+.lp-integ-cta-note {
+  font-size: 0.85rem;
+  color: var(--lp-text-muted);
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+/* ═══════════════════════════════
    FAQ
 ═══════════════════════════════ */
 .lp-faq-section {
