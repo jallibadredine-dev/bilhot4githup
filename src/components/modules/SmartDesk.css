@@ -6,7 +6,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #F7F7F7;
+  background: #F8FAFC;
   overflow-y: auto;
   overflow-x: hidden;
   gap: 0;
@@ -19,7 +19,7 @@
   justify-content: space-between;
   padding: 20px 24px 16px;
   background: #FFFFFF;
-  border-bottom: 1px solid #EBEBEB;
+  border-bottom: 1px solid #EEF0F3;
   gap: 20px;
   flex-shrink: 0;
 }
@@ -68,15 +68,15 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  background: #F7F7F7;
-  border: 1.5px solid #EBEBEB;
-  border-radius: 10px;
+  background: #F3F6FA;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 9px;
   padding: 8px 14px;
   width: 280px;
   transition: border-color 0.15s;
 }
-.sd-search-wrap:focus-within { border-color: #AAAAAA; background: white; }
-.sd-search-icon { color: #AAAAAA; flex-shrink: 0; }
+.sd-search-wrap:focus-within { border-color: #CBD5E1; background: white; }
+.sd-search-icon { color: #9CA3AF; flex-shrink: 0; }
 .sd-search-input {
   border: none; background: transparent; outline: none;
   font-size: 0.84rem; color: #222222; width: 100%; font-family: inherit;
@@ -93,8 +93,8 @@
   border: 1.5px solid transparent;
   transition: all 0.15s; white-space: nowrap; min-height: unset; font-family: inherit;
 }
-.sd-btn-ghost { background: transparent; border-color: #EBEBEB; color: #555555; }
-.sd-btn-ghost:hover { border-color: #AAAAAA; color: #222222; background: #F7F7F7; }
+.sd-btn-ghost { background: transparent; border-color: #E5E7EB; color: #374151; }
+.sd-btn-ghost:hover { border-color: #CBD5E1; color: #111827; background: #F3F6FA; }
 .sd-btn-primary { background: #2563EB; color: white; box-shadow: 0 2px 6px rgba(37,99,235,0.25); }
 .sd-btn-primary:hover { background: #1D4ED8; }
 
@@ -104,7 +104,7 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 0;
   background: #FFFFFF;
-  border-bottom: 1px solid #EBEBEB;
+  border-bottom: 1px solid #EEF0F3;
   flex-shrink: 0;
 }
 
@@ -113,7 +113,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
-  border-right: 1px solid #EBEBEB;
+  border-right: 1px solid #EEF0F3;
   cursor: default;
   transition: background 0.12s;
 }
@@ -161,17 +161,17 @@
 .sd-panel-title h3 { font-size: 0.9rem; font-weight: 700; color: #222222; margin: 0; }
 
 .sd-badge-count {
-  background: #F7F7F7; color: #555555;
+  background: #F3F6FA; color: #555555;
   font-size: 0.7rem; font-weight: 700;
   padding: 3px 9px; border-radius: 20px;
-  border: 1px solid #EBEBEB;
+  border: 1px solid #EEF0F3;
 }
 
 /* ─── ARRIVAL QUEUE ─── */
 .sd-arrivals-panel {
   background: #FFFFFF;
-  border: 1px solid #EBEBEB;
-  border-radius: 14px;
+  border: 1px solid #EEF0F3;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -180,7 +180,7 @@
 .sd-filter-tabs {
   display: flex;
   gap: 3px;
-  background: #F7F7F7;
+  background: #F3F6FA;
   padding: 3px;
   border-radius: 9px;
   flex-shrink: 0;
@@ -214,7 +214,7 @@
   justify-content: space-between; gap: 12px;
   padding: 13px 14px;
   background: #FAFAFA;
-  border: 1.5px solid #EBEBEB;
+  border: 1.5px solid #EEF0F3;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.15s;
@@ -289,8 +289,8 @@
 /* ─── SCANNER PANEL ─── */
 .sd-scanner-panel {
   background: #FFFFFF;
-  border: 1px solid #EBEBEB;
-  border-radius: 14px;
+  border: 1px solid #EEF0F3;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -302,7 +302,7 @@
 .sd-scanner-connection { flex-shrink: 0; }
 .sd-btn-connect {
   display: flex; align-items: center; gap: 7px;
-  padding: 7px 12px; border: 1.5px solid #EBEBEB;
+  padding: 7px 12px; border: 1.5px solid #EEF0F3;
   border-radius: 9px; background: white; color: #555555;
   font-size: 0.75rem; font-weight: 600; cursor: pointer;
   transition: all 0.12s; min-height: unset; font-family: inherit;
@@ -338,7 +338,7 @@
 }
 .sd-doc-type-btn {
   display: flex; align-items: center; gap: 5px;
-  padding: 6px 11px; border: 1.5px solid #EBEBEB;
+  padding: 6px 11px; border: 1.5px solid #EEF0F3;
   border-radius: 9px; background: white; color: #717171;
   font-size: 0.72rem; font-weight: 600; cursor: pointer;
   transition: all 0.12s; min-height: unset; white-space: nowrap; font-family: inherit;
@@ -362,7 +362,7 @@
 }
 .sd-scan-frame {
   position: relative; width: 220px; height: 150px;
-  border: 2px dashed #EBEBEB; border-radius: 12px;
+  border: 2px dashed #EEF0F3; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 8px; background: #FAFAFA;
   transition: border-color 0.2s;
@@ -390,7 +390,7 @@
 }
 .sd-scan-btn-primary { background: #2563EB; color: white; }
 .sd-scan-btn-primary:hover { background: #1D4ED8; }
-.sd-scan-btn-ghost { background: white; border-color: #EBEBEB; color: #555555; }
+.sd-scan-btn-ghost { background: white; border-color: #EEF0F3; color: #555555; }
 .sd-scan-btn-ghost:hover { border-color: #AAAAAA; color: #222222; }
 
 /* SCANNING */
@@ -434,19 +434,19 @@
 .sd-result-ok-sub   { display: block; font-size: 0.7rem; color: #16A34A; }
 
 .sd-icon-btn {
-  background: transparent; border: 1px solid #EBEBEB; border-radius: 7px;
+  background: transparent; border: 1px solid #EEF0F3; border-radius: 7px;
   color: #717171; cursor: pointer; padding: 6px; min-height: unset;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.12s;
 }
-.sd-icon-btn:hover { color: #222222; border-color: #AAAAAA; background: #F7F7F7; }
+.sd-icon-btn:hover { color: #222222; border-color: #AAAAAA; background: #F3F6FA; }
 
 .sd-result-body { display: flex; flex-direction: column; gap: 10px; }
 .sd-result-identity { display: flex; align-items: center; gap: 12px; }
 .sd-result-photo { flex-shrink: 0; }
 .sd-photo-placeholder {
   width: 64px; height: 80px;
-  background: #F7F7F7; border: 2px dashed #EBEBEB; border-radius: 8px;
+  background: #F3F6FA; border: 2px dashed #EEF0F3; border-radius: 8px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px;
 }
@@ -511,7 +511,7 @@
 .sd-req { color: #2563EB; }
 .sd-mf-group input, .sd-mf-group select {
   height: 36px; padding: 0 10px;
-  background: #F7F7F7; border: 1.5px solid #EBEBEB;
+  background: #F3F6FA; border: 1.5px solid #EEF0F3;
   border-radius: 9px; font-size: 0.78rem; color: #222222;
   outline: none; font-family: inherit; transition: border-color 0.15s;
   width: 100%;
@@ -571,7 +571,7 @@
   .sd-scanner-panel { min-height: 480px; }
   .sd-stats-bar { grid-template-columns: repeat(3, 1fr); }
   .sd-stat-card:nth-child(3) { border-right: none; }
-  .sd-stat-card:nth-child(4) { border-top: 1px solid #EBEBEB; }
+  .sd-stat-card:nth-child(4) { border-top: 1px solid #EEF0F3; }
 }
 
 @media (max-width: 768px) {

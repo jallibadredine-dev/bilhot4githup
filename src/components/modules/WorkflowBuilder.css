@@ -323,7 +323,7 @@ input:checked + .slider:before {
 
 /* ─── AI Node ─── */
 .ai-node {
-  border-top: 3px solid #8B5CF6;
+  border-top: 3px solid #2563EB;
   background: linear-gradient(135deg, #FAFAFF, #F5F3FF);
   position: relative;
   overflow: hidden;
@@ -336,8 +336,8 @@ input:checked + .slider:before {
   pointer-events: none;
 }
 .ai-node.selected {
-  border-color: #8B5CF6;
-  box-shadow: 0 0 0 1px #8B5CF6, 0 10px 15px -3px rgba(139,92,246,0.2);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 1px #2563EB, 0 10px 15px -3px rgba(139,92,246,0.2);
 }
 .ai-node-footer {
   margin-top: 10px;
@@ -346,7 +346,7 @@ input:checked + .slider:before {
 .ai-model-chip {
   font-size: 10px;
   font-weight: 700;
-  color: #8B5CF6;
+  color: #2563EB;
   background: rgba(139,92,246,0.1);
   padding: 2px 8px;
   border-radius: 20px;
@@ -369,7 +369,7 @@ input:checked + .slider:before {
   letter-spacing: 0.04em;
 }
 .ai-badge-active {
-  background: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  background: linear-gradient(135deg, #2563EB, #6D28D9);
   color: white;
   animation: pulse-subtle 2s ease-in-out infinite;
 }
@@ -431,7 +431,7 @@ input:checked + .slider:before {
 }
 .model-picker-btn:hover {
   background: #F5F3FF;
-  border-color: #8B5CF6;
+  border-color: #2563EB;
 }
 .model-picker-name {
   color: #1E293B;
@@ -486,7 +486,7 @@ input:checked + .slider:before {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
   color: white;
   border: none;
   border-radius: 10px;
@@ -606,7 +606,7 @@ input:checked + .slider:before {
   background: #FAFAFF;
 }
 .ai-textarea:focus {
-  border-color: #8B5CF6;
+  border-color: #2563EB;
   box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
 }
 
@@ -643,7 +643,7 @@ input:checked + .slider:before {
   justify-content: center;
   gap: 8px;
   padding: 11px;
-  background: linear-gradient(135deg, #7C3AED, #8B5CF6);
+  background: linear-gradient(135deg, #2563EB, #2563EB);
   color: white;
   border: none;
   border-radius: 10px;
@@ -701,7 +701,7 @@ input:checked + .slider:before {
   justify-content: center;
   gap: 6px;
   padding: 11px;
-  background: linear-gradient(135deg, #3B82F6, #6366F1);
+  background: linear-gradient(135deg, #3B82F6, #2563EB);
   color: white;
   border: none;
   border-radius: 10px;
@@ -735,7 +735,7 @@ input:checked + .slider:before {
   transition: all 0.2s;
 }
 .template-item:hover {
-  border-color: #8B5CF6;
+  border-color: #2563EB;
   background: #FAFAFF;
   transform: translateX(2px);
 }
@@ -757,7 +757,7 @@ input:checked + .slider:before {
   transition: transform 0.15s;
 }
 .template-item:hover .template-arrow {
-  color: #8B5CF6;
+  color: #2563EB;
   transform: translateX(3px);
 }
 

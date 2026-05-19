@@ -3,7 +3,7 @@
 .rai2-root {
   height: calc(100vh - 56px);
   overflow-y: auto;
-  background: #F1F5F9;
+  background: #F8FAFC;
   font-family: 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;

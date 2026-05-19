@@ -3,25 +3,25 @@
 ═══════════════════════════════════════════════════ */
 
 :root {
-  --cm2-indigo: #6366F1;
-  --cm2-indigo-dark: #4F46E5;
-  --cm2-indigo-light: #EEF2FF;
+  --cm2-indigo: #2563EB;
+  --cm2-indigo-dark: #1D4ED8;
+  --cm2-indigo-light: #EFF6FF;
   --cm2-green: #10B981;
   --cm2-red: #EF4444;
   --cm2-amber: #F59E0B;
   --cm2-bg: #F8FAFC;
   --cm2-white: #FFFFFF;
-  --cm2-border: #E2E8F0;
+  --cm2-border: #EEF0F3;
   --cm2-text: #0F172A;
   --cm2-muted: #64748B;
-  --cm2-shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
-  --cm2-radius: 16px;
+  --cm2-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --cm2-radius: 12px;
 }
 
 .cm2-wrapper {
   background: var(--cm2-bg);
   min-height: 100%;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   color: var(--cm2-text);
   display: flex;
   flex-direction: column;
@@ -41,15 +41,15 @@
 .cm2-header-left { display: flex; align-items: center; gap: 14px; }
 
 .cm2-icon-badge {
-  width: 46px;
-  height: 46px;
+  width: 42px;
+  height: 42px;
   background: var(--cm2-indigo);
   color: white;
-  border-radius: 14px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+  box-shadow: 0 3px 10px rgba(37,99,235,0.3);
   flex-shrink: 0;
 }
 
@@ -79,7 +79,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
-  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
   white-space: nowrap;
 }
 .cm2-btn-create:hover { background: var(--cm2-indigo-dark); }
@@ -620,7 +620,7 @@
 .cm2-field input:focus, .cm2-field select:focus, .cm2-field textarea:focus {
   border-color: var(--cm2-indigo);
   background: var(--cm2-white);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
 }
 .cm2-field-hint { font-size: 0.72rem; color: var(--cm2-muted); }
 
@@ -657,7 +657,7 @@
   font-weight: 800;
   cursor: pointer;
   transition: 0.2s;
-  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
 }
 .cm2-btn-submit:hover:not(:disabled) { background: var(--cm2-indigo-dark); }
 .cm2-btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -689,8 +689,8 @@
   margin-top: 4px;
   border-radius: 10px;
   border: 1.5px dashed #C7D2FE;
-  background: #EEF2FF;
-  color: #4F46E5;
+  background: #EFF6FF;
+  color: #2563EB;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -698,6 +698,6 @@
 }
 .cm2-encode-btn:hover {
   background: #E0E7FF;
-  border-color: #6366F1;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+  border-color: #2563EB;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.15);
 }

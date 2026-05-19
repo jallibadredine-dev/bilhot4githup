@@ -5,9 +5,9 @@
 .db-root {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 1.5rem 2rem;
-  background: #F1F5F9;
+  gap: 14px;
+  padding: 1.25rem 1.75rem;
+  background: #F8FAFC;
   min-height: 100%;
   font-family: 'Inter', system-ui, sans-serif;
 }
@@ -43,10 +43,10 @@
   align-items: center;
   gap: 16px;
   background: white;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  padding: 14px 20px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  border: 1px solid #EEF0F3;
+  border-radius: 12px;
+  padding: 12px 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .db-header-left  { flex: 1; }
@@ -128,7 +128,7 @@
 .db-btn-secondary {
   background: white;
   color: #334155;
-  border: 1.5px solid #E2E8F0;
+  border: 1.5px solid #EEF0F3;
 }
 .db-btn-secondary:hover { background: #F8FAFC; border-color: #CBD5E1; }
 .db-btn-secondary.syncing { color: #2563EB; border-color: #BFDBFE; }
@@ -136,11 +136,11 @@
 .db-btn-icon {
   background: #F8FAFC;
   color: #475569;
-  border: 1.5px solid #E2E8F0;
+  border: 1.5px solid #EEF0F3;
   padding: 8px 12px;
   position: relative;
 }
-.db-btn-icon:hover { background: #F1F5F9; }
+.db-btn-icon:hover { background: #F3F6FA; }
 
 .db-notif-badge {
   position: absolute;
@@ -170,7 +170,7 @@
 
 .kpi-card {
   background: white;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #EEF0F3;
   border-radius: 14px;
   padding: 1.1rem;
   display: flex;
@@ -249,7 +249,7 @@
 ═══════════════════════════════════════════════════════════ */
 .db-card {
   background: white;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #EEF0F3;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -262,7 +262,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid #F3F6FA;
   flex-shrink: 0;
 }
 
@@ -325,11 +325,11 @@
   padding: 9px 12px;
   background: #F8FAFC;
   border-radius: 10px;
-  border: 1px solid #F1F5F9;
+  border: 1px solid #F3F6FA;
   transition: background 0.15s;
 }
 
-.db-channel-item:hover { background: #F1F5F9; }
+.db-channel-item:hover { background: #F3F6FA; }
 
 .db-ch-logo {
   width: 32px;
@@ -389,7 +389,7 @@
   justify-content: space-between;
   margin-top: 6px;
   padding-top: 10px;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid #F3F6FA;
 }
 
 .db-channels-total {
@@ -411,7 +411,7 @@
 
 /* ─── Smart Locks ─── */
 .db-locks-badge {
-  background: #7C3AED;
+  background: #2563EB;
   color: white;
   font-size: 0.65rem;
   font-weight: 800;
@@ -431,7 +431,7 @@
   gap: 9px;
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1px solid #F1F5F9;
+  border: 1px solid #F3F6FA;
   transition: background 0.15s;
 }
 
@@ -733,7 +733,7 @@
 }
 
 .db-bar:hover   { filter: brightness(1.1); }
-.db-bar.today   { background: linear-gradient(180deg, #A78BFA 0%, #7C3AED 100%); }
+.db-bar.today   { background: linear-gradient(180deg, #A78BFA 0%, #2563EB 100%); }
 
 .db-bar-label {
   font-size: 0.65rem;
@@ -747,7 +747,7 @@
 .db-tabs {
   display: flex;
   gap: 4px;
-  background: #F1F5F9;
+  background: #F3F6FA;
   padding: 3px;
   border-radius: 8px;
 }
@@ -779,11 +779,11 @@
   padding: 9px 10px;
   border-radius: 10px;
   background: #FAFAFA;
-  border: 1px solid #F1F5F9;
+  border: 1px solid #F3F6FA;
   transition: background 0.15s;
 }
 
-.db-guest-row:hover { background: #F1F5F9; }
+.db-guest-row:hover { background: #F3F6FA; }
 
 .db-guest-status-bar {
   width: 3px;
@@ -860,7 +860,7 @@
 }
 
 .badge-checked-in  { background: #F0FDF4; color: #15803D; }
-.badge-checked-out { background: #F1F5F9; color: #475569; }
+.badge-checked-out { background: #F3F6FA; color: #475569; }
 .badge-pending     { background: #EFF6FF; color: #1D4ED8; }
 .badge-late        { background: #FEF2F2; color: #B91C1C; }
 
@@ -872,11 +872,11 @@
   padding: 8px 10px;
   border-radius: 10px;
   background: #FAFAFA;
-  border: 1px solid #F1F5F9;
+  border: 1px solid #F3F6FA;
   transition: background 0.15s;
 }
 
-.db-auto-row:hover { background: #F1F5F9; }
+.db-auto-row:hover { background: #F3F6FA; }
 
 .db-auto-icon {
   width: 28px;
@@ -920,10 +920,10 @@
   gap: 6px;
   margin-top: 4px;
   padding-top: 10px;
-  border-top: 1px solid #F1F5F9;
+  border-top: 1px solid #F3F6FA;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #6366F1;
+  color: #2563EB;
 }
 
 /* ═══════════════════════════════════════════════════════════

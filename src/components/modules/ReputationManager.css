@@ -320,7 +320,7 @@
   display: flex; align-items: center; gap: 6px;
   padding: 6px 12px; background: white;
   border: 1.5px solid #C4B5FD; border-radius: 8px;
-  font-size: 0.72rem; font-weight: 700; color: #7C3AED;
+  font-size: 0.72rem; font-weight: 700; color: #2563EB;
   cursor: pointer; transition: all 0.12s; min-height: unset; font-family: inherit;
 }
 .rm-btn-ai:hover:not(:disabled)  { background: #F5F3FF; }

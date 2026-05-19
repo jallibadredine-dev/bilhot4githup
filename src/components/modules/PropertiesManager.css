@@ -50,7 +50,7 @@
 }
 
 .btn-add-property {
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: linear-gradient(135deg, #2563EB, #2563EB);
   color: white;
   border: none;
   padding: 13px 26px;
@@ -217,7 +217,7 @@
 .channel-mini-icon.airbnb { background: #FF5A5F; }
 .channel-mini-icon.booking { background: #003580; }
 .channel-mini-icon.expedia { background: #00355F; }
-.channel-mini-icon.beds24 { background: #8B5CF6; }
+.channel-mini-icon.beds24 { background: #2563EB; }
 
 .no-channels { font-size: 0.75rem; color: var(--text-muted); font-style: italic; }
 
@@ -285,7 +285,7 @@
   min-height: 380px;
   transition: all 0.2s;
 }
-.add-placeholder-card:hover { border-color: #6366F1; color: #6366F1; }
+.add-placeholder-card:hover { border-color: #2563EB; color: #2563EB; }
 .plus-circle {
   width: 64px;
   height: 64px;
@@ -341,8 +341,8 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #EEF2FF, #DDD6FE);
-  color: #6366F1;
+  background: linear-gradient(135deg, #EFF6FF, #DDD6FE);
+  color: #2563EB;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,7 +386,7 @@
   position: relative;
   transition: color 0.2s;
 }
-.m-tab.active { color: #6366F1; }
+.m-tab.active { color: #2563EB; }
 .m-tab.active::after {
   content: '';
   position: absolute;
@@ -394,7 +394,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background: #6366F1;
+  background: #2563EB;
   border-radius: 2px 2px 0 0;
 }
 
@@ -417,7 +417,7 @@
   margin-bottom: 10px;
 }
 
-.label-icon { color: #6366F1; }
+.label-icon { color: #2563EB; }
 
 .smart-url-input-wrap {
   display: flex;
@@ -431,7 +431,7 @@
 }
 
 .smart-url-input-wrap:focus-within {
-  border-color: #6366F1;
+  border-color: #2563EB;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
   background: white;
 }
@@ -666,7 +666,7 @@
 
 .step-label { font-size: 0.85rem; font-weight: 600; flex: 1; }
 .import-step.done .step-label { color: #16A34A; }
-.import-step.active .step-label { color: #4F46E5; }
+.import-step.active .step-label { color: #2563EB; }
 
 .step-pulse {
   position: absolute;
@@ -906,7 +906,7 @@
   outline: none;
   transition: border-color 0.2s;
 }
-.form-grid input:focus { border-color: #6366F1; background: white; }
+.form-grid input:focus { border-color: #2563EB; background: white; }
 
 .type-icons { display: flex; gap: 10px; }
 
@@ -924,7 +924,7 @@
   transition: all 0.2s;
   color: var(--text-secondary);
 }
-.type-btn.active { border-color: #6366F1; color: #6366F1; background: #EEF2FF; }
+.type-btn.active { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
 .type-btn span { font-size: 0.7rem; font-weight: 700; }
 
 .dropzone {
@@ -939,7 +939,7 @@
   gap: 8px;
   cursor: pointer;
 }
-.dropzone:hover { border-color: #6366F1; color: #6366F1; }
+.dropzone:hover { border-color: #2563EB; color: #2563EB; }
 
 .form-footer {
   margin-top: 2rem;

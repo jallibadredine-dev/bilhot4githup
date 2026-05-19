@@ -10,7 +10,7 @@
 .gc-page {
   min-height: 100dvh;
   background: linear-gradient(160deg, #F0F4FF 0%, #FAFBFF 50%, #F5F0FF 100%);
-  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -29,7 +29,7 @@
 }
 .gc-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #6366F1, #8B5CF6);
+  background: linear-gradient(90deg, #2563EB, #2563EB);
   border-radius: 100px;
   transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -48,7 +48,7 @@
 .gc-logo {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  background: linear-gradient(135deg, #2563EB, #2563EB);
   color: white;
   border-radius: 9px;
   display: flex;
@@ -81,11 +81,11 @@
   transition: 0.3s;
 }
 .gc-dot.active {
-  background: #6366F1;
-  border-color: #6366F1;
+  background: #2563EB;
+  border-color: #2563EB;
   color: white;
   transform: scale(1.18);
-  box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.4);
 }
 .gc-dot.done {
   background: #10B981;
@@ -133,7 +133,7 @@
   justify-content: center;
   margin-bottom: 4px;
 }
-.gc-step-icon.indigo  { background: #EEF2FF; color: #6366F1; }
+.gc-step-icon.indigo  { background: #EFF6FF; color: #2563EB; }
 .gc-step-icon.amber   { background: #FFFBEB; color: #D97706; }
 .gc-step-icon.green   { background: #D1FAE5; color: #059669; }
 .gc-step-icon.purple  { background: #F5F3FF; color: #7C3AED; }
@@ -230,8 +230,8 @@
   -webkit-appearance: none;
 }
 .gc-field input:focus, .gc-field select:focus {
-  border-color: #6366F1;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
 }
 
 .gc-gdpr-note {
@@ -277,7 +277,7 @@
   cursor: pointer;
   transition: 0.2s;
 }
-.gc-accept-check:has(input:checked) { border-color: #6366F1; background: #EEF2FF; }
+.gc-accept-check:has(input:checked) { border-color: #2563EB; background: #EFF6FF; }
 .gc-accept-check input { display: none; }
 
 .gc-check-box {
@@ -295,8 +295,8 @@
   margin-top: 1px;
 }
 .gc-accept-check:has(input:checked) .gc-check-box {
-  background: #6366F1;
-  border-color: #6366F1;
+  background: #2563EB;
+  border-color: #2563EB;
 }
 
 .gc-accept-check span {
@@ -377,7 +377,7 @@
   color: #0F172A;
 }
 .gc-recap-row:last-child { border-bottom: none; }
-.gc-recap-row svg { color: #6366F1; flex-shrink: 0; }
+.gc-recap-row svg { color: #2563EB; flex-shrink: 0; }
 .gc-recap-detail { margin-left: auto; font-size: 0.78rem; color: #64748B; font-weight: 600; }
 .gc-recap-sig { height: 28px; border: 1px solid #E2E8F0; border-radius: 6px; margin-left: auto; }
 
@@ -385,7 +385,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: linear-gradient(135deg, #EEF2FF, #F5F3FF);
+  background: linear-gradient(135deg, #EFF6FF, #F5F3FF);
   border: 1.5px solid #C7D2FE;
   border-radius: 16px;
   padding: 18px;
@@ -398,13 +398,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6366F1;
-  box-shadow: 0 2px 8px rgba(99,102,241,0.15);
+  color: #2563EB;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.15);
   flex-shrink: 0;
 }
 .gc-pin-locked strong { display: block; font-size: 0.9rem; font-weight: 800; color: #0F172A; }
-.gc-pin-locked p { font-size: 0.78rem; color: #6366F1; margin: 2px 0 0; font-weight: 600; }
-.gc-pin-dots { margin-left: auto; font-size: 1rem; color: #6366F1; letter-spacing: 3px; }
+.gc-pin-locked p { font-size: 0.78rem; color: #2563EB; margin: 2px 0 0; font-weight: 600; }
+.gc-pin-dots { margin-left: auto; font-size: 1rem; color: #2563EB; letter-spacing: 3px; }
 
 /* ── NAV BUTTONS ───────────────────────────────── */
 .gc-nav {
@@ -438,7 +438,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #6366F1;
+  background: #2563EB;
   color: white;
   border: none;
   border-radius: 14px;
@@ -447,9 +447,9 @@
   font-weight: 800;
   cursor: pointer;
   transition: 0.2s;
-  box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+  box-shadow: 0 4px 16px rgba(37,99,235,0.35);
 }
-.gc-btn-next:hover:not(:disabled) { background: #4F46E5; }
+.gc-btn-next:hover:not(:disabled) { background: #2563EB; }
 .gc-btn-next:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
 .gc-btn-validate {
@@ -520,7 +520,7 @@
 .gc-pin-reveal {
   padding: 28px 24px 20px;
   text-align: center;
-  background: linear-gradient(160deg, #EEF2FF 0%, #F5F3FF 100%);
+  background: linear-gradient(160deg, #EFF6FF 0%, #F5F3FF 100%);
   border-bottom: 1px solid #E2E8F0;
 }
 .gc-pin-label {
@@ -532,7 +532,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #6366F1;
+  color: #2563EB;
   margin-bottom: 12px;
 }
 .gc-pin-val {
@@ -561,9 +561,9 @@
   transition: 0.15s;
 }
 .gc-pin-toggle { background: white; border: 1.5px solid #E2E8F0; color: #64748B; }
-.gc-copy-btn   { background: #6366F1; border: none; color: white; }
+.gc-copy-btn   { background: #2563EB; border: none; color: white; }
 .gc-pin-toggle:hover { border-color: #94A3B8; }
-.gc-copy-btn:hover   { background: #4F46E5; }
+.gc-copy-btn:hover   { background: #2563EB; }
 
 .gc-access-info-list { padding: 0 20px; }
 .gc-access-info-row {
@@ -637,14 +637,14 @@
   min-height: 100dvh;
   gap: 16px;
   color: #64748B;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .gc-spin-ring {
   width: 40px;
   height: 40px;
   border: 3px solid #E2E8F0;
-  border-top-color: #6366F1;
+  border-top-color: #2563EB;
   border-radius: 50%;
   animation: gc-spin 0.8s linear infinite;
 }
@@ -659,7 +659,7 @@
   gap: 14px;
   padding: 32px 24px;
   text-align: center;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   background: #F8FAFC;
 }
 .gc-error-icon { color: #EF4444; }
@@ -671,7 +671,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #6366F1;
+  background: #2563EB;
   color: white;
   border: none;
   border-radius: 14px;
@@ -683,7 +683,7 @@
   margin-top: 8px;
   transition: 0.2s;
 }
-.gc-cta-btn:hover { background: #4F46E5; }
+.gc-cta-btn:hover { background: #2563EB; }
 
 /* ── DESKTOP ───────────────────────────────────── */
 @media (min-width: 640px) {

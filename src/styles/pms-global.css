@@ -1,0 +1,388 @@
+/* ═══════════════════════════════════════════════════════════
+   BILHOT PMS — GLOBAL DESIGN SYSTEM v3
+   HotelSync Professional Style
+   Applied uniformly across ALL modules
+═══════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 1 — MODULE ROOT BACKGROUNDS
+   Light, clean page background across all modules
+───────────────────────────────────────────────────────── */
+.affiliate-system-container,
+.dashboard-container,
+.ah-wrapper,
+.rcm-root,
+.cm-wrapper,
+.cm2-wrapper,
+.cp-root,
+.crm2-root,
+.grc-root,
+.db-root,
+.maintenance-container,
+.properties-manager-container,
+.property-builder-container,
+.rm-container,
+.rai2-root,
+.sd-container,
+.slh-root,
+.tth-root,
+.services-hub-container,
+.sh-container,
+.ui-container,
+.workflow-builder-container,
+.builder-container,
+.pc-root,
+.ow-root {
+  background: #F8FAFC !important;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 2 — TOPBARS & MODULE HEADERS
+   White background, clean border-bottom
+───────────────────────────────────────────────────────── */
+.sd-topbar,
+.slh-topbar,
+.cm-setup-topbar,
+.sh-topbar,
+.cm2-topbar-bar,
+.rcm-topbar,
+.grc-topbar,
+.rai2-header,
+.rm-header,
+.sh-header,
+.ui-header {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #EEF0F3 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 3 — CARDS & PANELS
+   Consistent white cards: subtle border, 12px radius
+───────────────────────────────────────────────────────── */
+
+/* Dashboard cards */
+.db-card {
+  border-radius: 12px !important;
+  border-color: #EEF0F3 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+.db-card-header {
+  border-bottom-color: #F3F6FA !important;
+}
+.kpi-card {
+  border-radius: 12px !important;
+  border-color: #EEF0F3 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+}
+
+/* SmartDesk panels */
+.sd-arrivals-panel,
+.sd-ai-panel {
+  border-radius: 12px !important;
+  border-color: #EEF0F3 !important;
+}
+.sd-guest-card {
+  border-radius: 10px !important;
+  border-color: #EEF0F3 !important;
+  background: #FAFBFC !important;
+}
+.sd-guest-card:hover {
+  border-color: #D1D9E3 !important;
+  background: #FFFFFF !important;
+}
+.sd-guest-card.selected {
+  border-color: #2563EB !important;
+  background: #EFF6FF !important;
+}
+
+/* Channel manager cards */
+.cm-card,
+.cm-provider-card,
+.cm-setup-form-card {
+  border-radius: 12px !important;
+  border-color: #EEF0F3 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+}
+
+/* SmartLockHub cards */
+.slh-lock-card {
+  border-radius: 12px !important;
+  border-color: #EEF0F3 !important;
+}
+.slh-stat-card {
+  border-radius: 12px !important;
+  border-color: #EEF0F3 !important;
+}
+.slh-setup-card {
+  border-radius: 12px !important;
+  border-color: #EEF0F3 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 4 — PRIMARY BUTTONS
+   Blue #2563EB, 9px radius, font-weight 600
+───────────────────────────────────────────────────────── */
+.db-btn-primary,
+.sd-btn-primary,
+.slh-btn-primary-sm,
+.slh-sf-submit,
+.cm2-btn-create,
+.sh-btn-primary,
+.rcm-btn-primary,
+.grc-btn-primary,
+.rai2-btn-primary,
+.rm-btn-primary,
+.ah-btn-primary {
+  border-radius: 9px !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* Ghost / secondary buttons */
+.db-btn-secondary,
+.sd-btn-ghost,
+.slh-btn-outline,
+.rcm-btn-outline,
+.grc-btn-outline {
+  border-radius: 9px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 5 — FILTER TABS
+   Clean pill-style tab navigation
+───────────────────────────────────────────────────────── */
+.sd-filter-tabs {
+  background: #F3F6FA !important;
+  border-radius: 9px !important;
+}
+.sd-filter-tab.active {
+  background: #FFFFFF !important;
+  color: #111827 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 6 — SEARCH BARS
+   Consistent input fields
+───────────────────────────────────────────────────────── */
+.sd-search-wrap {
+  background: #F3F6FA !important;
+  border-color: #E5E7EB !important;
+  border-radius: 9px !important;
+}
+.sd-search-wrap:focus-within {
+  background: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+}
+
+.slh-search-wrap {
+  background: #F3F6FA !important;
+  border-radius: 9px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 7 — STATS / KPI BARS
+   Consistent stat card row styling
+───────────────────────────────────────────────────────── */
+.sd-stats-bar {
+  background: #FFFFFF !important;
+  border-bottom-color: #EEF0F3 !important;
+}
+.sd-stat-card {
+  border-right-color: #EEF0F3 !important;
+}
+.sd-stat-card:hover {
+  background: #FAFBFC !important;
+}
+.sd-stat-icon {
+  border-radius: 9px !important;
+}
+
+/* Dashboard KPI icon */
+.kpi-icon-wrap {
+  border-radius: 9px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 8 — CHANNEL MANAGER COLOR CORRECTION
+   Use brand blue #2563EB instead of indigo #4F46E5
+───────────────────────────────────────────────────────── */
+.cm-wrapper {
+  --cm-indigo: #2563EB !important;
+  --cm-indigo-dark: #1D4ED8 !important;
+  --cm-indigo-light: #EFF6FF !important;
+  --cm-radius: 12px !important;
+  --cm-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 9 — LIST ITEMS (arrivals, guests, locks, etc)
+   Consistent row styling across modules
+───────────────────────────────────────────────────────── */
+.db-channel-item {
+  background: #F8FAFC !important;
+  border-color: #F3F6FA !important;
+  border-radius: 9px !important;
+}
+.db-channel-item:hover {
+  background: #F0F4F8 !important;
+}
+.db-lock-item {
+  border-radius: 9px !important;
+  border-color: #F3F6FA !important;
+}
+.db-alert-item {
+  border-radius: 9px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 10 — BADGES & PILLS
+   Consistent badge styling
+───────────────────────────────────────────────────────── */
+.db-locks-badge {
+  background: #2563EB !important;
+}
+
+/* SmartDesk badges */
+.sd-ai-badge {
+  background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
+}
+
+/* SmartDesk status badge */
+.sd-status-badge {
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 11 — DRAWER / SIDE PANEL
+   Module detail drawers
+───────────────────────────────────────────────────────── */
+.slh-drawer {
+  background: #FFFFFF !important;
+  border-left: 1px solid #EEF0F3 !important;
+}
+.slh-drawer-head {
+  border-bottom-color: #EEF0F3 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 12 — SETTINGS / FORM ROWS
+   Clean settings page rows
+───────────────────────────────────────────────────────── */
+.sd-block {
+  border-bottom-color: #EEF0F3 !important;
+}
+.sd-row {
+  border-bottom-color: #F3F6FA !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 13 — DARK MODE OVERRIDES
+   Apply consistent dark mode styles
+───────────────────────────────────────────────────────── */
+[data-theme="dark"] .affiliate-system-container,
+[data-theme="dark"] .dashboard-container,
+[data-theme="dark"] .ah-wrapper,
+[data-theme="dark"] .rcm-root,
+[data-theme="dark"] .cm-wrapper,
+[data-theme="dark"] .cm2-wrapper,
+[data-theme="dark"] .cp-root,
+[data-theme="dark"] .crm2-root,
+[data-theme="dark"] .grc-root,
+[data-theme="dark"] .db-root,
+[data-theme="dark"] .maintenance-container,
+[data-theme="dark"] .properties-manager-container,
+[data-theme="dark"] .rm-container,
+[data-theme="dark"] .rai2-root,
+[data-theme="dark"] .sd-container,
+[data-theme="dark"] .slh-root,
+[data-theme="dark"] .tth-root,
+[data-theme="dark"] .services-hub-container,
+[data-theme="dark"] .sh-container,
+[data-theme="dark"] .ui-container {
+  background: #0F172A !important;
+}
+
+[data-theme="dark"] .db-card,
+[data-theme="dark"] .kpi-card,
+[data-theme="dark"] .sd-arrivals-panel,
+[data-theme="dark"] .sd-guest-card,
+[data-theme="dark"] .slh-lock-card,
+[data-theme="dark"] .slh-setup-card {
+  background: #1E293B !important;
+  border-color: #2D3F55 !important;
+}
+
+[data-theme="dark"] .sd-topbar,
+[data-theme="dark"] .slh-topbar {
+  background: #1E293B !important;
+  border-bottom-color: #2D3F55 !important;
+}
+
+[data-theme="dark"] .sd-stats-bar {
+  background: #1E293B !important;
+  border-bottom-color: #2D3F55 !important;
+}
+
+[data-theme="dark"] .sd-filter-tabs {
+  background: #263248 !important;
+}
+
+[data-theme="dark"] .sd-filter-tab.active {
+  background: #1E293B !important;
+  color: #F1F5F9 !important;
+}
+
+[data-theme="dark"] .db-channel-item,
+[data-theme="dark"] .db-lock-item {
+  background: #263248 !important;
+  border-color: #334155 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 14 — TYPOGRAPHY REFINEMENTS
+   Consistent text hierarchy
+───────────────────────────────────────────────────────── */
+.sd-title,
+.db-hotel-name,
+.slh-topbar h1,
+.cm2-topbar-title,
+.sh-page-title {
+  letter-spacing: -0.3px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+/* Module page subtitles */
+.sd-subtitle,
+.slh-topbar p {
+  color: #6B7280 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTION 15 — SCROLLBAR GLOBAL
+   Thin, clean scrollbars everywhere
+───────────────────────────────────────────────────────── */
+.db-root *::-webkit-scrollbar,
+.sd-container *::-webkit-scrollbar,
+.slh-root *::-webkit-scrollbar,
+.cm-wrapper *::-webkit-scrollbar,
+.cm2-wrapper *::-webkit-scrollbar,
+.ui-container *::-webkit-scrollbar,
+.sh-container *::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.db-root *::-webkit-scrollbar-track,
+.sd-container *::-webkit-scrollbar-track,
+.slh-root *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.db-root *::-webkit-scrollbar-thumb,
+.sd-container *::-webkit-scrollbar-thumb,
+.slh-root *::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 4px;
+}

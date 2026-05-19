@@ -15,7 +15,7 @@
      --luxe-amber: #d97706;
      --luxe-text: #0f172a; /* Deep dark slate for text */
      --luxe-text-muted: #64748b; /* Gray text for secondary information */
-     --luxe-font: 'Plus Jakarta Sans', sans-serif;
+     --luxe-font: 'Inter', system-ui, sans-serif;
      --luxe-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
      --luxe-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
      --luxe-shadow-lg: 0 14px 24px -8px rgb(0 0 0 / 0.08);
@@ -960,7 +960,7 @@
 .slh-title-icon {
   width: 40px; height: 40px;
   border-radius: 11px;
-  background: linear-gradient(135deg, #1D4ED8, #7C3AED);
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
   display: flex; align-items: center; justify-content: center;
   color: white; flex-shrink: 0;
 }
@@ -1394,7 +1394,7 @@
 .slh-pin-open-btn {
   display: flex; align-items: center; justify-content: center; gap: 7px;
   padding: 11px;
-  background: #7C3AED; color: white;
+  background: #2563EB; color: white;
   border: none; border-radius: 10px;
   font-size: 0.8rem; font-weight: 700;
   cursor: pointer; min-height: unset; transition: all 0.15s;
@@ -1688,7 +1688,7 @@
 }
 .slh-setup-header-icon {
   width: 44px; height: 44px; border-radius: 12px;
-  background: linear-gradient(135deg, #1D4ED8, #7C3AED);
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
   color: white; display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
@@ -1838,7 +1838,7 @@
 .slh-setup-cta-btn {
   display: flex; align-items: center; gap: 7px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #2563EB, #7C3AED);
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
   color: white; border: none; border-radius: 10px;
   font-size: 0.82rem; font-weight: 800;
   cursor: pointer; min-height: unset; transition: all 0.15s;
@@ -1854,7 +1854,7 @@
 .slh-btn-primary-sm {
   display: flex; align-items: center; gap: 6px;
   padding: 7px 14px;
-  background: linear-gradient(135deg, #2563EB, #7C3AED);
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
   color: white; border: none; border-radius: 9px;
   font-size: 0.77rem; font-weight: 700;
   cursor: pointer; min-height: unset; transition: all 0.15s;
@@ -1995,7 +1995,7 @@
   margin-top: 10px;
   border-radius: 9px;
   border: none;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  background: linear-gradient(135deg, #2563EB, #2563EB);
   color: #fff;
   font-size: 0.8rem;
   font-weight: 600;

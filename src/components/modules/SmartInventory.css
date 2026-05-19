@@ -41,7 +41,7 @@
 .tth-header-icon {
   width: 36px; height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #2563EB, #7C3AED);
+  background: linear-gradient(135deg, #2563EB, #2563EB);
   display: flex; align-items: center; justify-content: center;
   color: white; flex-shrink: 0;
 }

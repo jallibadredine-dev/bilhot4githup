@@ -4,21 +4,21 @@
 ═══════════════════════════════════════════════════ */
 
 :root {
-  --ah-indigo: #6366F1;
-  --ah-indigo-dark: #4F46E5;
-  --ah-indigo-light: #EEF2FF;
+  --ah-indigo: #2563EB;
+  --ah-indigo-dark: #1D4ED8;
+  --ah-indigo-light: #EFF6FF;
   --ah-green: #10B981;
   --ah-red: #EF4444;
   --ah-amber: #F59E0B;
-  --ah-blue: #3B82F6;
+  --ah-blue: #2563EB;
   --ah-bg: #F8FAFC;
   --ah-white: #FFFFFF;
-  --ah-border: #E2E8F0;
+  --ah-border: #EEF0F3;
   --ah-text: #0F172A;
   --ah-muted: #64748B;
-  --ah-shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.04);
-  --ah-shadow-lg: 0 14px 24px -8px rgba(0,0,0,0.08);
-  --ah-radius: 16px;
+  --ah-shadow: 0 1px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  --ah-shadow-lg: 0 8px 16px -4px rgba(0,0,0,0.08);
+  --ah-radius: 12px;
 }
 
 @keyframes ah-spin { to { transform: rotate(360deg); } }
@@ -31,7 +31,7 @@
 .ah-wrapper {
   background: var(--ah-bg);
   min-height: 100%;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   color: var(--ah-text);
   display: flex;
   flex-direction: column;
@@ -63,7 +63,7 @@
   flex-shrink: 0;
   transition: 0.3s;
 }
-.ah-engine-badge.on { background: var(--ah-indigo); color: #fff; box-shadow: 0 4px 14px rgba(99,102,241,0.4); }
+.ah-engine-badge.on { background: var(--ah-indigo); color: #fff; box-shadow: 0 3px 10px rgba(37,99,235,0.3); border-radius: 11px; }
 .ah-engine-badge.off { background: var(--ah-indigo-light); color: var(--ah-indigo); }
 
 .ah-title {
@@ -136,7 +136,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
-  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
   white-space: nowrap;
 }
 .ah-btn-start:hover:not(:disabled) { background: var(--ah-indigo-dark); }
@@ -659,7 +659,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
-  box-shadow: 0 4px 10px rgba(99,102,241,0.25);
+  box-shadow: 0 4px 10px rgba(37,99,235,0.25);
   white-space: nowrap;
 }
 .ah-btn-primary:hover:not(:disabled) { background: var(--ah-indigo-dark); }
@@ -787,7 +787,7 @@
 .ah-field input:focus, .ah-field select:focus {
   border-color: var(--ah-indigo);
   background: var(--ah-white);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
 }
 
 .ah-field-hint { font-size: 0.72rem; color: var(--ah-muted); }
@@ -1011,7 +1011,7 @@
 .ah-sms-textarea:focus {
   border-color: var(--ah-indigo);
   background: var(--ah-white);
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
 }
 
 /* Phone mockup */
