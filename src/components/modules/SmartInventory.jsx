@@ -556,74 +556,70 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                         onDrop={e => { e.preventDefault(); handleRoomDrop(selectedBuilding.id, floor.id, room.id); }}
                         onClick={() => openRoom(room, selectedBuilding.id, floor.id, selectedBuilding.name, floor.label)}
                       >
+                        {/* Top section: number + status spinner */}
                         <div className="tth-card-head">
                           <span className="tth-grip"><GripVertical size={11}/></span>
-                          <span className="tth-card-num">{room.number}</span>
-                          {room.status === 'occupied' && <RefreshCw size={12} className="tth-spin-icon"/>}
+                          <div className="tth-card-info">
+                            <span className="tth-card-num">{room.number}</span>
+                            <span className="tth-card-type-lbl">{rType.label}</span>
+                          </div>
+                          {room.status === 'occupied' && <RefreshCw size={11} className="tth-spin-icon"/>}
                         </div>
 
-                        <div className="tth-card-status-icon">
+                        {/* Guest name */}
+                        {guest && <span className="tth-card-guest">{guest.name.split(' ')[0]}</span>}
+
+                        {/* Smart lock badge — bottom */}
+                        <div className="tth-card-footer">
                           {(cs?.status === 'dirty' || cs?.status === 'in_progress') ? (
-                            <span className="tth-si cleaning tth-si-pulse" title="Prêt au ménage">
-                              <Sparkles size={20}/>
+                            <span className={`tth-si cleaning${cs?.status === 'in_progress' ? ' tth-si-pulse' : ''}`}
+                              title="Prêt au ménage">
+                              <Sparkles size={15}/>
                             </span>
                           ) : room.status === 'occupied' ? (
-                            <span className={`tth-si occupied tth-si-glow-blue${room.lock?.locked === false ? ' unlocked' : ''}`}
-                              title={room.lock?.locked === false ? 'Occupée · Serrure ouverte' : 'Occupée · Verrouillée'}>
-                              {room.lock?.locked === false ? <Unlock size={20}/> : <Lock size={20}/>}
+                            <span className={`tth-si occupied${room.lock?.locked === false ? ' unlocked' : ''}`}
+                              title={room.lock?.locked === false ? 'Occupée · Porte ouverte' : 'Occupée · Verrouillée'}>
+                              {room.lock?.locked === false ? <Unlock size={15}/> : <Lock size={15}/>}
                             </span>
                           ) : (room.status === 'maintenance' || room.status === 'blocked') ? (
-                            <span className="tth-si broken tth-si-glow-red" title="En panne / Hors service">
-                              <Lock size={20}/>
+                            <span className="tth-si broken" title="En panne / Hors service">
+                              <Lock size={15}/>
                             </span>
                           ) : !hasLock ? (
-                            <span className="tth-si no-lock" title="Aucune serrure configurée">
-                              <Unlock size={20}/>
+                            <span className="tth-si no-lock" title="Aucune serrure"
+                              onClick={e => { e.stopPropagation(); setLockModal({ room, buildingId: selectedBuilding.id, floorId: floor.id }); }}>
+                              <Unlock size={15}/>
                             </span>
                           ) : room.lock?.locked ? (
                             <span className="tth-si available locked" title="Disponible · Verrouillée">
-                              <Lock size={20}/>
+                              <Lock size={15}/>
                             </span>
                           ) : (
                             <span className="tth-si available" title="Disponible · Déverrouillée">
-                              <Unlock size={20}/>
+                              <Unlock size={15}/>
                             </span>
                           )}
-                        </div>
-                        {guest && <span className="tth-card-guest">{guest.name.split(' ')[0]}</span>}
 
-                        <div className="tth-card-footer">
-                          {/* Lock icon: blue=connected, red=offline/no lock */}
-                          <span
-                            className={`tth-lock-icon ${hasLock ? (lockOnline ? 'lock-blue' : 'lock-orange') : 'lock-red'}`}
-                            title={hasLock ? (lockOnline ? 'Serrure connectée' : 'Serrure hors ligne') : 'Aucune serrure'}
-                            onClick={e => {
-                              e.stopPropagation();
-                              if (!hasLock) setLockModal({ room, buildingId: selectedBuilding.id, floorId: floor.id });
-                            }}
-                          >
-                            <Lock size={13}/>
-                          </span>
-
+                          {/* Battery warning badge */}
                           {hasLock && room.lock.battery < 25 && (
-                            <span className="tth-badge-icon battery" title={`Batterie ${room.lock.battery}%`}>
-                              <BatteryLow size={12}/>
+                            <span className="tth-si battery-low" title={`Batterie ${room.lock.battery}%`}>
+                              <BatteryLow size={13}/>
                             </span>
                           )}
-                          {cs?.status === 'dirty' && (
-                            <span className="tth-badge-icon clean" title="À nettoyer">🧹</span>
+
+                          {/* Connectivity dot */}
+                          {hasLock && (
+                            <span
+                              className={`tth-conn-dot ${lockOnline ? 'online' : 'offline'}`}
+                              title={lockOnline ? 'Serrure connectée' : 'Serrure hors ligne'}
+                            />
                           )}
-                          {cs?.status === 'in_progress' && (
-                            <span className="tth-badge-icon" title="Ménage en cours">⏳</span>
-                          )}
-                          {room.status === 'maintenance' && !cs && (
-                            <span className="tth-badge-icon repair" title="Maintenance">🔧</span>
+
+                          {/* PIN tag */}
+                          {room.lock?.pin && (
+                            <span className="tth-pin-tag"><Key size={9}/> {room.lock.pin}</span>
                           )}
                         </div>
-
-                        {room.lock?.pin && (
-                          <div className="tth-pin-tag"><Key size={9}/> {room.lock.pin}</div>
-                        )}
                       </motion.div>
                     );
                   })
