@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PlanningCalendar from './PlanningCalendar';
+import { useAppStore } from '../../store/appStore';
 import './ModularDashboard.css';
 
 const now = new Date();
@@ -118,6 +119,90 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
   const locksOnline   = LOCKS.filter(l => l.status === 'online').length;
   const locksBatLow   = LOCKS.filter(l => l.battery < 20).length;
 
+  /* ── Real Supabase data via global Zustand store ─────────────── */
+  const reservations = useAppStore(s => s.reservations);
+  const rooms        = useAppStore(s => s.rooms);
+  const payments     = useAppStore(s => s.payments);
+  const systemLogs   = useAppStore(s => s.systemLogs);
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const getField = (obj, ...fields) => {
+    for (const f of fields) if (obj[f] != null) return obj[f];
+    return null;
+  };
+
+  /* ── KPI — Occupation ────────────────────────────────────────── */
+  const totalRooms    = rooms.length > 0 ? rooms.length : 34;
+  const occupiedRooms = rooms.filter(r => r.status === 'occupied').length;
+  const occupancyRate = rooms.length > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 88;
+  const kpiOcc        = rooms.length > 0 ? `${occupancyRate}%` : '88%';
+  const occSub        = rooms.length > 0 ? `${occupiedRooms} / ${totalRooms} chambres` : '30 / 34 chambres';
+
+  /* ── KPI — Arrivées / Départs ────────────────────────────────── */
+  const todayArrivals = reservations.filter(r => {
+    const d = getField(r, 'check_in', 'arrival_date', 'checkin_date', 'start_date');
+    return d && String(d).startsWith(today);
+  });
+  const todayDepartures = reservations.filter(r => {
+    const d = getField(r, 'check_out', 'departure_date', 'checkout_date', 'end_date');
+    return d && String(d).startsWith(today);
+  });
+  const lateArrivals  = todayArrivals.filter(r => getField(r, 'status') === 'late').length;
+  const pendingCheckins = todayArrivals.filter(r => !['checked-in','checked_in'].includes(getField(r, 'status') || '')).length;
+  const kpiArrivals   = (todayArrivals.length > 0 || todayDepartures.length > 0)
+    ? `${todayArrivals.length} / ${todayDepartures.length}` : '4 / 2';
+  const kpiArrivalSub = lateArrivals > 0 ? `${lateArrivals} en retard` : undefined;
+  const kpiArrivalTrend = pendingCheckins > 0 ? `${pendingCheckins} check-ins en attente` : 'Tous traités';
+
+  /* ── KPI — Revenu du jour ────────────────────────────────────── */
+  const todayRevenue = payments
+    .filter(p => p.created_at && p.created_at.startsWith(today) && p.status !== 'failed')
+    .reduce((s, p) => s + (Number(getField(p, 'amount', 'total', 'price')) || 0), 0);
+  const kpiRevenue = todayRevenue > 0 ? todayRevenue.toLocaleString('fr-FR') : '1 745';
+  const revTrendUp = todayRevenue > 0;
+
+  /* ── Liste arrivées/départs ──────────────────────────────────── */
+  const mapResToGuest = (r, type) => ({
+    name:   getField(r, 'guest_name', 'guestName', 'name') || 'Invité',
+    room:   String(getField(r, 'room_number', 'room', 'roomNumber', 'room_id') || '—'),
+    time:   type === 'arrival'
+      ? (getField(r, 'arrival_time', 'check_in_time') || '14:00')
+      : (getField(r, 'departure_time', 'check_out_time') || '11:00'),
+    nights: Number(getField(r, 'nights', 'duration', 'length_of_stay')) || 1,
+    source: getField(r, 'source', 'channel', 'ota', 'booking_source') || 'Direct',
+    status: getField(r, 'status') || 'pending',
+    vip:    !!(getField(r, 'vip', 'is_vip')),
+  });
+  const realArrivals      = todayArrivals.map(r => mapResToGuest(r, 'arrival'));
+  const realDepartures    = todayDepartures.map(r => mapResToGuest(r, 'departure'));
+  const displayArrivals   = realArrivals.length   > 0 ? realArrivals   : ARRIVALS;
+  const displayDepartures = realDepartures.length > 0 ? realDepartures : DEPARTURES;
+
+  /* ── Automatisations récentes depuis system_logs ─────────────── */
+  const LOG_ICON_MAP = {
+    locks: <Key size={14}/>, reservations: <CalendarDays size={14}/>,
+    'billing-engine': <CreditCard size={14}/>, 'checkin-manager': <UserCheck size={14}/>,
+    reviews: <Star size={14}/>, realtime: <RefreshCw size={14}/>,
+    automation: <Bot size={14}/>, distribution: <Globe2 size={14}/>,
+  };
+  const LOG_COLOR_MAP = {
+    locks: '#2563EB', reservations: '#D97706', 'billing-engine': '#16A34A',
+    'checkin-manager': '#F59E0B', reviews: '#EC4899', realtime: '#0EA5E9',
+    automation: '#8B5CF6', distribution: '#2563EB',
+  };
+  const recentLogs = systemLogs.slice(0, 6).map(l => ({
+    icon:   LOG_ICON_MAP[l.module] || <Zap size={14}/>,
+    color:  LOG_COLOR_MAP[l.module] || '#6366F1',
+    label:  l.message || 'Événement système',
+    target: l.details ? String(l.details).slice(0, 50) : (l.module || 'Système'),
+    time:   l.created_at
+      ? new Date(l.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      : '--:--',
+  }));
+  const displayAutomations = recentLogs.length > 0 ? recentLogs : AUTOMATIONS;
+  const totalAutoToday     = systemLogs.length > 0 ? systemLogs.length : 24;
+
   return (
     <div className="db-root">
 
@@ -163,8 +248,8 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
       <div className="db-kpi-row">
         <KPICard
           title="Taux d'Occupation"
-          value="88%" unit="" sub="30 / 34 chambres"
-          trend="+6% vs hier" trendUp
+          value={kpiOcc} unit="" sub={occSub}
+          trend={rooms.length > 0 ? `${occupancyRate}% taux réel` : '+6% vs hier'} trendUp={occupancyRate >= 70}
           icon={<Percent size={18} color="#2563EB"/>} bg="#EFF6FF"
           onClick={() => nav('frontdesk')}
         />
@@ -177,16 +262,16 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
         />
         <KPICard
           title="Arrivées / Départs"
-          value="4 / 2" unit=""
-          sub="2 en retard"
-          trend="2 check-ins en attente" trendUp={false}
+          value={kpiArrivals} unit=""
+          sub={kpiArrivalSub}
+          trend={kpiArrivalTrend} trendUp={pendingCheckins === 0}
           icon={<Users size={18} color="#D97706"/>} bg="#FFFBEB"
           onClick={() => nav('checkin-manager')}
         />
         <KPICard
           title="Revenu du Jour"
-          value="1 745" unit="€"
-          trend="+8% vs hier" trendUp
+          value={kpiRevenue} unit="€"
+          trend={revTrendUp ? 'Données Supabase en direct' : '+8% vs hier'} trendUp={revTrendUp}
           icon={<TrendingUp size={18} color="#7C3AED"/>} bg="#F5F3FF"
           onClick={() => nav('billing-engine')}
         />
@@ -402,15 +487,15 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
             </div>
             <div className="db-tabs">
               <button className={tab === 'arrivals'   ? 'active' : ''} onClick={() => setTab('arrivals')}>
-                Arrivées ({ARRIVALS.length})
+                Arrivées ({displayArrivals.length})
               </button>
               <button className={tab === 'departures' ? 'active' : ''} onClick={() => setTab('departures')}>
-                Départs ({DEPARTURES.length})
+                Départs ({displayDepartures.length})
               </button>
             </div>
           </div>
           <div className="db-card-body">
-            {(tab === 'arrivals' ? ARRIVALS : DEPARTURES).map((g, i) => (
+            {(tab === 'arrivals' ? displayArrivals : displayDepartures).map((g, i) => (
               <div className="db-guest-row" key={i} onClick={() => nav('checkin-manager')} style={{ cursor: 'pointer' }}>
                 <div className={`db-guest-status-bar status-${g.status}`}/>
                 <div className="db-guest-avatar">
@@ -449,7 +534,7 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
             </button>
           </div>
           <div className="db-card-body">
-            {AUTOMATIONS.map((au, i) => (
+            {displayAutomations.map((au, i) => (
               <div className="db-auto-row" key={i}>
                 <div className="db-auto-icon" style={{ background: au.color + '18', color: au.color }}>
                   {au.icon}
@@ -463,7 +548,7 @@ const ModularDashboard = ({ pmsMode, onModuleSelect }) => {
             ))}
             <div className="db-auto-footer">
               <Zap size={12} color="#6366F1"/>
-              <span>24 actions automatisées aujourd'hui</span>
+              <span>{totalAutoToday} actions automatisées aujourd'hui</span>
             </div>
           </div>
         </div>

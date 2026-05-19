@@ -16,6 +16,7 @@ import { sendPinNotifications } from './notifications';
 import { autoExpireCards, autoActivateCards } from './cardManagement';
 import { logError } from './errorHandler';
 import { secureStorage } from './secureStorage';
+import { writeSystemLog } from '../store/realtime';
 
 const STORAGE_KEY = 'hosflow_automation_log';
 const MAPPING_KEY = 'hosflow_property_lock_map';
@@ -54,6 +55,21 @@ const addLogEntry = (entry) => {
   log.unshift(newEntry);
   saveLog(log);
   automationEvents.emit('log', newEntry);
+  // Persist to Supabase system_logs for cross-module visibility
+  const severity = entry.status === 'error' ? 'error'
+    : entry.status === 'warning' ? 'warn' : 'info';
+  const details = [
+    entry.bookingId ? `Booking: ${entry.bookingId}` : null,
+    entry.pin       ? 'PIN créé'                     : null,
+    entry.lockId    ? `Lock: ${entry.lockId}`        : null,
+    entry.guestName ? `Client: ${entry.guestName}`   : null,
+  ].filter(Boolean).join(' | ') || null;
+  writeSystemLog({
+    severity,
+    module:  'automation',
+    message: entry.message || entry.type || 'Événement automation',
+    details,
+  });
   return newEntry;
 };
 

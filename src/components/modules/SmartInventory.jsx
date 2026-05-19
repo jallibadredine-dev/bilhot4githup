@@ -6,7 +6,7 @@ import {
   X, Smartphone, MessageSquare, Mail, UserCheck, LogOut,
   RefreshCw, Shield, Zap, CreditCard, MoreHorizontal, Grid3x3,
   DoorOpen, AlertTriangle, Settings, Activity, Star, ChevronLeft,
-  GripVertical, Pencil
+  GripVertical, Pencil, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SmartInventory.css';
@@ -562,7 +562,17 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
                           {room.status === 'occupied' && <RefreshCw size={12} className="tth-spin-icon"/>}
                         </div>
 
-                        <span className="tth-card-type">{rType.label}</span>
+                        <div className="tth-card-status-icon">
+                          {(cs?.status === 'dirty' || cs?.status === 'in_progress') ? (
+                            <span className="tth-si cleaning" title="Prêt au ménage"><Sparkles size={20}/></span>
+                          ) : room.status === 'occupied' ? (
+                            <span className="tth-si occupied" title="Occupée"><Lock size={20}/></span>
+                          ) : (room.status === 'maintenance' || room.status === 'blocked') ? (
+                            <span className="tth-si broken" title="En panne / Hors service"><Lock size={20}/></span>
+                          ) : (
+                            <span className="tth-si available" title="Disponible"><Lock size={20}/></span>
+                          )}
+                        </div>
                         {guest && <span className="tth-card-guest">{guest.name.split(' ')[0]}</span>}
 
                         <div className="tth-card-footer">
