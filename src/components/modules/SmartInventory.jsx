@@ -564,13 +564,30 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
 
                         <div className="tth-card-status-icon">
                           {(cs?.status === 'dirty' || cs?.status === 'in_progress') ? (
-                            <span className="tth-si cleaning" title="Prêt au ménage"><Sparkles size={20}/></span>
+                            <span className="tth-si cleaning tth-si-pulse" title="Prêt au ménage">
+                              <Sparkles size={20}/>
+                            </span>
                           ) : room.status === 'occupied' ? (
-                            <span className="tth-si occupied" title="Occupée"><Lock size={20}/></span>
+                            <span className={`tth-si occupied tth-si-glow-blue${room.lock?.locked === false ? ' unlocked' : ''}`}
+                              title={room.lock?.locked === false ? 'Occupée · Serrure ouverte' : 'Occupée · Verrouillée'}>
+                              {room.lock?.locked === false ? <Unlock size={20}/> : <Lock size={20}/>}
+                            </span>
                           ) : (room.status === 'maintenance' || room.status === 'blocked') ? (
-                            <span className="tth-si broken" title="En panne / Hors service"><Lock size={20}/></span>
+                            <span className="tth-si broken tth-si-glow-red" title="En panne / Hors service">
+                              <Lock size={20}/>
+                            </span>
+                          ) : !hasLock ? (
+                            <span className="tth-si no-lock" title="Aucune serrure configurée">
+                              <Unlock size={20}/>
+                            </span>
+                          ) : room.lock?.locked ? (
+                            <span className="tth-si available locked" title="Disponible · Verrouillée">
+                              <Lock size={20}/>
+                            </span>
                           ) : (
-                            <span className="tth-si available" title="Disponible"><Lock size={20}/></span>
+                            <span className="tth-si available" title="Disponible · Déverrouillée">
+                              <Unlock size={20}/>
+                            </span>
                           )}
                         </div>
                         {guest && <span className="tth-card-guest">{guest.name.split(' ')[0]}</span>}

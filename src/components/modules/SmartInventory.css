@@ -309,38 +309,80 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  transition: transform 0.12s;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
 }
 
 .tth-si.occupied {
-  background: #DBEAFE;
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
   color: #1D4ED8;
+  border: 1.5px solid #93C5FD;
+}
+
+.tth-si.occupied.unlocked {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  color: #2563EB;
+  border-color: #BFDBFE;
 }
 
 .tth-si.broken {
-  background: #FEE2E2;
+  background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
   color: #DC2626;
+  border: 1.5px solid #FCA5A5;
 }
 
 .tth-si.cleaning {
-  background: #FFF7ED;
+  background: linear-gradient(135deg, #FFF7ED 0%, #FED7AA 100%);
   color: #EA580C;
+  border: 1.5px solid #FDBA74;
+}
+
+.tth-si.available.locked {
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  color: #16A34A;
+  border: 1.5px solid #86EFAC;
 }
 
 .tth-si.available {
-  background: #F1F5F9;
+  background: #F8FAFC;
   color: #94A3B8;
+  border: 1.5px solid #E2E8F0;
 }
 
-.tth-card.selected .tth-si.occupied,
-.tth-card.selected .tth-si.broken,
-.tth-card.selected .tth-si.cleaning,
-.tth-card.selected .tth-si.available {
-  background: rgba(255,255,255,0.20);
-  color: rgba(255,255,255,0.90);
+.tth-si.no-lock {
+  background: #FEF2F2;
+  color: #EF4444;
+  border: 1.5px dashed #FCA5A5;
+}
+
+/* Glow effects */
+.tth-si-glow-blue {
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15), 0 2px 8px rgba(37,99,235,0.20);
+}
+
+.tth-si-glow-red {
+  box-shadow: 0 0 0 3px rgba(220,38,38,0.15), 0 2px 8px rgba(220,38,38,0.20);
+}
+
+/* Pulse animation for cleaning */
+@keyframes tth-pulse-orange {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(234,88,12,0.35); }
+  50%       { box-shadow: 0 0 0 6px rgba(234,88,12,0); }
+}
+
+.tth-si-pulse {
+  animation: tth-pulse-orange 2s ease-in-out infinite;
+}
+
+.tth-card.selected .tth-si {
+  background: rgba(255,255,255,0.20) !important;
+  color: rgba(255,255,255,0.95) !important;
+  border-color: rgba(255,255,255,0.25) !important;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 .tth-card-guest {
