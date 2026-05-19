@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ArrowRight, Check, X, Star, Users, ShieldCheck, 
-  Zap, Calendar, Key, Globe, Layout, MessageSquare, 
-  CreditCard, BarChart3, ChevronRight, Smartphone, 
-  Bell, Lock, Mail 
+import {
+  ArrowRight, Check, Star, Users, ShieldCheck,
+  Zap, Globe, MessageSquare, Lock, Smartphone,
+  BarChart3, ChevronRight, Bot, Calendar
 } from 'lucide-react';
 import AuthPage from './AuthPage';
 import PricingSimulator from './PricingSimulator';
+import heroImg from '../../assets/hero.png';
+import lockBannerImg from '../../assets/lock-banner.png';
 import './LandingPage.css';
 
 const LandingPage = ({ onLogin }) => {
@@ -18,395 +19,313 @@ const LandingPage = ({ onLogin }) => {
   const handleCloseAuth = () => setShowAuthModal(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const fadeInUp = {
-    initial: { opacity: 0, y: 30 },
+  const fadeUp = {
+    initial: { opacity: 0, y: 24 },
     whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-50px" },
-    transition: { duration: 0.6, ease: "easeOut" }
+    viewport: { once: true, margin: '-40px' },
+    transition: { duration: 0.55, ease: 'easeOut' }
   };
 
-  const staggerContainer = {
-    initial: {},
-    whileInView: {
-      transition: {
-        staggerChildren: 0.1
-      }
+  const features = [
+    {
+      icon: <BarChart3 size={22} />,
+      title: 'PMS Tout-en-Un',
+      desc: 'Réservations, calendrier, facturation et rapports dans une seule interface.',
     },
-    viewport: { once: true }
-  };
+    {
+      icon: <Zap size={22} />,
+      title: 'Automatisations Intelligentes',
+      desc: "Déclenchez des actions automatiques sur chaque événement de séjour.",
+    },
+    {
+      icon: <Bot size={22} />,
+      title: 'IA Conciergerie',
+      desc: 'Répondez aux clients, gérez les demandes et optimisez vos tarifs avec l\'IA.',
+    },
+  ];
+
+  const cards = [
+    {
+      icon: <Smartphone size={20} />,
+      title: 'Application mobile native',
+      desc: 'Gérez check-ins, serrures et messages depuis votre smartphone, partout.',
+      img: heroImg,
+    },
+    {
+      icon: <Lock size={20} />,
+      title: 'Accès IoT sans clé',
+      desc: 'Codes d\'accès automatiques synchronisés avec les dates de séjour.',
+      img: lockBannerImg,
+    },
+    {
+      icon: <MessageSquare size={20} />,
+      title: 'Inbox omnicanale',
+      desc: 'Airbnb, Booking, WhatsApp et SMS centralisés dans un seul fil.',
+      img: heroImg,
+    },
+  ];
 
   return (
-    <div className="td-landing-wrapper">
-      {/* Background Ambient Orbs - Matching AuthPage Style */}
-      <div className="ambient-orb orb-1"></div>
-      <div className="ambient-orb orb-2"></div>
-      <div className="ambient-orb orb-3"></div>
-      <div className="ambient-orb orb-4"></div>
+    <div className="lp-wrapper">
 
-      {/* Navbar */}
-      <nav className={`td-nav ${scrolled ? 'scrolled' : ''}`}>
-        <div className="td-nav-container">
-          <div className="td-logo">
-            <span style={{ fontWeight: 800, fontSize: 22, letterSpacing: -0.5, lineHeight: 1, userSelect: 'none' }}>
-              <span style={{ color: '#2563EB' }}>Bil</span><span style={{ color: '#111827' }}>Hot</span>
-            </span>
-          </div>
-          <div className="td-nav-links hide-mobile">
-            <a href="#how-it-works">Fonctionnement</a>
+      {/* ── Navbar ── */}
+      <nav className={`lp-nav ${scrolled ? 'scrolled' : ''}`}>
+        <div className="lp-nav-inner">
+          <span className="lp-logo">
+            <span className="lp-logo-blue">Bil</span>Hot
+          </span>
+          <div className="lp-nav-links hide-mobile">
             <a href="#features">Fonctionnalités</a>
+            <a href="#how-it-works">Fonctionnement</a>
             <a href="#pricing">Tarifs</a>
             <a href="#testimonials">Avis</a>
           </div>
-          <div className="td-nav-actions">
-            <button className="td-btn-secondary hide-mobile" onClick={handleOpenAuth}>Connexion</button>
-            <button className="td-btn-primary" onClick={handleOpenAuth}>
-              Démarrer <ArrowRight size={16} />
+          <div className="lp-nav-actions">
+            <button className="lp-btn-ghost hide-mobile" onClick={handleOpenAuth}>Connexion</button>
+            <button className="lp-btn-dark" onClick={handleOpenAuth}>
+              Mon compte <ArrowRight size={15} />
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <header className="td-hero">
-        {/* Floating OTA Bubbles with Logos */}
-        <div className="hp-floating-bubbles-container">
-          <div className="hp-bubble bubble-airbnb">
-            <img src="https://www.vectorlogo.zone/logos/airbnb/airbnb-icon.svg" alt="Airbnb" />
+      {/* ── Hero ── */}
+      <section className="lp-hero">
+        <motion.div className="lp-hero-content" {...fadeUp}>
+          <div className="lp-hero-badge">
+            <span className="lp-badge-dot" />
+            Un PMS. Une IA. Zéro friction.
           </div>
-          <div className="hp-bubble bubble-booking">
-            <img src="https://www.vectorlogo.zone/logos/booking/booking-icon.svg" alt="Booking.com" />
-          </div>
-          <div className="hp-bubble bubble-expedia">
-            <Globe size={28} />
-          </div>
-          <div className="hp-bubble bubble-tripadvisor">
-            <img src="https://www.vectorlogo.zone/logos/tripadvisor/tripadvisor-icon.svg" alt="TripAdvisor" />
-          </div>
-          <div className="hp-bubble bubble-stripe">
-            <img src="https://www.vectorlogo.zone/logos/stripe/stripe-icon.svg" alt="Stripe" />
-          </div>
-          <div className="hp-bubble bubble-ttlock">
-            <img src="https://www.vectorlogo.zone/logos/google_cloud/google_cloud-icon.svg" alt="Cloud" />
-          </div>
-        </div>
 
-        <motion.div {...fadeInUp} style={{ position: 'relative', zIndex: 10 }}>
-          <div className="hp-trust-badges">
-            <div className="hp-trust-badge">
-              <Star size={14} fill="currentColor" />
-              <span>4.9/5 sur Trustpilot</span>
-            </div>
-            <div className="hp-trust-badge">
-              <Users size={14} />
-              <span>+2,500 établissements</span>
-            </div>
-            <div className="hp-trust-badge">
-              <ShieldCheck size={14} />
-              <span>Conforme RGPD & SOC2</span>
-            </div>
-          </div>
-          
-          <h1 className="td-hero-title">
-            Gérez vos propriétés <br/>
-            en mode <span style={{ color: 'var(--hp-blue)' }}>pilote automatique.</span>
+          <h1 className="lp-hero-h1">
+            Une app pour <span className="lp-highlight">gérer</span>,{' '}
+            <span className="lp-highlight">automatiser</span>,<br />
+            et développer votre activité
           </h1>
-          
-          <p className="td-hero-desc">
-            Le PMS nouvelle génération qui connecte vos canaux, vos serrures et vos clients dans une interface unique et ultra-fluide.
+
+          <p className="lp-hero-sub">
+            Connectez vos canaux, gérez vos serrures et fidélisez vos clients avec
+            une suite complète propulsée par <strong>l'Intelligence Artificielle</strong>.
           </p>
-          
-          <div className="hp-hero-cta-group">
-            <button className="td-btn-primary large" onClick={handleOpenAuth}>
-              Essayer BilHot Gratuitement
+
+          <div className="lp-hero-ctas">
+            <button className="lp-btn-primary-lg" onClick={handleOpenAuth}>
+              Commencer gratuitement <ArrowRight size={17} />
             </button>
-            <p className="hp-cta-subtext">
-              <Check size={14} className="hp-check" /> Pas de carte de crédit • Annulation possible à tout moment
-            </p>
+            <button className="lp-btn-outline-lg" onClick={handleOpenAuth}>
+              Voir une démo
+            </button>
           </div>
-          
-          <div className="hp-stats-grid">
-            <div className="hp-stat-item">
-              <span className="hp-stat-value">99.9%</span>
-              <span className="hp-stat-label">Uptime</span>
+          <p className="lp-hero-note">
+            <Check size={13} /> Pas de carte de crédit · Annulation à tout moment
+          </p>
+        </motion.div>
+
+        {/* Product screenshot */}
+        <motion.div
+          className="lp-hero-mockup"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+        >
+          <div className="lp-mockup-browser">
+            <div className="lp-browser-bar">
+              <span className="lp-browser-dot red" />
+              <span className="lp-browser-dot yellow" />
+              <span className="lp-browser-dot green" />
+              <span className="lp-browser-url">app.bilhot.com</span>
             </div>
-            <div className="hp-stat-item">
-              <span className="hp-stat-value">150+</span>
-              <span className="hp-stat-label">Intégrations</span>
-            </div>
-            <div className="hp-stat-item">
-              <span className="hp-stat-value">24/7</span>
-              <span className="hp-stat-label">Support Expert</span>
-            </div>
+            <img src={heroImg} alt="BilHot Dashboard" className="lp-mockup-img" />
+          </div>
+          <div className="lp-forbes-badge">
+            <strong>Forbes</strong>
+            <span>"L'Outil Essentiel pour l'Hôtellerie Moderne"</span>
           </div>
         </motion.div>
-      </header>
 
-      {/* Logo Cloud */}
-      <section className="td-logos">
-        <p>Ils nous font confiance pour leur croissance</p>
-        <div className="td-logo-track">
-           <span>Airbnb</span>
-           <span>Booking.com</span>
-           <span>Expedia</span>
-           <span>TripAdvisor</span>
-           <span>Stripe</span>
-           <span>TTLock</span>
+        {/* Stats bar */}
+        <motion.div className="lp-stats-bar" {...fadeUp} transition={{ delay: 0.3 }}>
+          <div className="lp-stat">
+            <span className="lp-stat-val">99.9%</span>
+            <span className="lp-stat-lbl">Uptime garanti</span>
+          </div>
+          <div className="lp-stat-sep" />
+          <div className="lp-stat">
+            <span className="lp-stat-val">+2 500</span>
+            <span className="lp-stat-lbl">Établissements</span>
+          </div>
+          <div className="lp-stat-sep" />
+          <div className="lp-stat">
+            <span className="lp-stat-val">150+</span>
+            <span className="lp-stat-lbl">Intégrations</span>
+          </div>
+          <div className="lp-stat-sep" />
+          <div className="lp-stat">
+            <span className="lp-stat-val">24/7</span>
+            <span className="lp-stat-lbl">Support expert</span>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ── Logo cloud ── */}
+      <section className="lp-partners">
+        <p className="lp-partners-label">Ils nous font confiance pour leur croissance</p>
+        <div className="lp-partners-row">
+          {['Airbnb', 'Booking.com', 'Expedia', 'TripAdvisor', 'Stripe', 'TTLock'].map(name => (
+            <span key={name} className="lp-partner-name">{name}</span>
+          ))}
         </div>
       </section>
 
-      {/* Features Showcase Section */}
-      <section className="hp-features-showcase" id="features">
-        <div className="hp-section-header">
-          <h2>Tout ce dont vous avez besoin</h2>
-          <p>Une suite complète d'outils pour dominer le marché de la location saisonnière et de l'hôtellerie.</p>
-        </div>
-
-        {/* Feature 1: Mobile App */}
-        <div className="hp-feature-row">
-          <motion.div className="hp-feature-text" {...fadeInUp}>
-            <Smartphone className="hp-icon-accent" size={40} style={{ color: 'var(--hp-blue)', marginBottom: '1.5rem' }} />
-            <h2>Contrôlez tout, partout.</h2>
-            <p>Notre application mobile native vous permet de gérer les check-ins, d'ouvrir les portes à distance et de répondre aux clients, même en déplacement.</p>
-            <ul className="hp-feature-list">
-              <li><Check size={18} className="hp-check" /> Notifications push en temps réel</li>
-              <li><Check size={18} className="hp-check" /> Ouverture de serrure via Bluetooth/Wi-Fi</li>
-              <li><Check size={18} className="hp-check" /> Mode Hors-ligne disponible</li>
-            </ul>
-          </motion.div>
-          <motion.div className="hp-feature-image" {...fadeInUp} transition={{ delay: 0.2 }}>
-            <img src="/hosflow_mobile_app_mockup_1777482343211.png" alt="Mobile App Mockup" />
-          </motion.div>
-        </div>
-
-        {/* Feature 2: Unified Inbox */}
-        <div className="hp-feature-row reverse">
-          <motion.div className="hp-feature-text" {...fadeInUp}>
-            <Mail className="hp-icon-accent" size={40} style={{ color: 'var(--hp-blue)', marginBottom: '1.5rem' }} />
-            <h2>Boîte de réception unifiée.</h2>
-            <p>Ne perdez plus jamais un message. Centralisez toutes les conversations Airbnb, Booking, WhatsApp et SMS dans un flux unique et intelligent.</p>
-            <ul className="hp-feature-list">
-              <li><Check size={18} className="hp-check" /> Réponses automatiques par IA</li>
-              <li><Check size={18} className="hp-check" /> Traduction instantanée intégrée</li>
-              <li><Check size={18} className="hp-check" /> Notes internes pour l'équipe</li>
-            </ul>
-          </motion.div>
-          <motion.div className="hp-feature-image" {...fadeInUp} transition={{ delay: 0.2 }}>
-            <img src="/hosflow_unified_inbox_mockup_1777482367848.png" alt="Unified Inbox Mockup" />
-          </motion.div>
-        </div>
-
-        {/* Feature 3: Smart Locks */}
-        <div className="hp-feature-row">
-          <motion.div className="hp-feature-text" {...fadeInUp}>
-            <Lock className="hp-icon-accent" size={40} style={{ color: 'var(--hp-blue)', marginBottom: '1.5rem' }} />
-            <h2>Accès sans clé, 100% sûr.</h2>
-            <p>Connectez vos serrures TTLock ou Sciener. Hova génère et envoie automatiquement les codes d'accès valides uniquement pendant la durée du séjour.</p>
-            <ul className="hp-feature-list">
-              <li><Check size={18} className="hp-check" /> Synchronisation automatique des dates</li>
-              <li><Check size={18} className="hp-check" /> Journal d'accès en temps réel</li>
-              <li><Check size={18} className="hp-check" /> Alerte batterie faible</li>
-            </ul>
-          </motion.div>
-          <motion.div className="hp-feature-image" {...fadeInUp} transition={{ delay: 0.2 }}>
-            <img src="/images/image_1.png" alt="Smart Locks" />
-          </motion.div>
-        </div>
-      </section>
-
-      {/* How it Works */}
-      <section className="hp-how-it-works" id="how-it-works">
-        <div className="hp-section-header">
-          <h2>Simplifiez votre quotidien</h2>
-          <p>Trois étapes vers une liberté totale.</p>
-        </div>
-        
-        <div className="hp-steps-grid">
-          <motion.div className="hp-step-card" {...fadeInUp}>
-            <div className="hp-step-number">1</div>
-            <h3>Importation Rapide</h3>
-            <p>Connectez vos comptes OTA. Nous importons tout en moins de 60 secondes.</p>
-            <div className="hp-step-visual">
-              <img src="/images/image_3.png" alt="Channel Manager" />
+      {/* ── Features split ── */}
+      <section className="lp-features-split" id="features">
+        <div className="lp-features-split-inner">
+          <div className="lp-features-list">
+            <p className="lp-section-eyebrow">Tout ce dont vous avez besoin</p>
+            <h2 className="lp-section-h2">
+              Conçu pour les <span className="lp-highlight">gestionnaires</span> modernes
+            </h2>
+            <div className="lp-feature-items">
+              {features.map((f, i) => (
+                <motion.div key={i} className="lp-feature-item" {...fadeUp} transition={{ delay: i * 0.1 }}>
+                  <div className="lp-feature-icon">{f.icon}</div>
+                  <div>
+                    <h3>{f.title}</h3>
+                    <p>{f.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-          </motion.div>
-          
-          <motion.div className="hp-step-card" {...fadeInUp} transition={{ delay: 0.1 }}>
-            <div className="hp-step-number">2</div>
-            <h3>Configuration IA</h3>
-            <p>Notre IA analyse vos annonces et configure les automatisations optimales.</p>
-            <div className="hp-step-visual">
-              <img src="/images/image_0.png" alt="AI Config" />
-            </div>
-          </motion.div>
-          
-          <motion.div className="hp-step-card" {...fadeInUp} transition={{ delay: 0.2 }}>
-            <div className="hp-step-number">3</div>
-            <h3>Encaissez Directement</h3>
-            <p>Le moteur de réservation direct s'occupe de tout le reste.</p>
-            <div className="hp-step-visual">
-              <img src="/images/image_4.png" alt="Billing" />
-            </div>
+            <button className="lp-btn-primary-lg" onClick={handleOpenAuth} style={{ marginTop: '2rem' }}>
+              Démarrer gratuitement <ArrowRight size={16} />
+            </button>
+          </div>
+
+          <motion.div className="lp-features-screenshot" {...fadeUp} transition={{ delay: 0.2 }}>
+            <img src={lockBannerImg} alt="BilHot App Screenshot" />
           </motion.div>
         </div>
       </section>
 
-      {/* Comparison Section */}
-      <section className="hp-comparison" id="comparison">
-        <div className="hp-section-header">
-          <h2>L'avantage BilHot</h2>
-          <p>Pourquoi nos clients ne reviendront jamais en arrière.</p>
-        </div>
-        
-        <div className="hp-comparison-container">
-          <table className="hp-table">
-            <thead>
-              <tr>
-                <th className="hp-table-col-label">Fonctionnalité</th>
-                <th className="hp-table-col-hosflow">BilHot</th>
-                <th className="hp-table-col-old">Autres PMS</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Mise à jour Calendrier</td>
-                <td><Zap size={16} fill="currentColor" /> Instantanée</td>
-                <td>Lente (2-5 min)</td>
-              </tr>
-              <tr>
-                <td>Accès IoT Natif</td>
-                <td><Check size={18} className="hp-check" /> Oui</td>
-                <td>Via tierce partie</td>
-              </tr>
-              <tr>
-                <td>IA Concierge</td>
-                <td><Check size={18} className="hp-check" /> Inclus</td>
-                <td>Option payante</td>
-              </tr>
-              <tr>
-                <td>Mobile App Native</td>
-                <td><Check size={18} className="hp-check" /> iOS & Android</td>
-                <td>Web-only souvent</td>
-              </tr>
-              <tr>
-                <td>Paiements Directs</td>
-                <td>Stripe / PayPal</td>
-                <td>Limité</td>
-              </tr>
-            </tbody>
-          </table>
+      {/* ── 3 Feature Cards ── */}
+      <section className="lp-cards-section" id="how-it-works">
+        <motion.div className="lp-section-center" {...fadeUp}>
+          <p className="lp-section-eyebrow">Fonctionnalités clés</p>
+          <h2 className="lp-section-h2">
+            Tout ce qu'il faut pour <span className="lp-highlight">scaler</span>
+          </h2>
+        </motion.div>
+
+        <div className="lp-cards-grid">
+          {cards.map((card, i) => (
+            <motion.div key={i} className="lp-card" {...fadeUp} transition={{ delay: i * 0.12 }}>
+              <div className="lp-card-screenshot">
+                <img src={card.img} alt={card.title} />
+              </div>
+              <div className="lp-card-body">
+                <div className="lp-card-icon">{card.icon}</div>
+                <h3>{card.title}</h3>
+                <p>{card.desc}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="hp-pricing" id="pricing">
-        <div className="hp-section-header">
-          <h2>Calculez votre tarif en direct</h2>
-          <p>Payez selon le nombre de chambres que vous gérez. Pas de surprise.</p>
-        </div>
+      {/* ── Pricing ── */}
+      <section className="lp-pricing-section" id="pricing">
+        <motion.div className="lp-section-center" {...fadeUp}>
+          <p className="lp-section-eyebrow">Tarification</p>
+          <h2 className="lp-section-h2">Payez selon votre taille, pas plus</h2>
+          <p className="lp-section-desc">Pas de surprise. Pas de contrat. Annulez à tout moment.</p>
+        </motion.div>
         <PricingSimulator onStart={handleOpenAuth} />
       </section>
 
-      {/* Testimonials */}
-      <section className="hp-testimonials" id="testimonials">
-        <div className="hp-section-header">
-          <h2>Ils adorent BilHot</h2>
-          <p>Rejoignez les milliers de gestionnaires qui ont repris le contrôle.</p>
-        </div>
-        
-        <div className="hp-testimonial-grid">
-          <motion.div className="hp-testimonial-card" {...fadeInUp}>
-            <div className="hp-user-info">
-              <div className="hp-user-avatar">JD</div>
-              <div className="hp-user-details">
-                <h4>Jean Dupont</h4>
-                <p>Host à Paris (12 appts)</p>
+      {/* ── Testimonials ── */}
+      <section className="lp-testimonials-section" id="testimonials">
+        <motion.div className="lp-section-center" {...fadeUp}>
+          <p className="lp-section-eyebrow">Témoignages</p>
+          <h2 className="lp-section-h2">Ils adorent <span className="lp-highlight">BilHot</span></h2>
+        </motion.div>
+
+        <div className="lp-testimonials-grid">
+          {[
+            { initials: 'JD', name: 'Jean Dupont', role: 'Host à Paris (12 appts)', text: '"Le gain de temps est phénoménal. La synchronisation avec les serrures est un game changer total pour ma logistique."' },
+            { initials: 'SM', name: 'Sarah Martin', role: 'Directrice de Résidence', text: '"L\'interface est la plus belle du marché. C\'est un plaisir de l\'utiliser au quotidien."' },
+            { initials: 'RB', name: 'Robert Bernard', role: 'Fondateur de Conciergerie', text: '"BilHot nous a permis de scaler notre conciergerie sans recruter massivement. L\'automatisation fait tout."' },
+          ].map((t, i) => (
+            <motion.div key={i} className="lp-testimonial" {...fadeUp} transition={{ delay: i * 0.1 }}>
+              <div className="lp-stars">{'★★★★★'}</div>
+              <p className="lp-testimonial-text">{t.text}</p>
+              <div className="lp-testimonial-author">
+                <div className="lp-avatar">{t.initials}</div>
+                <div>
+                  <strong>{t.name}</strong>
+                  <span>{t.role}</span>
+                </div>
               </div>
-            </div>
-            <p className="hp-testimonial-text">
-              "Le gain de temps est phénoménal. La synchronisation avec les serrures est un 'game changer' total pour ma logistique."
-            </p>
-          </motion.div>
-          
-          <motion.div className="hp-testimonial-card" {...fadeInUp} transition={{ delay: 0.1 }}>
-            <div className="hp-user-info">
-              <div className="hp-user-avatar">SM</div>
-              <div className="hp-user-details">
-                <h4>Sarah Martin</h4>
-                <p>Directrice de Résidence</p>
-              </div>
-            </div>
-            <p className="hp-testimonial-text">
-              "L'interface est la plus belle du marché. C'est un plaisir de l'utiliser au quotidien. L'équipe support est géniale."
-            </p>
-          </motion.div>
-          
-          <motion.div className="hp-testimonial-card" {...fadeInUp} transition={{ delay: 0.2 }}>
-            <div className="hp-user-info">
-              <div className="hp-user-avatar">RB</div>
-              <div className="hp-user-details">
-                <h4>Robert Bernard</h4>
-                <p>Fondateur de Conciergerie</p>
-              </div>
-            </div>
-            <p className="hp-testimonial-text">
-              "BilHot nous a permis de scaler notre conciergerie sans recruter massivement. L'automatisation fait tout le travail."
-            </p>
-          </motion.div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="td-footer">
-        <div className="td-footer-top">
-          <div className="td-footer-brand">
-            <div className="td-logo">
-              <div className="td-logo-icon">H</div>
-              <span style={{ color: 'white' }}>BilHot</span>
+      {/* ── CTA Banner ── */}
+      <section className="lp-cta-banner">
+        <div className="lp-cta-inner">
+          <div className="lp-cta-text">
+            <span className="lp-cta-eyebrow">Commencer aujourd'hui</span>
+            <h2>Toute votre activité,<br />un seul login</h2>
+            <p>Pas de carte de crédit. Pas de contrat.<br />Juste les outils pour gérer, automatiser et encaisser.</p>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' }}>
+              <button className="lp-cta-btn" onClick={handleOpenAuth}>
+                Commencer gratuitement <ArrowRight size={16} />
+              </button>
             </div>
-            <p>Le futur du Property Management. Simple, puissant et automatisé.</p>
+            <span className="lp-cta-note"><Check size={12} /> Pas de carte de crédit requise</span>
           </div>
-          <div className="link-col">
-            <h4>Produit</h4>
-            <a href="#how-it-works">Fonctionnement</a>
-            <a href="#features">Fonctionnalités</a>
-            <a href="#pricing">Tarifs</a>
-            <a href="#">Security</a>
-          </div>
-          <div className="link-col">
-            <h4>Ressources</h4>
-            <a href="#">Guides</a>
-            <a href="#">API Docs</a>
-            <a href="#">Blog</a>
-            <a href="#">Communauté</a>
-          </div>
-          <div className="link-col">
-            <h4>Légal</h4>
-            <a href="#">Confidentialité</a>
-            <a href="#">Mentions</a>
-            <a href="#">Cookies</a>
+          <div className="lp-cta-mockup">
+            <img src={heroImg} alt="BilHot App" />
           </div>
         </div>
-        <div className="td-footer-bottom">
-          <p>&copy; 2026 Hova. Tous droits réservés.</p>
-          <div style={{ display: 'flex', gap: '2rem' }}>
-            <a href="#" style={{ color: '#64748b', textDecoration: 'none' }}>Twitter</a>
-            <a href="#" style={{ color: '#64748b', textDecoration: 'none' }}>LinkedIn</a>
-            <a href="#" style={{ color: '#64748b', textDecoration: 'none' }}>Instagram</a>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div className="lp-footer-brand">
+            <span className="lp-logo" style={{ fontSize: 20 }}>
+              <span className="lp-logo-blue">Bil</span>Hot
+            </span>
+            <p>Le futur du Property Management.<br />Simple, puissant et automatisé.</p>
+          </div>
+          {[
+            { title: 'Produit', links: ['Fonctionnement', 'Fonctionnalités', 'Tarifs', 'Sécurité'] },
+            { title: 'Ressources', links: ['Guides', 'API Docs', 'Blog', 'Communauté'] },
+            { title: 'Légal', links: ['Confidentialité', 'Mentions légales', 'Cookies'] },
+          ].map(col => (
+            <div key={col.title} className="lp-footer-col">
+              <h4>{col.title}</h4>
+              {col.links.map(l => <a key={l} href="#">{l}</a>)}
+            </div>
+          ))}
+        </div>
+        <div className="lp-footer-bottom">
+          <span>© 2026 BilHot. Tous droits réservés.</span>
+          <div className="lp-footer-social">
+            <a href="#">Twitter</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Instagram</a>
           </div>
         </div>
       </footer>
 
-      {/* Auth Modal Overlay */}
-      {showAuthModal && (
-        <AuthPage onLogin={onLogin} onClose={handleCloseAuth} />
-      )}
+      {showAuthModal && <AuthPage onLogin={onLogin} onClose={handleCloseAuth} />}
     </div>
   );
 };
