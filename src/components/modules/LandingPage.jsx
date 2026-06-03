@@ -23,6 +23,7 @@ const LandingPage = ({ onLogin }) => {
 
   const handleOpenAuth = () => setShowAuthModal(true);
   const handleCloseAuth = () => setShowAuthModal(false);
+  const handleDemo = () => onLogin('demo');
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -222,9 +223,14 @@ const LandingPage = ({ onLogin }) => {
             Gérez vos réservations, synchronisez vos canaux et automatisez vos opérations en quelques minutes avec notre PMS alimenté par l'IA. Connectez vos propriétés et recevez vos premières réservations synchronisées. <strong>Il suffit d'un compte.</strong>
           </p>
 
-          <button className="lp-btn-hero-cta" onClick={handleOpenAuth}>
-            Commencer gratuitement <ArrowRight size={18} />
-          </button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button className="lp-btn-hero-cta" onClick={handleOpenAuth}>
+              Commencer gratuitement <ArrowRight size={18} />
+            </button>
+            <button className="lp-btn-demo-live" onClick={handleDemo}>
+              🚀 Voir la démo live
+            </button>
+          </div>
 
           {/* Trust checklist */}
           <div className="lp-hero-checklist">

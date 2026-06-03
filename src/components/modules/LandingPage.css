@@ -281,6 +281,29 @@ html {
   box-shadow: 0 8px 24px rgba(79,70,229,0.3);
 }
 
+.lp-btn-demo-live {
+  background: transparent;
+  color: var(--lp-brand);
+  border: 2px solid var(--lp-brand);
+  padding: 0.9rem 1.75rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font);
+  transition: background 0.15s, color 0.15s, transform 0.12s, box-shadow 0.2s;
+  margin-bottom: 1.5rem;
+}
+.lp-btn-demo-live:hover {
+  background: var(--lp-brand);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79,70,229,0.25);
+}
+
 .lp-hero-checklist {
   display: flex;
   flex-wrap: wrap;
