@@ -235,6 +235,27 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
 }
 
+/* Trial pill */
+.th-trial-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #F8FAFC, #FFFFFF);
+  border: 1px solid #E6EEF8;
+  box-shadow: 0 2px 6px rgba(37,99,235,0.06);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+.th-trial-pill.expired {
+  background: linear-gradient(180deg, #FFF1F2, #FFFFFF);
+  border-color: #FECACA;
+  box-shadow: none;
+}
+.th-trial-text.expired { color: #B91C1C; }
+
+
 .th-avatar {
   width: 30px;
   height: 30px;

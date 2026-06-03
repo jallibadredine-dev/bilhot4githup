@@ -1,0 +1,255 @@
+.activity-container {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-header-side {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header-side h3 {
+  font-size: 1.1rem;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.month-title {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+/* Mini Calendar */
+.mini-calendar {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.cal-nav {
+  position: absolute;
+  top: -30px;
+  right: 0;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-nav-small {
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  color: var(--text-secondary);
+}
+
+.cal-days {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cal-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.cal-col span {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.cal-col.active {
+  color: var(--accent-blue);
+  position: relative;
+}
+
+.cal-col.active span:first-child {
+  color: var(--accent-blue);
+}
+
+.cal-col.active span:last-child {
+  color: var(--status-cyan);
+  font-size: 1.2rem;
+  line-height: 0.5;
+  margin-top: 2px;
+}
+
+/* Activity Cards */
+.activity-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activity-card {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.act-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.act-header h4 {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  padding-right: 12px;
+}
+
+.btn-edit {
+  color: var(--text-muted);
+}
+.btn-edit:hover {
+  color: var(--accent-blue);
+}
+
+.act-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.tag-summary {
+  display: inline-block;
+  align-self: flex-start;
+  background: var(--accent-blue-light);
+  color: var(--accent-blue);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  margin: 4px 0 8px;
+}
+
+.act-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mt-md {
+  margin-top: 8px;
+}
+
+.act-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.act-icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.emoji-hand {
+  font-size: 0.9rem;
+}
+
+.bg-green { background: #D9F2E6; color: var(--status-green); border-color: transparent;}
+.act-date { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-left: auto;}
+
+.btn-add-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 12px;
+}
+
+/* Checklist section */
+.mt-lg {
+  margin-top: 2.5rem;
+}
+
+.btn-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.check-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.check-item.active {
+  background: white;
+  border-color: var(--border-light);
+}
+
+.check-item h4 {
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.check-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tag-green {
+  background: var(--status-green);
+  color: white;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 500;
+}
+
+.check-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.check-circle.green {
+  background: var(--status-green);
+}

@@ -1,0 +1,50 @@
+/* ─── PREMIUM CHANNEL MANAGER STYLES ─── */
+:root {
+  --cm-indigo: #4F46E5;
+  --cm-indigo-light: #EEF2FF;
+  --cm-slate: #1E293B;
+  --cm-border: #F1F5F9;
+  --cm-bg: #F8FAFC;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Animations */
+@keyframes pulse-emerald {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.animate-pulse-emerald {
+  animation: pulse-emerald 2s infinite;
+}
+
+/* Layout overrides */
+.max-w-screen-2xl {
+  max-width: 1536px;
+}
+
+/* Card hover effects */
+.hover-indigo:hover {
+  border-color: var(--cm-indigo);
+  box-shadow: 0 20px 40px -10px rgba(79, 70, 229, 0.1);
+}
+
+/* Transitions */
+.transition-all-500 {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}

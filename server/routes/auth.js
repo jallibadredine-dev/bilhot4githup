@@ -88,6 +88,60 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ error: msg || 'Account creation failed' });
     }
 
+    // Ensure a profile row exists with a 14-day trial window so the frontend
+    // can show remaining days immediately even if onboarding upsert fails.
+    try {
+      const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+      const profilePayload = {
+        id: data.id,
+        full_name: (name || '').trim(),
+        email: email.trim().toLowerCase(),
+        role: 'user',
+        plan: 'trial',
+        trial_ends_at: trialEndsAt,
+        created_at: new Date().toISOString(),
+      };
+
+      // Upsert via PostgREST — use service role key
+      const profilesUrl = `${sbUrl.replace(/\/$/, '')}/rest/v1/profiles`;
+      await fetch(profilesUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+          'Prefer': 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify(profilePayload),
+      });
+    } catch (profileErr) {
+      console.warn('[auth/signup] could not upsert profile:', profileErr?.message || profileErr);
+    }
+
+    // Create an admin notification (non-blocking) so admins see new signups
+    try {
+      const notifUrl = `${sbUrl.replace(/\/$/, '')}/rest/v1/notifications`;
+      const notif = {
+        title: 'Nouvel utilisateur inscrit',
+        body: `Email: ${email.trim().toLowerCase()}${name ? ` — Nom: ${name.trim()}` : ''}`,
+        level: 'info',
+        meta: { user_id: data.id },
+        created_at: new Date().toISOString(),
+        seen: false,
+      };
+      await fetch(notifUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': sbKey,
+          'Authorization': `Bearer ${sbKey}`,
+        },
+        body: JSON.stringify(notif),
+      });
+    } catch (notifErr) {
+      console.warn('[auth/signup] could not create admin notification:', notifErr?.message || notifErr);
+    }
+
     return res.status(201).json({ userId: data.id });
   } catch (err) {
     console.error('[auth/signup]', err.message);

@@ -1,0 +1,280 @@
+/* SettingsDashboard.css - Ultra Premium Block-Scroll Layout */
+
+.settings-container-unique {
+  height: calc(100vh - 80px); /* Adjust based on your topbar */
+  overflow-y: auto;
+  background-color: #fafafa;
+  background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,0.03) 0px, transparent 50%),
+                    radial-gradient(at 100% 0%, hsla(225,39%,30%,0.03) 0px, transparent 50%);
+  padding: 4rem 2rem;
+  padding-bottom: 10rem; /* space for scrolling past the last block */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+/* Custom Scrollbar for Settings */
+.settings-container-unique::-webkit-scrollbar {
+  width: 8px;
+}
+.settings-container-unique::-webkit-scrollbar-track {
+  background: transparent;
+}
+.settings-container-unique::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.settings-hero {
+  max-width: 900px;
+  margin: 0 auto 4rem auto;
+  text-align: center;
+}
+
+.settings-hero h1 {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.04em;
+  margin-bottom: 1rem;
+}
+
+.settings-hero p {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Floating Navigation Pill */
+.floating-nav {
+  position: sticky;
+  top: 1rem;
+  z-index: 50;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 5rem;
+  pointer-events: none;
+}
+
+.floating-nav-pill {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.02);
+  padding: 0.4rem;
+  border-radius: 100px;
+  display: flex;
+  gap: 0.25rem;
+  pointer-events: auto;
+}
+
+.nav-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 100px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-pill-btn:hover {
+  background: rgba(15, 23, 42, 0.04);
+  color: #0f172a;
+}
+
+/* The Blocks */
+.settings-blocks {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.settings-block-card {
+  background: #ffffff;
+  border-radius: 32px;
+  padding: 3.5rem;
+  box-shadow: 0 20px 60px -15px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.04);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.settings-block-card:hover {
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+
+.settings-block-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.15), transparent);
+}
+
+.block-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 3.5rem;
+}
+
+.block-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,1), 0 10px 20px -5px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
+}
+
+.block-header h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin: 0;
+}
+
+.block-header p {
+  color: #64748b;
+  margin-top: 0.25rem;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Bento Forms */
+.bento-form-row {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 3rem;
+  padding: 2.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.bento-form-row:first-child {
+  padding-top: 0;
+}
+.bento-form-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.bento-label-group h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+.bento-label-group p {
+  font-size: 0.9rem;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.bento-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.bento-input {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #0f172a;
+  transition: all 0.2s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.bento-input:focus {
+  background: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+
+/* Special Inputs */
+.bento-upload-box {
+  border: 2px dashed #cbd5e1;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #64748b;
+}
+
+.bento-upload-box:hover {
+  background: #ffffff;
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+/* Floating Save Button */
+.save-fab {
+  position: fixed;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: white;
+  padding: 1.25rem 3rem;
+  border-radius: 100px;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: none;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+}
+
+.save-fab:hover {
+  transform: translateX(-50%) translateY(-5px) scale(1.02);
+  box-shadow: 0 30px 50px -10px rgba(15, 23, 42, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.save-fab.saved {
+  background: #10b981;
+  box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.4);
+}
+
+@media (max-width: 1024px) {
+  .bento-form-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .settings-block-card {
+    padding: 2rem;
+  }
+}

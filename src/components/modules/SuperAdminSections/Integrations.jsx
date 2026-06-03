@@ -4,9 +4,11 @@ import { Globe, Plus, CheckCircle, XCircle, AlertTriangle, Settings, ExternalLin
 import { LS_TUYA_ID, LS_TUYA_SEC, LS_TUYA_REG, LS_TUYA_CODE, TUYA_REGIONS,
          ENV_TUYA_ID, ENV_TUYA_SEC, ENV_TUYA_CODE } from '../../../lib/tuya';
 
-/* ── Global TTLock app-credential keys (shared with SmartLockHub) ── */
+/* ── Global TTLock / TTHotel app-credential keys (shared with SmartLockHub) ── */
 const TT_CLIENT_ID_KEY  = 'hova_ttlock_client_id';
 const TT_CLIENT_SEC_KEY = 'hova_ttlock_client_sec';
+const ENV_TTHOTEL_CLIENT_ID = import.meta.env.VITE_TTHOTEL_CLIENT_ID || '';
+const ENV_TTHOTEL_CLIENT_SECRET = import.meta.env.VITE_TTHOTEL_CLIENT_SECRET || '';
 
 const GROUPS = [
   {cat:'Paiements',items:[
@@ -48,8 +50,8 @@ const SC = {
 
 /* ── TTLock-specific config panel ── */
 function TTLockConfig() {
-  const [cid,   setCid]   = useState(() => localStorage.getItem(TT_CLIENT_ID_KEY)  || '');
-  const [csec,  setCsec]  = useState(() => localStorage.getItem(TT_CLIENT_SEC_KEY) || '');
+  const [cid,   setCid]   = useState(() => localStorage.getItem(TT_CLIENT_ID_KEY)  || ENV_TTHOTEL_CLIENT_ID || '');
+  const [csec,  setCsec]  = useState(() => localStorage.getItem(TT_CLIENT_SEC_KEY) || ENV_TTHOTEL_CLIENT_SECRET || '');
   const [showS, setShowS] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -64,10 +66,17 @@ function TTLockConfig() {
   return (
     <div className="sa2-int-config">
       <div style={{ fontSize: '0.7rem', color: '#64748B', marginBottom: 10, lineHeight: 1.5 }}>
-        Credentials d'application TTLock — obtenus sur{' '}
-        <a href="https://open.ttlock.com" target="_blank" rel="noreferrer" style={{ color: '#8B5CF6' }}>open.ttlock.com</a>.
-        Ces credentials sont partagés avec tous les utilisateurs de la plateforme.
+        Identifiants d'application TTHotel / TTLock — gérés de façon centralisée depuis le panneau Super Admin.
+        <br/>
+        Ces credentials sont partagés avec tous les utilisateurs de la plateforme et sont nécessaires pour les connexions réelles avec des comptes TTHotel.
       </div>
+      {ENV_TTHOTEL_CLIENT_ID && ENV_TTHOTEL_CLIENT_SECRET && (
+        <div style={{ fontSize: '0.75rem', padding: '10px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, marginBottom: 14 }}>
+          <strong>Variables d'environnement actives :</strong>
+          <div style={{ marginTop: 8 }}><code style={{ color: '#4338ca' }}>VITE_TTHOTEL_CLIENT_ID</code> = {ENV_TTHOTEL_CLIENT_ID}</div>
+          <div><code style={{ color: '#4338ca' }}>VITE_TTHOTEL_CLIENT_SECRET</code> = {ENV_TTHOTEL_CLIENT_SECRET}</div>
+        </div>
+      )}
       <div className="sa2-form-row">
         <label>Client ID</label>
         <input
@@ -111,13 +120,94 @@ function TTLockConfig() {
 }
 
 /* ── Tuya-specific config panel (Super Admin) ── */
+function TTHotelTTLockCentralConfig() {
+  const [cid, setCid] = useState(() => localStorage.getItem(TT_CLIENT_ID_KEY) || ENV_TTHOTEL_CLIENT_ID || '');
+  const [csec, setCsec] = useState(() => localStorage.getItem(TT_CLIENT_SEC_KEY) || ENV_TTHOTEL_CLIENT_SECRET || '');
+  const [showSecret, setShowSecret] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const hasEnvCreds = !!(ENV_TTHOTEL_CLIENT_ID && ENV_TTHOTEL_CLIENT_SECRET);
+
+  const save = () => {
+    if (!cid.trim() || !csec.trim()) return;
+    localStorage.setItem(TT_CLIENT_ID_KEY, cid.trim());
+    localStorage.setItem(TT_CLIENT_SEC_KEY, csec.trim());
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  return (
+    <div className="sa2-int-config" style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: 12, lineHeight: 1.6 }}>
+        Panneau centralisé des credentials TTHotel / TTLock. Ces identifiants sont utilisés par tous les comptes de la plateforme
+        pour l’authentification TTHotel réelle et les actions entièrement opérationnelles.
+      </div>
+      {hasEnvCreds && (
+        <div style={{ padding: '10px 12px', background: '#EEF2FF', border: '1px solid #C7D2FE', borderRadius: 10, marginBottom: 14 }}>
+          <strong>Variables d’environnement actives :</strong>
+          <div style={{ marginTop: 8 }}><code style={{ color: '#4338ca' }}>VITE_TTHOTEL_CLIENT_ID</code> = {ENV_TTHOTEL_CLIENT_ID}</div>
+          <div><code style={{ color: '#4338ca' }}>VITE_TTHOTEL_CLIENT_SECRET</code> = {ENV_TTHOTEL_CLIENT_SECRET}</div>
+        </div>
+      )}
+      <div className="sa2-form-row">
+        <label>Client ID TTHotel</label>
+        <input
+          type="text"
+          value={cid}
+          onChange={e => setCid(e.target.value)}
+          placeholder="4bfda77c44f1463aa1005222f28787cc"
+          className="sa2-input"
+          style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+        />
+      </div>
+      <div className="sa2-form-row">
+        <label>Client Secret TTHotel</label>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input
+            type={showSecret ? 'text' : 'password'}
+            value={csec}
+            onChange={e => setCsec(e.target.value)}
+            placeholder="e9a239827303299addd7bec18ddbc9af"
+            className="sa2-input"
+            style={{ fontFamily: 'monospace', fontSize: '0.75rem', flex: 1 }}
+          />
+          <button
+            onClick={() => setShowSecret(v => !v)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '0 4px' }}
+          >
+            {showSecret ? <EyeOff size={13}/> : <Eye size={13}/>}  
+          </button>
+        </div>
+      </div>
+      <button
+        className="sa2-btn sa2-btn-primary sa2-btn-sm"
+        onClick={save}
+        disabled={!cid.trim() || !csec.trim()}
+      >
+        {saved ? <><CheckCircle size={11}/> Sauvegardé</> : <><Save size={11}/> Enregistrer</>}
+      </button>
+    </div>
+  );
+}
+
 function TuyaConfig() {
+  const [id, setId] = useState(() => localStorage.getItem(LS_TUYA_ID) || ENV_TUYA_ID || '');
+  const [secret, setSecret] = useState(() => localStorage.getItem(LS_TUYA_SEC) || ENV_TUYA_SEC || '');
+  const [code, setCode] = useState(() => localStorage.getItem(LS_TUYA_CODE) || ENV_TUYA_CODE || '');
   const [reg, setReg] = useState(() => localStorage.getItem(LS_TUYA_REG) || 'eu');
+  const [showId, setShowId] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const hasEnvCreds = !!(ENV_TUYA_ID && ENV_TUYA_SEC);
+  const hasSavedCreds = !!(id.trim() && secret.trim());
+  const hasProjectCode = !!code.trim();
 
-  const saveRegion = () => {
+  const save = () => {
+    if (!id.trim() || !secret.trim()) return;
+    localStorage.setItem(LS_TUYA_ID, id.trim());
+    localStorage.setItem(LS_TUYA_SEC, secret.trim());
+    localStorage.setItem(LS_TUYA_CODE, code.trim());
     localStorage.setItem(LS_TUYA_REG, reg);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -127,78 +217,84 @@ function TuyaConfig() {
     <div className="sa2-int-config">
       {/* Platform credentials banner */}
       <div style={{
-        background: hasEnvCreds ? '#F0FDF4' : '#FFF7ED',
-        border: `1px solid ${hasEnvCreds ? '#BBF7D0' : '#FED7AA'}`,
+        background: hasSavedCreds || hasEnvCreds ? '#F0FDF4' : '#FFF7ED',
+        border: `1px solid ${hasSavedCreds || hasEnvCreds ? '#BBF7D0' : '#FED7AA'}`,
         borderRadius: 8, padding: '10px 12px', marginBottom: 12,
         display: 'flex', alignItems: 'flex-start', gap: 8
       }}>
-        {hasEnvCreds
+        {(hasSavedCreds || hasEnvCreds)
           ? <ShieldCheck size={15} style={{ color: '#16A34A', marginTop: 1, flexShrink: 0 }}/>
           : <AlertTriangle size={15} style={{ color: '#F59E0B', marginTop: 1, flexShrink: 0 }}/>
         }
-        <div style={{ fontSize: '0.72rem', lineHeight: 1.55, color: hasEnvCreds ? '#166534' : '#92400E' }}>
-          {hasEnvCreds ? (
+        <div style={{ fontSize: '0.72rem', lineHeight: 1.55, color: (hasSavedCreds || hasEnvCreds) ? '#166534' : '#92400E' }}>
+          {(hasSavedCreds || hasEnvCreds) ? (
             <>
-              <strong>Credentials plateforme actifs</strong> — injectés via les secrets Replit.<br/>
-              Les clients qui ne configurent pas leurs propres identifiants utiliseront automatiquement ces credentials partagés.
+              <strong>Credentials Tuya actifs</strong> — gérés depuis Super Admin.
+              <br/>
+              Les utilisateurs peuvent se connecter avec leur compte Smart Life / Tuya sans saisir le client_id / client_secret.
             </>
           ) : (
             <>
-              <strong>Aucun credential plateforme détecté.</strong><br/>
-              Ajoutez <code>VITE_TUYA_CLIENT_ID</code>, <code>VITE_TUYA_CLIENT_SECRET</code> et <code>VITE_TUYA_PROJECT_CODE</code> dans les secrets Replit.
+              <strong>Aucun credential Tuya configuré.</strong>
+              <br/>
+              Ajoutez <code>VITE_TUYA_CLIENT_ID</code>, <code>VITE_TUYA_CLIENT_SECRET</code> et <code>VITE_TUYA_PROJECT_CODE</code> dans les secrets Replit, ou saisissez-les ci-dessous.
             </>
           )}
         </div>
       </div>
 
-      {/* Read-only display of platform credentials */}
-      {hasEnvCreds && (
-        <>
-          <div className="sa2-form-row">
-            <label>Access ID / Client ID</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input
-                type="text"
-                readOnly
-                value={ENV_TUYA_ID.slice(0,6) + '••••••••••••' + ENV_TUYA_ID.slice(-4)}
-                className="sa2-input"
-                style={{ fontFamily: 'monospace', fontSize: '0.75rem', background: '#F8FAFC', color: '#64748B', flex: 1 }}
-              />
-              <Lock size={12} style={{ color: '#94A3B8', flexShrink: 0 }}/>
-            </div>
-          </div>
-          <div className="sa2-form-row">
-            <label>Access Secret / Client Secret</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input
-                type="password"
-                readOnly
-                value={ENV_TUYA_SEC}
-                className="sa2-input"
-                style={{ fontFamily: 'monospace', fontSize: '0.75rem', background: '#F8FAFC', color: '#64748B', flex: 1 }}
-              />
-              <Lock size={12} style={{ color: '#94A3B8', flexShrink: 0 }}/>
-            </div>
-          </div>
-          {ENV_TUYA_CODE && (
-            <div className="sa2-form-row">
-              <label>Project Code</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input
-                  type="text"
-                  readOnly
-                  value={ENV_TUYA_CODE}
-                  className="sa2-input"
-                  style={{ fontFamily: 'monospace', fontSize: '0.75rem', background: '#F8FAFC', color: '#64748B', flex: 1 }}
-                />
-                <Lock size={12} style={{ color: '#94A3B8', flexShrink: 0 }}/>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+      <div className="sa2-form-row">
+        <label>Access ID / Client ID</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <input
+            type={showId ? 'text' : 'password'}
+            value={id}
+            onChange={e => setId(e.target.value)}
+            placeholder="vmsde9hpfme9e5aq8uvj"
+            className="sa2-input"
+            style={{ fontFamily: 'monospace', fontSize: '0.75rem', flex: 1 }}
+          />
+          <button
+            onClick={() => setShowId(v => !v)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '0 4px' }}
+          >
+            {showId ? <EyeOff size={13}/> : <Eye size={13}/>}  
+          </button>
+        </div>
+      </div>
 
-      {/* Editable: region */}
+      <div className="sa2-form-row">
+        <label>Access Secret / Client Secret</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <input
+            type={showSecret ? 'text' : 'password'}
+            value={secret}
+            onChange={e => setSecret(e.target.value)}
+            placeholder="2791f4f3ab784361a8932b4fd2062227"
+            className="sa2-input"
+            style={{ fontFamily: 'monospace', fontSize: '0.75rem', flex: 1 }}
+          />
+          <button
+            onClick={() => setShowSecret(v => !v)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '0 4px' }}
+          >
+            {showSecret ? <EyeOff size={13}/> : <Eye size={13}/>}  
+          </button>
+        </div>
+      </div>
+
+      <div className="sa2-form-row">
+        <label>Project Code</label>
+        <input
+          type="text"
+          value={code}
+          onChange={e => setCode(e.target.value)}
+          placeholder="p17791216260284mksvm"
+          className="sa2-input"
+          style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+        />
+      </div>
+
       <div className="sa2-form-row">
         <label>Région Cloud (défaut)</label>
         <select value={reg} onChange={e => setReg(e.target.value)} className="sa2-input" style={{ fontSize: '0.8rem' }}>
@@ -209,15 +305,15 @@ function TuyaConfig() {
       </div>
 
       <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginBottom: 8, lineHeight: 1.5 }}>
-        Les clients peuvent surcharger ces credentials avec les leurs dans <strong>Serrures Intelligentes → Connexion Tuya</strong>.
+        Les utilisateurs se connectent avec leur email/mot de passe Smart Life. Les identifiants Tuya Cloud sont gérés depuis Super Admin.
       </div>
 
       <button
         className="sa2-btn sa2-btn-primary sa2-btn-sm"
-        onClick={saveRegion}
-        style={{ marginTop: 4 }}
+        onClick={save}
+        disabled={!id.trim() || !secret.trim()}
       >
-        {saved ? <><CheckCircle size={11}/> Sauvegardé</> : <><Save size={11}/> Sauvegarder la région</>}
+        {saved ? <><CheckCircle size={11}/> Sauvegardé</> : <><Save size={11}/> Sauvegarder</>}
       </button>
     </div>
   );
@@ -282,6 +378,23 @@ export default function Integrations() {
         <div><h2 className="sa2-section-title">Centre d'Intégrations</h2><p className="sa2-section-desc">Connectez et gérez tous vos services tiers depuis un seul endroit</p></div>
         <button className="sa2-btn sa2-btn-primary"><Plus size={13}/> Nouvelle intégration</button>
       </div>
+
+      <div className="sa2-block" style={{ marginBottom: 24, padding: 20, background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+          <div>
+            <div className="sa2-block-title">TTHotel / TTLock — Credentials centralisés</div>
+            <div style={{ color: '#64748B', fontSize: '0.9rem', marginTop: 4 }}>
+              Gérez les identifiants d'application TTHotel et TTLock en un seul endroit. Ces clés sont utilisées par toutes les connexions TTHotel réelles de la plateforme.
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <ShieldCheck size={18} color="#7C3AED" />
+            <span style={{ color: '#334155', fontWeight: 600 }}>Centralisé</span>
+          </div>
+        </div>
+        <TTHotelTTLockCentralConfig />
+      </div>
+
       <div className="sa2-kpi-grid" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:24}}>
         {[[Globe,all.length,'Total','#5B5BA6'],[CheckCircle,conn,'Connectées','#10B981'],[AlertTriangle,deg,'Dégradées','#F59E0B'],[XCircle,all.length-conn-deg,'Inactives','#94A3B8']].map(([Icon,v,l,c])=>(
           <div key={l} className="sa2-kpi-card"><div className="sa2-kpi-icon" style={{background:c+'18',color:c}}><Icon size={17}/></div><div className="sa2-kpi-body"><div className="sa2-kpi-label">{l}</div><div className="sa2-kpi-value">{v}</div></div></div>

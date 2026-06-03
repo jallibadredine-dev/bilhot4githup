@@ -9,7 +9,7 @@ import {
   ChevronRight, ArrowRight, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../../lib/supabase';
+import { supabase, SUPABASE_READY } from '../../lib/supabase';
 import OnboardingWizard from './OnboardingWizard';
 import './AuthPage.css';
 
@@ -35,14 +35,17 @@ const GoogleSignupCTA = ({ onSwitchToLogin }) => {
     setErr(null);
     setLoading(true);
     try {
+      if (!SUPABASE_READY) {
+        throw new Error('Supabase non configuré. Impossible d’utiliser Google OAuth en local.');
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: window.location.origin + window.location.pathname },
       });
       if (error) throw error;
-    } catch {
+    } catch (err) {
       setLoading(false);
-      setErr('Provider Google non configuré. Consultez docs/google-oauth-setup.md.');
+      setErr(err?.message || 'Provider Google non configuré. Consultez docs/google-oauth-setup.md.');
     }
   };
 
@@ -51,7 +54,7 @@ const GoogleSignupCTA = ({ onSwitchToLogin }) => {
       <button
         type="button"
         onClick={handleGoogle}
-        disabled={loading}
+        disabled={loading || !SUPABASE_READY}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 10, padding: '10px 16px', borderRadius: 10, border: '1.5px solid #e2e8f0',
@@ -66,10 +69,20 @@ const GoogleSignupCTA = ({ onSwitchToLogin }) => {
         {loading ? 'Redirection…' : "S'inscrire avec Google"}
       </button>
       {err && <p style={{ color: '#ef4444', fontSize: 12, marginTop: 6, textAlign: 'center' }}>{err}</p>}
+      {!SUPABASE_READY && (
+        <p style={{ color: '#f59e0b', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+          Supabase non configuré localement — l’inscription Google est désactivée.
+        </p>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
         <div style={{ flex: 1, height: 1, background: '#e2e8f0' }}/>
         <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>ou créez un compte par email</span>
         <div style={{ flex: 1, height: 1, background: '#e2e8f0' }}/>
+      </div>
+      <div style={{ marginTop: 12, textAlign: 'center' }}>
+        <button type="button" onClick={onSwitchToLogin} className="auth-link" style={{ fontSize: 12 }}>
+          J’ai déjà un compte
+        </button>
       </div>
     </div>
   );
@@ -129,14 +142,18 @@ const LoginForm = ({ onLogin, onSwitchRegister }) => {
     setAuthError(null);
     setGoogleLoading(true);
     try {
+      if (!SUPABASE_READY) {
+        throw new Error('Supabase non configuré. Impossible d’utiliser Google OAuth.');
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: window.location.origin + window.location.pathname },
       });
       if (error) throw error;
-    } catch {
+    } catch (err) {
       setGoogleLoading(false);
       setAuthError(
+        err?.message ||
         'Connexion Google impossible. Assurez-vous que le provider Google est activé dans Supabase Dashboard ' +
         '(Authentication > Providers > Google) et que les credentials OAuth Google sont configurés. ' +
         'Consultez docs/google-oauth-setup.md pour le guide complet.'
@@ -224,10 +241,15 @@ const LoginForm = ({ onLogin, onSwitchRegister }) => {
       <div className="auth-divider"><span>ou</span></div>
 
       {/* Google */}
-      <button className="btn-google" onClick={handleGoogle} type="button" disabled={googleLoading}>
+      <button className="btn-google" onClick={handleGoogle} type="button" disabled={googleLoading || !SUPABASE_READY}>
         <GoogleIcon/>
         {googleLoading ? 'Redirection…' : 'Continuer avec Google'}
       </button>
+      {!SUPABASE_READY && (
+        <p style={{ color: '#f59e0b', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+          Supabase non configuré — le login Google n’est pas disponible.
+        </p>
+      )}
 
       {/* Switch to register */}
       <p className="auth-legal" style={{ marginTop: '1.2rem' }}>

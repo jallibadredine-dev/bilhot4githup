@@ -3,7 +3,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient.js';
-import app from './app.js';
 
 // Load .env manually (backend process doesn't use Vite's env loading)
 try {
@@ -20,6 +19,8 @@ try {
     if (key && !process.env[key]) process.env[key] = val;
   }
 } catch (_) {}
+
+const { default: app } = await import('./app.js');
 
 const port = parseInt(process.env.BACKEND_PORT || '3001');
 

@@ -113,7 +113,7 @@ router.get('/providers', async (_req, res) => {
     timedFetch('http://localhost:' + (process.env.BACKEND_PORT || '3001') + '/api/health', {}, 2000),
     timedFetch('https://accounts.google.com/.well-known/openid-configuration', {}, 4000),
     timedFetch('https://euapi.ttlock.com/v3/user/login', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'clientId=health_check' }, 5000),
-    timedFetch('https://thtthotel.ttlock.com/v3/hotel/listHotelInfo', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'clientId=health_check' }, 5000),
+    timedFetch('https://euapi.ttlock.com/v3/hotel/listHotelInfo', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'clientId=health_check' }, 5000),
     timedFetch('http://localhost:8080/api/status', {}, 2000),
     process.env.REDIS_URL
       ? timedFetch(process.env.REDIS_URL + '/ping', {}, 2000)

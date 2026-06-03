@@ -1,0 +1,278 @@
+.pro-dashboard-container {
+  padding: 2rem 2.5rem;
+  background: #F8FAFC;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #0F172A;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── HEADER ─── */
+.pro-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+.header-title-group h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.5px;
+}
+.ai-badge {
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+.header-title-group p {
+  font-size: 0.95rem;
+  color: #64748B;
+  font-weight: 500;
+}
+
+/* Actions */
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+.btn-edit-layout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.btn-edit-layout:hover { background: #F1F5F9; border-color: #CBD5E1; }
+.btn-edit-layout.active { background: #0F172A; color: white; border-color: #0F172A; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2); }
+
+/* ─── MODULAR WIDGET GRID (Framer Motion) ─── */
+.widget-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.widget-container {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Edit Mode styling */
+.editing-mode .widget-container {
+  box-shadow: 0 15px 30px -5px rgba(0,0,0,0.1), 0 0 0 2px rgba(37, 99, 235, 0.3);
+  opacity: 0.95;
+}
+
+/* Grab Handle (Only visible in edit mode) */
+.widget-handle {
+  padding: 12px 1.5rem;
+  background: #F1F5F9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #E2E8F0;
+  cursor: grab;
+  /* hidden by default, shown in editing mode */
+  display: none;
+}
+.editing-mode .widget-handle {
+  display: flex;
+}
+.widget-handle:active { cursor: grabbing; }
+
+.widget-handle span {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.widget-ops {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  color: #94A3B8;
+}
+
+/* Widget Body */
+.widget-content {
+  padding: 1.5rem;
+}
+
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin-bottom: 1.5rem;
+}
+.live-pulse {
+  width: 8px;
+  height: 8px;
+  background: #16A34A;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2);
+  animation: pulse-green 2s infinite;
+}
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+
+/* ─── SPECIFIC WIDGET OVERRIDES ─── */
+.widget-calendar .widget-content {
+  padding: 0; /* Remove padding because TimelineView brings its own */
+}
+.calendar-embed-wrapper {
+  height: 500px; /* Limit timeline height so dashboard doesn't grow to infinity */
+  position: relative;
+}
+
+/* ─── KPI GRID (Inside stats widget) ─── */
+.kpi-master-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.kpi-card {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.kpi-icon-wrap { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.kpi-label { font-size: 0.8rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.kpi-value-block { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+.kpi-value { font-size: 1.8rem; font-weight: 800; color: #0F172A; letter-spacing: -0.5px; }
+.kpi-unit { font-size: 0.9rem; font-weight: 600; color: #94A3B8; }
+
+.kpi-trend { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; }
+.trend-positive { color: #16A34A; }
+.trend-negative { color: #DC2626; }
+.trend-neutral { color: #F59E0B; }
+.trend-text { color: #94A3B8; font-weight: 500; }
+
+/* ─── FEATURES GRID (Inside modules widget) ─── */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.feature-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.feature-card:hover { background: white; border-color: #3B82F6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); transform: translateY(-2px); }
+
+.feat-icon-box { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: white; color: #3B82F6; border: 1px solid #E2E8F0; }
+.feature-card:hover .feat-icon-box { background: #EFF6FF; border-color: #BFDBFE; }
+
+.feat-info h3 { font-size: 0.95rem; font-weight: 800; color: #1E293B; margin-bottom: 4px; }
+.feat-info p { font-size: 0.8rem; color: #64748B; line-height: 1.4; }
+.feat-arrow { margin-left: auto; color: #CBD5E1; transition: transform 0.2s, color 0.2s; }
+.feature-card:hover .feat-arrow { color: #3B82F6; transform: translateX(2px); }
+
+/* Edit Overlay */
+.edit-overlay {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  pointer-events: none;
+}
+.edit-hint {
+  background: #0F172A;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+}
+.edit-hint span { font-size: 0.9rem; font-weight: 600; }
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  .pro-dashboard-container {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pro-dashboard-container {
+    padding: 1rem;
+  }
+  
+  .pro-dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+
+  .header-title-group h1 {
+    font-size: 1.5rem;
+  }
+
+  .kpi-master-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-embed-wrapper {
+    height: 350px;
+  }
+}

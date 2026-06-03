@@ -13,6 +13,7 @@ import TopHeader from './components/layout/TopHeader';
 import OracleAssistant from './components/common/OracleAssistant';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import ToastContainer from './components/common/ToastContainer';
+import TrialPopup from './components/common/TrialPopup';
 import { logError, logWarn } from './lib/errorHandler';
 import { setAuthState } from './lib/authState';
 import { toast } from './lib/toast';
@@ -86,11 +87,41 @@ function App() {
   const [showGoogleOnboarding, setShowGoogleOnboarding] = useState(false);
   const [googleOnboardingUser, setGoogleOnboardingUser] = useState(null);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('bilhot_darkMode') === 'true');
+  const [superAdminTarget, setSuperAdminTarget] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('superadmin')) {
+      setSuperAdminTarget(params.get('superadmin') || 'integrations');
+    } else {
+      setSuperAdminTarget(null);
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
     localStorage.setItem('bilhot_darkMode', darkMode);
   }, [darkMode]);
+
+  // Notify user when trial is low (<= 3 days) — once per session
+  useEffect(() => {
+    try {
+      if (!trialInfo || trialInfo.expired) return;
+      const notifiedKey = 'hova_trial_low_notified';
+      const already = sessionStorage.getItem(notifiedKey);
+      if (trialInfo.daysLeft <= 3 && !already) {
+        sessionStorage.setItem(notifiedKey, '1');
+        // Use toast if available
+        try { toast.info(`Il reste ${trialInfo.daysLeft} jour${trialInfo.daysLeft > 1 ? 's' : ''} d'essai gratuit.`); } catch {}
+      }
+    } catch {}
+  }, [trialInfo]);
+
+  useEffect(() => {
+    if (superAdminTarget && isAuthenticated && activeView !== 'super-admin') {
+      setActiveView('super-admin');
+    }
+  }, [superAdminTarget, isAuthenticated, activeView]);
 
   useEffect(() => {
     if (!SUPABASE_READY) {
@@ -185,8 +216,8 @@ function App() {
             try { sessionStorage.removeItem(SS_PENDING_KEY); } catch {}
           }
 
-          // New user → set trial banner info
-          setTrialInfo({ daysLeft: 14, expired: false });
+          // New user → set trial banner info (include exact end timestamp)
+          setTrialInfo({ daysLeft: 14, expired: false, endsAt: trialEndsAt });
 
           // Welcome toast — shown once per session for brand-new accounts
           try {
@@ -224,12 +255,13 @@ function App() {
 
           if (trialErr?.code === '42703') {
             // Columns not yet migrated — show banner with default 14 days (best-effort)
-            setTrialInfo({ daysLeft: 14, expired: false });
+            const fallbackEnds = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+            setTrialInfo({ daysLeft: 14, expired: false, endsAt: fallbackEnds });
           } else if (!trialErr && trialRow?.trial_ends_at) {
             const daysLeft = Math.ceil(
               (new Date(trialRow.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
             );
-            setTrialInfo({ daysLeft: Math.max(0, daysLeft), expired: daysLeft <= 0 });
+            setTrialInfo({ daysLeft: Math.max(0, daysLeft), expired: daysLeft <= 0, endsAt: trialRow.trial_ends_at });
           }
 
           // OAuth user with incomplete profile (qualification not completed) → re-trigger wizard
@@ -452,7 +484,7 @@ function App() {
       case 'staff-hub':
         return <StaffHub onNavigate={setActiveView} />;
       case 'locks':
-        return withTrialGate(<SmartLockHub />, 'SmartLock Hub');
+        return withTrialGate(<SmartLockHub setActiveView={setActiveView} />, 'SmartLock Hub');
       case 'card-management':
         return <CardManagement />;
       case 'inventory':
@@ -496,15 +528,18 @@ function App() {
     if (isAuthenticated && activeView === 'super-admin') {
       return (
         <Suspense fallback={<LoadingFallback />}>
-          <SuperAdmin onLogout={() => {
-            setAuthState(false);
-            clearSensitiveLocalState();
-            supabase.auth.signOut();
-            setIsAuthenticated(false);
-            setCurrentUser(null);
-            setActiveView('dashboard');
-            window.location.href = '/';
-          }} />
+          <SuperAdmin
+            initialActive={superAdminTarget || 'integrations'}
+            onLogout={() => {
+              setAuthState(false);
+              clearSensitiveLocalState();
+              supabase.auth.signOut();
+              setIsAuthenticated(false);
+              setCurrentUser(null);
+              setActiveView('dashboard');
+              window.location.href = '/';
+            }}
+          />
         </Suspense>
       );
     }
@@ -527,14 +562,17 @@ function App() {
   if (isAuthenticated && activeView === 'super-admin') {
     return (
       <Suspense fallback={<LoadingFallback />}>
-        <SuperAdmin onLogout={() => {
-          setAuthState(false);
-          clearSensitiveLocalState();
-          supabase.auth.signOut();
-          setIsAuthenticated(false);
-          setCurrentUser(null);
-          setActiveView('dashboard');
-        }} />
+        <SuperAdmin
+          initialActive={superAdminTarget || 'dashboard'}
+          onLogout={() => {
+            setAuthState(false);
+            clearSensitiveLocalState();
+            supabase.auth.signOut();
+            setIsAuthenticated(false);
+            setCurrentUser(null);
+            setActiveView('dashboard');
+          }}
+        />
       </Suspense>
     );
   }
@@ -703,6 +741,7 @@ function App() {
             setPmsMode={setPmsMode}
             setActiveView={setActiveView}
             currentUser={currentUser}
+            trialInfo={trialInfo}
             onLogout={() => {
               setAuthState(false);
               clearSensitiveLocalState();
@@ -735,6 +774,11 @@ function App() {
 
       {/* Global Toast Notifications */}
       <ToastContainer />
+
+      {/* Floating trial popup */}
+      {isAuthenticated && trialInfo && !trialInfo.expired && (
+        <TrialPopup trialInfo={trialInfo} onOpenBilling={() => setActiveView('client-plans')} />
+      )}
 
       {/* Mobile Bottom Navigation */}
       <nav className="mobile-bottom-nav" aria-label="Navigation mobile">

@@ -58,8 +58,8 @@ const SECTION_MAP = {
   settings:     SystemSettings,
 };
 
-export default function SuperAdmin({ onLogout }) {
-  const [active, setActive]       = useState('dashboard');
+export default function SuperAdmin({ onLogout, initialActive = 'dashboard' }) {
+  const [active, setActive]       = useState(initialActive);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 

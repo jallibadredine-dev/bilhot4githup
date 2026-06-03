@@ -20,7 +20,7 @@ const UserAvatar = ({ name, email, size = 30 }) => {
   );
 };
 
-const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }) => {
+const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser, trialInfo }) => {
   const [loggingOut, setLoggingOut]   = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -31,6 +31,16 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }
     || 'Utilisateur';
 
   const email = currentUser?.email || '';
+
+  function formatDateDDMMYYYY(v) {
+    try {
+      const d = new Date(v);
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    } catch { return '' }
+  }
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -98,6 +108,21 @@ const TopHeader = ({ pmsMode, setPmsMode, setActiveView, onLogout, currentUser }
 
       {/* ── RIGHT: Actions + User ── */}
       <div className="th-right">
+
+        {/* Trial pill */}
+        {trialInfo && (
+          <div
+            className={`th-trial-pill ${trialInfo.expired ? 'expired' : ''}`}
+            style={{ marginRight: 12 }}
+            title={trialInfo.endsAt ? `Fin de l'essai : ${formatDateDDMMYYYY(trialInfo.endsAt)}` : ''}
+          >
+            {trialInfo.expired ? (
+              <span className="th-trial-text expired">Essai terminé</span>
+            ) : (
+              <span className="th-trial-text">Essai: {trialInfo.daysLeft} jour{trialInfo.daysLeft > 1 ? 's' : ''} restants</span>
+            )}
+          </div>
+        )}
 
         <button
           className="th-btn th-btn-ghost"

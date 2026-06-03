@@ -1,0 +1,310 @@
+.property-builder-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 2rem;
+  background: #f8fafc;
+  overflow-y: auto;
+}
+
+.builder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.builder-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.5px;
+}
+
+.builder-header p {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Wizard Steps */
+.wizard-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 3rem;
+  background: white;
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  width: fit-content;
+  align-self: center;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.step-item.active {
+  color: #3b82f6;
+}
+
+.step-item span {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.step-item.active span {
+  background: #3b82f6;
+  color: white;
+}
+
+.step-divider {
+  width: 40px;
+  height: 2px;
+  background: #f1f5f9;
+}
+
+/* Panel Design */
+.step-panel {
+  max-width: 500px;
+  margin: 0 auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+  border: 1px solid #f1f5f9;
+}
+
+.step-panel h3 {
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.bulk-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #eff6ff;
+  padding: 12px;
+  border-radius: 10px;
+  color: #1e40af;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Inventory Preview */
+.inventory-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.building-card {
+  background: white;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.building-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.building-info h4 {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.building-info p {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.badge-count-large {
+  margin-left: auto;
+  background: #f1f5f9;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.floor-row {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.floor-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.rooms-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.room-pill {
+  width: 54px;
+  height: 54px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.room-pill:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.room-num {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.room-icons {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.room-pill.status-clean { border-left: 3px solid #10b981; }
+.room-pill.status-dirty { border-left: 3px solid #f59e0b; }
+
+.btn-add-room {
+  width: 54px;
+  height: 54px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  background: transparent;
+}
+
+.btn-add-room:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Footer Actions */
+.builder-footer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 1rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3rem;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -10px 15px -3px rgba(0,0,0,0.05);
+}
+
+.footer-btns {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-full-primary {
+  width: 100%;
+  padding: 14px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-top: 1rem;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.text-highlight {
+  color: #3b82f6;
+  font-weight: 800;
+}
