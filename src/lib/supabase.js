@@ -52,10 +52,16 @@ const mockClient = {
 
 // Singleton — évite les instances multiples lors du HMR Vite
 const SINGLETON_KEY = '__hova_supabase__'
+const SINGLETON_URL_KEY = '__hova_supabase_url__'
 
 function getOrCreateClient() {
   if (!SUPABASE_READY) return mockClient
   if (typeof window === 'undefined') return makeClient()
+  // Bust the singleton if the URL changed (e.g. new secrets after env update)
+  if (window[SINGLETON_URL_KEY] !== rawUrl) {
+    window[SINGLETON_KEY] = null
+    window[SINGLETON_URL_KEY] = rawUrl
+  }
   if (!window[SINGLETON_KEY]) {
     window[SINGLETON_KEY] = makeClient()
   }
