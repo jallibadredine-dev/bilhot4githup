@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
-const rawUrl = import.meta.env.VITE_SB_URL      || import.meta.env.VITE_SUPABASE_URL      || ''
-const rawKey = import.meta.env.VITE_SB_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const rawUrl = import.meta.env.VITE_SUPABASE_URL      || import.meta.env.VITE_SB_URL      || ''
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SB_ANON_KEY || ''
 
 const isValidUrl = (v) => { try { return v && new URL(v).protocol.startsWith('http'); } catch { return false; } }
 const isValidKey = (v) => v && v.startsWith('eyJ')
