@@ -78,6 +78,7 @@ function App() {
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const isDemoMode = React.useRef(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
   const [pmsMode, setPmsMode] = useState('pro');
@@ -276,7 +277,13 @@ function App() {
       }
     };
 
+    // Fallback: if Supabase DNS is unreachable (e.g. dev sandbox), unblock UI after 4s
+    const sessionTimeout = setTimeout(() => {
+      setSessionChecked(true);
+    }, 4000);
+
     supabase.auth.getSession().then(({ data: { session }, error }) => {
+      clearTimeout(sessionTimeout);
       if (error) {
         logError('auth', 'getSession failed', { error: error.message });
         writeSystemLog({ severity: 'error', module: 'auth', message: 'getSession failed', details: { error: error.message } });
@@ -290,7 +297,7 @@ function App() {
         // Evaluate trial status on every session restore (not just on SIGNED_IN)
         ensureUserProfile(session.user);
         loadInitialStoreData();
-      } else {
+      } else if (!isDemoMode.current) {
         setAuthState(false);
         clearSensitiveLocalState();
       }
@@ -308,7 +315,7 @@ function App() {
           ensureUserProfile(session.user);
           loadInitialStoreData();
         }
-      } else {
+      } else if (!isDemoMode.current) {
         setAuthState(false);
         clearStoreSession();
         setIsAuthenticated(false);
@@ -582,10 +589,12 @@ function App() {
       <Suspense fallback={<LoadingFallback />}>
         <LandingPage onLogin={(mode) => {
             if (mode === 'demo') {
+              isDemoMode.current = true;
               setPmsMode('pro');
               setCurrentUser({ id: 'demo', email: 'demo@hova.app', user_metadata: { full_name: 'Mode Démo' } });
               setAuthState(true);
               setIsAuthenticated(true);
+              setSessionChecked(true);
             } else if (mode === 'super-admin') {
               setPmsMode('pro');
               setCurrentUser({ id: 'sa-local', email: 'admin@hosflow.com', user_metadata: { full_name: 'Super Admin' } });
