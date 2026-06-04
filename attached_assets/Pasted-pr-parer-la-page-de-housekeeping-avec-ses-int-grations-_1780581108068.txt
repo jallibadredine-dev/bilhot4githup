@@ -1,0 +1,83 @@
+préparer la page de housekeeping avec ses intégrations pour que je puisse relier une application:
+Projet : Smart Hotel Housekeeping Hub (SH3)
+
+## 🎯 Objectif du Projet
+Développer une solution IoT et logicielle permettant de connecter des plaques de porte hôtelières traditionnelles (non-connectées, de type Xindela ou similaire, voir fichier *image.png) à notre **PMS propriétaire* et à une *application mobile dédiée* pour l'équipe hôtelière et le Housekeeping (gouvernantes, valets, femmes de ménage).
+
+L'interface mobile finale doit adopter un style épuré, moderne et minimaliste (comme illustré dans le fichier *watermarked_img_16039316311299353329.png*).
+
+---
+
+## 🏗️ Architecture Technique Réseau & Matériel
+
+Puisque les plaques actuelles fonctionnent en circuit fermé (câble électrique direct entre l'interrupteur intérieur et la plaque extérieure), l'architecture repose sur l'intégration d'un composant matériel tiers :
+
+1. *Hardware (Chambre) :* 
+   * Intégration d'un micro-module relais connecté (ex: Shelly, Sonoff ou module industriel Zigbee/Wi-Fi) derrière l'interrupteur tactile de la chambre.
+   * Le module détecte le passage du courant (12V/24V/220V) lorsque le client active un statut (Ne pas déranger, Ménage, Occupé).
+2. *Passerelle / Middleware (IoT Server) :* 
+   * Centralise les requêtes HTTP/MQTT envoyées par les micro-modules de chaque chambre.
+3. *API & PMS (Backend) :*
+   * Réceptionne les données via un webhook et met à jour le Dashboard général du PMS en temps réel.
+4. *Application Mobile (Frontend) :*
+   * Reçoit les notifications Push et affiche l'état des chambres pour l'équipe de ménage.
+
+---
+
+## 🛠️ Stack Technique Recommandée
+
+* *Backend / API :* Node.js (Express) / Python (FastAPI) ou la stack actuelle de votre PMS.
+* *Protocoles IoT :* MQTT ou Webhooks HTTP.
+* *Frontend Mobile (App) :* React Native ou Flutter (pour une compatibilité iOS et Android avec un design moderne et fluide).
+* *Base de données :* PostgreSQL / MongoDB (selon votre PMS).
+
+---
+
+## 📋 Spécifications des Fonctionnalités (User Stories)
+
+### 1. Dashboard Administrateur / Réception (PMS)
+* Vue d'ensemble de l'hôtel par étage.
+* Indicateurs clés : Nombre total de chambres, Arrivées du jour, Chambres propres, Chambres en cours d'inspection.
+* Changement de couleur dynamique de la chambre dès qu'un client appuie sur un bouton (Ex: Rouge pour DND, Vert pour Ménage demandé).
+
+### 2. Application Mobile Housekeeping
+* *Notifications Push instantanées :* Alerte lorsqu'une chambre passe en statut "Please Clean Up (Ménage)".
+* *Gestion des tâches :* Possibilité pour le personnel de ménage d'accepter une tâche ([Accept Task]), de mettre à jour le statut ([Update Status]) ou de marquer le ménage comme terminé.
+* *Filtres :* Tri par étage et par statut de chambre.
+
+---
+
+## 🚀 Guide de Démarrage Rapide (Pour le dépôt GitHub)
+
+### Étape 1 : Clonage et Configuration du Backend
+```bash
+git clone [https://github.com/votre-compte/smart-hotel-hub.git](https://github.com/votre-compte/smart-hotel-hub.git)
+cd smart-hotel-hub/backend
+npm install
+cp .env.example .env
+Configurez vos variables d'environnement (⁠DATABASE_URL⁠, ⁠MQTT_BROKER_URL⁠, ⁠PMS_API_KEY⁠).
+Étape 2 : Lancement du Serveur API
+npm run start:dev
+
+Étape 3 : Configuration des Modules IoT (Exemple Shelly / Webhook)
+Configurez vos micro-modules dans les chambres pour envoyer une requête ⁠POST⁠ lors d'un changement d'état (Action URL) :
+POST [http://api.votrehotel.com/v1/rooms/status-update](http://api.votrehotel.com/v1/rooms/status-update)
+Content-Type: application/json
+
+{
+  "room_number": "103",
+  "status": "DND",
+  "trigger": "hardware_button"
+}
+
+Étape 4 : Lancement de l'Application Mobile
+cd ../mobile-app
+npm install
+npx react-native run-android # ou run-ios
+
+Maquettes d'Interface (UI/UX)
+L'UI doit respecter les codes visuels du fichier watermarked_img_16039316311299353329.png :
+ Fond clair, ombres douces (Soft Shadows).
+ Typographie moderne sans-serif (ex: Inter ou Roboto).
+ Badges de statut colorés mais pastel (Ne pas déranger = Rouge soft, Ménage = Vert soft).
+ Boutons d'action clairs et accessibles.

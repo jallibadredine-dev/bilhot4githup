@@ -33,6 +33,7 @@ const PropertyBuilder = lazy(() => import('./components/modules/PropertyBuilder'
 const SmartDesk = lazy(() => import('./components/modules/SmartDesk'));
 const RevenueAI = lazy(() => import('./components/modules/RevenueAI'));
 const PredictiveMaintenance = lazy(() => import('./components/modules/PredictiveMaintenance'));
+const HousekeepingHub = lazy(() => import('./components/modules/HousekeepingHub'));
 const GuestCRM = lazy(() => import('./components/modules/GuestCRM'));
 const ModularDashboard = lazy(() => import('./components/modules/ModularDashboard'));
 const ServicesHub = lazy(() => import('./components/modules/ServicesHub'));
@@ -470,7 +471,7 @@ function App() {
       case 'revenue':
         return <RevenueAI />;
       case 'housekeeping':
-        return <PredictiveMaintenance />;
+        return <HousekeepingHub />;
       case 'guests':
         return <GuestCRM />;
       case 'unified-inbox':

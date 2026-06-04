@@ -5,6 +5,7 @@ import adminRouter  from './routes/admin.js';
 import healthRouter from './routes/health.js';
 import authRouter   from './routes/auth.js';
 import tthotelRouter from './routes/tthotel.js';
+import housekeepingRouter from './routes/housekeeping.js';
 import { WebhookHandlers } from './webhookHandlers.js';
 
 const app = express();
@@ -42,5 +43,6 @@ app.use('/api/admin', adminRouter);
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/tthotel', tthotelRouter);
+app.use('/api/housekeeping', housekeepingRouter);
 
 export default app;
