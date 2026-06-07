@@ -6,7 +6,7 @@ import {
   User, LayoutGrid, List,
   Eye, EyeOff, RefreshCw, Copy, Shield,
   Link2, Unlink, ChevronDown, Settings, ArrowRight,
-  Download, CheckCircle2, CreditCard
+  Download, CheckCircle2, CreditCard, Plus
 } from 'lucide-react';
 import SmartDoorLock from '../icons/SmartDoorLock';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -366,22 +366,36 @@ const SmartLockHub = ({ setActiveView }) => {
       localStorage.removeItem('slh_tthotel_demo');
       setTthToken(tok); setTthRefresh(ref); setTthDemoMode(false);
 
-      const res = await tthotelAPI.getLocks(tok);
-      if (!res?.list || !res.list.length) {
-        throw new Error('Aucun appareil TTHotel trouvé pour ce compte. Vérifiez vos identifiants et la configuration du compte.');
+      let devices = [];
+      try {
+        const res = await tthotelAPI.getLocks(tok);
+        if (res?.error) {
+          console.error('[connectTTHotel] getLocks returned error:', res.error);
+          throw new Error(`Erreur lors de la récupération des appareils: ${res.error}`);
+        }
+        if (!res?.list || !res.list.length) {
+          throw new Error('Aucun appareil trouvé pour ce compte. Vous pouvez ajouter manuellement des appareils ou utiliser la démonstration.');
+        }
+        devices = res.list.map(l => ({
+          id:      String(l.lockId),
+          name:    l.lockAlias || `TTHotel #${l.lockId}`,
+          serial:  String(l.lockId),
+          model:   l.lockVersion ? 'Pro V2' : 'Lite',
+          battery: l.electricQuantity ?? 80,
+          online:  !!l.lockVersion,
+          locked:  l.lockStatus === 0,
+          fw:      l.lockVersion?.protocolVersion || '—',
+          lockId:  l.lockId,
+        }));
+      } catch (lockErr) {
+        // If getLocks fails, offer to use demo devices or add manually
+        console.warn('[connectTTHotel] Failed to get locks, offering alternatives:', lockErr.message);
+        setTthErr(`${lockErr.message}\n\nVous pouvez:\n1. Utiliser les appareils de démonstration (bouton ci-dessous)\n2. Ajouter manuellement vos appareils`);
+        setConnTTHotel(false);
+        setTthPass('');
+        setTthLoading(false);
+        return;
       }
-
-      const devices = res.list.map(l => ({
-        id:      String(l.lockId),
-        name:    l.lockAlias || `TTHotel #${l.lockId}`,
-        serial:  String(l.lockId),
-        model:   l.lockVersion ? 'Pro V2' : 'Lite',
-        battery: l.electricQuantity ?? 80,
-        online:  !!l.lockVersion,
-        locked:  l.lockStatus === 0,
-        fw:      l.lockVersion?.protocolVersion || '—',
-        lockId:  l.lockId,
-      }));
 
       localStorage.setItem('slh_tthotel_devices', JSON.stringify(devices));
       setTthotelDevices(devices);
@@ -402,6 +416,65 @@ const SmartLockHub = ({ setActiveView }) => {
     } finally {
       setTthLoading(false);
     }
+  };
+
+  const useTTHotelDemo = (e) => {
+    e?.preventDefault();
+    localStorage.setItem('slh_tthotel_demo', '1');
+    localStorage.setItem('slh_tthotel_devices', JSON.stringify(TTHOTEL_DEMO_LOCKS));
+    localStorage.removeItem('slh_tthotel_token');
+    localStorage.removeItem('slh_tthotel_refresh');
+    localStorage.removeItem('slh_tthotel_user');
+    
+    setTthDemoMode(true);
+    setTthotelDevices(TTHOTEL_DEMO_LOCKS);
+    setConnTTHotel(true);
+    setTthErr('');
+    setTthToken('demo');
+    setTthUser('');
+    setTthPass('');
+    
+    // Assign demo devices to rooms
+    const initAssign = { ...assignments };
+    initAssign[TTHOTEL_DEMO_LOCKS[0]?.id] = '102';
+    if (TTHOTEL_DEMO_LOCKS[1]) initAssign[TTHOTEL_DEMO_LOCKS[1].id] = '202';
+    if (TTHOTEL_DEMO_LOCKS[2]) initAssign[TTHOTEL_DEMO_LOCKS[2].id] = '304';
+    setAssignments(initAssign);
+    localStorage.setItem('slh_assignments', JSON.stringify(initAssign));
+    
+    toast.success('Mode démonstration TTHotel activé - ' + TTHOTEL_DEMO_LOCKS.length + ' appareils');
+  };
+
+  const addTTHotelDeviceManually = (e) => {
+    e?.preventDefault();
+    // Ask for device details
+    const deviceName = prompt('Nom de l\'appareil (ex: TTHotel #001):');
+    if (!deviceName) return;
+    
+    const newDevice = {
+      id: 'TTH-' + Math.random().toString(36).substr(2, 9).toUpperCase(),
+      name: deviceName,
+      serial: prompt('Numéro de série (ex: THP-0001):') || 'UNKNOWN',
+      model: prompt('Modèle (ex: Pro V2, Lite):') || 'Unknown',
+      battery: parseInt(prompt('Niveau batterie (0-100):') || '80'),
+      online: confirm('L\'appareil est-il en ligne?'),
+      locked: confirm('L\'appareil est-il verrouillé?'),
+      fw: prompt('Version firmware (ex: 1.8.3):') || '1.0.0',
+      lockId: 'manual-' + Math.random().toString(36).substr(2, 9),
+    };
+    
+    const updated = [...tthotelDevices, newDevice];
+    setTthotelDevices(updated);
+    localStorage.setItem('slh_tthotel_devices', JSON.stringify(updated));
+    
+    if (!connTTHotel) {
+      setConnTTHotel(true);
+      setTthToken('manual');
+      setTthDemoMode(false);
+      setTthErr('');
+    }
+    
+    toast.success(`Appareil "${deviceName}" ajouté manuellement`);
   };
 
   const connectTuya = async (e) => {
@@ -593,9 +666,19 @@ const SmartLockHub = ({ setActiveView }) => {
                 <button type="button" className="slh-sf-submit slh-sf-secondary" style={{ marginBottom: 12, background: 'transparent', color: '#7C3AED', border: '1px solid #7C3AED' }} onClick={goToSuperAdminIntegrations}>
                   <Link2 size={13} style={{ marginRight: 8 }}/> Aller à Super Admin — Intégrations
                 </button>
-                <button type="submit" className="slh-sf-submit" style={{ background: '#7C3AED' }} disabled={tthLoading}>
-                  {tthLoading ? <><RefreshCcw size={13} className="slh-spin"/> Connexion & import…</> : <><Wifi size={13}/> Connecter et importer les appareils</>}
-                </button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 0 }}>
+                  <button type="submit" className="slh-sf-submit" style={{ background: '#7C3AED' }} disabled={tthLoading}>
+                    {tthLoading ? <><RefreshCcw size={13} className="slh-spin"/> Connexion…</> : <><Wifi size={13}/> Connecter</>}
+                  </button>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <button type="button" className="slh-sf-submit slh-sf-secondary" onClick={useTTHotelDemo} style={{ background: 'transparent', color: '#7C3AED', border: '1px solid #7C3AED' }}>
+                      <Eye size={13} style={{ marginRight: 4 }}/> Démo
+                    </button>
+                    <button type="button" className="slh-sf-submit slh-sf-secondary" onClick={addTTHotelDeviceManually} style={{ background: 'transparent', color: '#7C3AED', border: '1px solid #7C3AED' }}>
+                      <Plus size={13} style={{ marginRight: 4 }}/> Manuel
+                    </button>
+                  </div>
+                </div>
               </form>
             )}
           </div>
