@@ -54,7 +54,8 @@ router.post('/signup', async (req, res) => {
   const sbKey = getServiceKey();
 
   if (!sbUrl || !sbKey) {
-    return res.status(503).json({ error: 'Auth service not configured' });
+    console.error('[auth/signup] Missing config: sbUrl=', !!sbUrl, 'sbKey=', !!sbKey);
+    return res.status(503).json({ error: 'Auth service not configured. Check server logs.' });
   }
 
   try {
@@ -73,7 +74,14 @@ router.post('/signup', async (req, res) => {
       }),
     });
 
-    const data = await response.json();
+    let data;
+    const text = await response.text();
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (parseErr) {
+      console.error('[auth/signup] JSON parse error:', parseErr.message, 'Response text:', text.substring(0, 200));
+      return res.status(500).json({ error: 'Invalid response from auth service' });
+    }
 
     if (!response.ok) {
       const msg = data?.msg || data?.message || data?.error_description || '';
@@ -147,6 +155,23 @@ router.post('/signup', async (req, res) => {
     console.error('[auth/signup]', err.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+/**
+ * GET /api/auth/check
+ * Health check — verify Supabase configuration
+ */
+router.get('/check', (req, res) => {
+  const sbUrl = getUrl();
+  const sbKey = getServiceKey();
+  
+  const status = {
+    supabase_configured: !!(sbUrl && sbKey),
+    supabase_url: sbUrl ? 'present' : 'missing',
+    supabase_key: sbKey ? 'present' : 'missing',
+  };
+  
+  return res.json(status);
 });
 
 export default router;

@@ -494,21 +494,35 @@ const OnboardingWizard = ({ onComplete, onSwitchToLogin, googleMode = false, goo
       if (!googleMode) {
         // Use the backend admin endpoint to create the user with email confirmation
         // bypassed — the user gets a real session immediately after signing in.
-        const signupRes = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: data.email.trim(),
-            password: data.password,
-            name: data.name.trim(),
-          }),
-        });
-        const signupJson = await signupRes.json();
+        let signupRes;
+        let signupJson;
+        try {
+          signupRes = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: data.email.trim(),
+              password: data.password,
+              name: data.name.trim(),
+            }),
+          });
+          const signupText = await signupRes.text();
+          try {
+            signupJson = signupText ? JSON.parse(signupText) : {};
+          } catch (parseErr) {
+            console.error('[signup] JSON parse error:', parseErr.message, 'Response:', signupText?.substring(0, 200));
+            throw new Error(`Réponse invalide du serveur : ${signupText?.substring(0, 100) || 'vide'}`);
+          }
+        } catch (fetchErr) {
+          console.error('[signup] Fetch error:', fetchErr.message);
+          throw new Error(`Erreur réseau : ${fetchErr.message}`);
+        }
+        
         if (!signupRes.ok) {
           if (signupJson.error === 'already_registered') {
             throw new Error('Cet email est déjà utilisé. Connectez-vous plutôt.');
           }
-          throw new Error(signupJson.error || 'Erreur lors de la création du compte.');
+          throw new Error(signupJson.error || `Erreur serveur ${signupRes.status}`);
         }
         userId = signupJson.userId;
 

@@ -349,7 +349,13 @@ const SmartLockHub = ({ setActiveView }) => {
     try {
       if (!tthUser || !tthPass) throw new Error('Email et mot de passe requis');
       const auth = await tthotelAPI.getToken(tthUser, tthPass);
-      if (!auth?.access_token) throw new Error(auth?.errmsg || 'Impossible d’obtenir un jeton TTHotel');
+      if (!auth?.access_token) {
+        const errorMsg = auth?.errmsg || 'Erreur inconnue';
+        if (errorMsg.includes('invalid account') || errorMsg.includes('invalid password')) {
+          throw new Error(`Authentification échouée: ${errorMsg}. Vérifiez que votre email et mot de passe TTLock/TTHotel sont corrects.`);
+        }
+        throw new Error(`Erreur TTHotel: ${errorMsg}`);
+      }
 
       const tok = auth.access_token;
       const ref = auth.refresh_token || '';

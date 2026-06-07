@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -40,16 +41,32 @@ const handleResponse = async (res) => {
 
 const urlencoded = (params) => new URLSearchParams(params).toString();
 
+/**
+ * Ensure password is MD5 hashed.
+ * If already hashed (32 hex chars), return as-is.
+ * Otherwise, compute MD5.
+ */
+const ensureMd5Password = (password) => {
+  if (!password) return '';
+  // Check if already MD5 (32 hex chars)
+  if (/^[a-f0-9]{32}$/i.test(password)) {
+    return password;
+  }
+  // Hash it
+  return crypto.createHash('md5').update(password).digest('hex');
+};
+
 router.post('/token', async (req, res) => {
   try {
     const { username, password, clientId, clientSecret } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'username et password requis' });
 
     const { cid, csec } = getAppCredentials(clientId, clientSecret);
+    const hashedPassword = ensureMd5Password(password);
     const response = await fetch(`${BASE_URL}/oauth2/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: urlencoded({ client_id: cid, client_secret: csec, grant_type: 'password', username, password }),
+      body: urlencoded({ client_id: cid, client_secret: csec, grant_type: 'password', username, password: hashedPassword }),
     });
     const result = await handleResponse(response);
     if (result.error) return res.status(400).json(result);
