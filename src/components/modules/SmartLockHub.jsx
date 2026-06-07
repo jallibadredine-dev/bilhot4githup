@@ -127,7 +127,7 @@ const SmartLockHub = ({ setActiveView }) => {
   });
 
   /* ── Devices ── */
-  const [ttlockDevices, setTtlockDevices] = useState([]);
+  const [ttlockDevices, setTtlockDevices] = useState(() => secureStorage.parseJSON('slh_ttlock_devices', []) || []);
   const [apiError, setApiError] = useState(null);
   const [lastSync, setLastSync] = useState(null);
 
@@ -177,6 +177,7 @@ const SmartLockHub = ({ setActiveView }) => {
           online: !!l.lockVersion, locked: l.lockStatus === 0,
           fw: l.lockVersion?.protocolVersion || '—', lockId: l.lockId,
         }));
+        localStorage.setItem('slh_ttlock_devices', JSON.stringify(mapped));
         setTtlockDevices(mapped);
         return mapped.length;
       }
@@ -480,7 +481,7 @@ const SmartLockHub = ({ setActiveView }) => {
   };
 
   const disconnect = (prov) => {
-    if (prov === 'ttlock')  { sessionStorage.removeItem('ttlock_token'); secureStorage.removeSensitive('ttlock_user'); secureStorage.removeSensitive('ttlock_client_id'); secureStorage.removeSensitive('ttlock_client_sec'); setTtToken(''); setTtlockDevices([]); setConnTTLock(false); }
+    if (prov === 'ttlock')  { sessionStorage.removeItem('ttlock_token'); localStorage.removeItem('slh_ttlock_devices'); secureStorage.removeSensitive('ttlock_user'); secureStorage.removeSensitive('ttlock_client_id'); secureStorage.removeSensitive('ttlock_client_sec'); setTtToken(''); setTtlockDevices([]); setConnTTLock(false); }
     if (prov === 'tthotel') { ['slh_tthotel','slh_tthotel_user','slh_tthotel_token','slh_tthotel_refresh','slh_tthotel_devices','slh_tthotel_demo'].forEach(k => localStorage.removeItem(k)); setTthotelDevices([]); setTthToken(''); setTthRefresh(''); setTthDemoMode(false); setConnTTHotel(false); }
     if (prov === 'tuya')    { ['slh_tuya','slh_tuya_id','slh_tuya_secret','slh_tuya_token','slh_tuya_devices','slh_tuya_demo','slh_tuya_email','slh_tuya_uid'].forEach(k => localStorage.removeItem(k)); secureStorage.removeSensitive('slh_tuya_id'); secureStorage.removeSensitive('slh_tuya_secret'); setTuyaDevices([]); setTuyaToken(''); setTuyaDemoMode(false); setTuyaEmail(''); setTuyaId(''); setTuyaSecret(''); setConnTuya(false); }
     if (selectedLock?.provider === prov) setSelectedLock(null);

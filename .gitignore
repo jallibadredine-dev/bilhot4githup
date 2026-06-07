@@ -11,7 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# Environment files
 .env
+.env.*
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +26,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Notebook and workspace artifacts
+.ipynb_checkpoints/
+*.ipynb
+*.jupyterlab-workspace
+*.tar.gz
+
+# Local backup folder
+BilHot2/
+.vite/
+
+# VS Code workspace file
+*.code-workspace

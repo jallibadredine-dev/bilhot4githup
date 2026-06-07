@@ -111,11 +111,42 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
   }, []);
 
   const [buildings,      setBuildings]      = useState(() => getInventoryBuildings() || createInitialData());
+  const [ttlockDevices,  setTtlockDevices]  = useState(() => secureStorage.parseJSON('slh_ttlock_devices', []) || []);
+  const [tthotelDevices, setTthotelDevices] = useState(() => secureStorage.parseJSON('slh_tthotel_devices', []) || []);
+  const [tuyaDevices,    setTuyaDevices]    = useState(() => secureStorage.parseJSON('slh_tuya_devices', []) || []);
 
   /* ── Persist to shared inventory store on every change ── */
   useEffect(() => {
     persistInventory(buildings);
   }, [buildings]);
+
+  useEffect(() => {
+    const normalizeDevices = (devices) => Array.isArray(devices)
+      ? devices.map(d => ({ ...d, devId: d.devId || d.id || d.lockId || d.serial }))
+      : [];
+
+    const loadDevices = () => {
+      setTtlockDevices(normalizeDevices(secureStorage.parseJSON('slh_ttlock_devices', []) || []));
+      setTthotelDevices(normalizeDevices(secureStorage.parseJSON('slh_tthotel_devices', []) || []));
+      setTuyaDevices(normalizeDevices(secureStorage.parseJSON('slh_tuya_devices', []) || []));
+    };
+
+    loadDevices();
+    window.addEventListener('storage', loadDevices);
+    return () => window.removeEventListener('storage', loadDevices);
+  }, []);
+
+  const realDevicePool = useMemo(() => ({
+    ttlock: ttlockDevices,
+    tthotel: tthotelDevices,
+    tuya: tuyaDevices,
+  }), [ttlockDevices, tthotelDevices, tuyaDevices]);
+
+  const findDeviceById = (provider, devId) => {
+    const providerDevices = realDevicePool[provider] || [];
+    return providerDevices.find(d => d.devId === devId)
+      || (LOCK_POOL[provider] || []).find(d => d.devId === devId);
+  };
 
   const [expandedFloors, setExpandedFloors] = useState({});
   const [selectedRoom,   setSelectedRoom]   = useState(null);
@@ -705,7 +736,7 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
             const sCfg  = STATUS_CFG[selectedRoom.status] || STATUS_CFG.available;
             const rType = ROOM_TYPES[selectedRoom.type] || ROOM_TYPES.standard;
             const prov  = selectedRoom.lock ? LOCK_PROVIDERS[selectedRoom.lock.provider] : null;
-            const dev   = selectedRoom.lock ? LOCK_POOL[selectedRoom.lock.provider]?.find(d => d.devId === selectedRoom.lock.devId) : null;
+            const dev   = selectedRoom.lock ? findDeviceById(selectedRoom.lock.provider, selectedRoom.lock.devId) : null;
             const guest = GUEST_MAP[selectedRoom.number];
             const fTotal   = folioTotal(selectedRoom.number);
             const fCharges = folioCharges(selectedRoom.number);
@@ -985,30 +1016,43 @@ const SmartInventory = ({ roomFolios = {}, clearFolioCharge }) => {
 
               {/* Device list */}
               <div className="si-device-list">
-                {LOCK_POOL[lockProvider]?.map(device => {
-                  const isUsed = usedDevIds.has(device.devId);
+                {(() => {
+                  const realDevices = realDevicePool[lockProvider] || [];
+                  const devices = realDevices.length ? realDevices : LOCK_POOL[lockProvider] || [];
                   return (
-                    <div key={device.devId} className={`si-device-row ${isUsed ? 'used' : ''}`}>
-                      <div className="si-device-info">
-                        <span className="si-device-name">{device.name}</span>
-                        <span className="si-device-serial">{device.serial} · FW {device.fw}</span>
-                      </div>
-                      <div className="si-device-stats">
-                        <BattIcon level={device.battery} size={13}/>
-                        <span className={device.battery < 20 ? 'text-red' : ''}>{device.battery}%</span>
-                        {device.online ? <span className="si-dot online"/> : <span className="si-dot offline"/>}
-                        <span>{device.online ? 'En ligne' : 'Hors ligne'}</span>
-                      </div>
-                      <button
-                        className={`si-link-btn ${isUsed ? 'disabled' : ''}`}
-                        disabled={isUsed}
-                        onClick={() => !isUsed && handleAssignLock(device)}
-                      >
-                        {isUsed ? '✓ Assignée' : 'Lier'}
-                      </button>
-                    </div>
+                    <>
+                      {!realDevices.length && (
+                        <div className="si-device-empty">
+                          <strong>Aucune serrure réelle détectée.</strong> Connectez vos comptes TTLock / TTHotel / Tuya depuis la page Serrures pour voir vos appareils réels.
+                        </div>
+                      )}
+                      {devices.map(device => {
+                        const isUsed = usedDevIds.has(device.devId);
+                        return (
+                          <div key={device.devId} className={`si-device-row ${isUsed ? 'used' : ''}`}>
+                            <div className="si-device-info">
+                              <span className="si-device-name">{device.name}</span>
+                              <span className="si-device-serial">{device.serial} · FW {device.fw}</span>
+                            </div>
+                            <div className="si-device-stats">
+                              <BattIcon level={device.battery} size={13}/>
+                              <span className={device.battery < 20 ? 'text-red' : ''}>{device.battery}%</span>
+                              {device.online ? <span className="si-dot online"/> : <span className="si-dot offline"/>}
+                              <span>{device.online ? 'En ligne' : 'Hors ligne'}</span>
+                            </div>
+                            <button
+                              className={`si-link-btn ${isUsed ? 'disabled' : ''}`}
+                              disabled={isUsed}
+                              onClick={() => !isUsed && handleAssignLock(device)}
+                            >
+                              {isUsed ? '✓ Assignée' : 'Lier'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </>
                   );
-                })}
+                })()}
               </div>
             </motion.div>
           </div>
